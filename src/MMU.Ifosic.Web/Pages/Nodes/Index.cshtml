@@ -1,0 +1,46 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Senarai ";
+}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex align-items-center">
+                <h4 class="mr-auto card-title"><span class="fa fa-book-open"></span> Senarai </h4>
+                <a class="ml-auto align-self-end btn btn-outline-success" asp-page="Edit"><i class="fa fa-file"></i> Tambah</a>
+            </div>
+        </div>
+        <div class="card-body border">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width: 1rem;">Bil.</th>
+                        <th>Tajuk</th>
+                        <th>Editor</th>
+                        <th>Tarikh</th>
+                        <th style="width: 10rem;">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Items.Count > 0) {
+                    int j = 1;
+                    @foreach(var m in Model.Items) {
+                    <tr>
+                        <td>@(j++).</td>
+                        <td>@m.Title</td>
+                        <td>@m.UserId</td>
+                        <td>@m.CreatedDate?.ToLocalTime()</td>
+                        <td>
+                            <a class="ml-auto btn btn-outline-primary" href="~/nodes/edit?id=@m.Id"><i class="fa fa-edit"></i> Edit</a>
+                        </td>
+                    </tr>
+                    }
+                } else {
+                    <tr><td colspan="10">Tiada rekod dijumpai</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+   </div>

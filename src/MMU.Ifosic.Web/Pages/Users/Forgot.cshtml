@@ -1,0 +1,56 @@
+﻿@page
+@model ForgotModel
+@{
+    ViewData["Title"] = "Forgot Password";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card card-maroon card-outline">
+                <div class="card-header">
+                    <h5 class="card-title m-0">Saya lupa katalaluan</h5>
+                </div>
+                <div class="card-body register-card-body">
+                    @if (Model.Email is null && Model.Message is null)
+                    {
+                        <p class="login-box-msg">Sila isi email yang berdaftar untuk menukar katalaluan</p>
+                        <p asp-validation-summary="ModelOnly" class="text-danger"></p>
+
+                        <form action="" method="post">
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" placeholder="Alamat emel" asp-for="Email">
+                                <div class="input-group-append">
+                                    <div class="input-group-text">
+                                        <span class="fas fa-envelope"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">Send</button>                        
+                        </form>
+                    } else if (Model.Email is not null && Model.Message is null) {
+                        <form action="" method="post">
+                            <input type="hidden" asp-for="Email" />
+                            <div class="form-group">
+                            <label asp-for="Password">Kata laluan</label>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <input type="password" class="form-control" placeholder="Password" asp-for="Password">
+                            </div>
+                            <div class="form-group">
+                            <label asp-for="Confirm">Pastikan Katalaluan</label>
+                            <span asp-validation-for="Confirm" class="text-danger"></span>
+                            <input type="password" class="form-control" placeholder="Confirm Password" asp-for="Confirm">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Tukar katalaluan</button>                        
+                        </form>
+                    } else {
+                        <p>@Model.Message</p>
+                    }
+                </div>
+                <!-- /.form-box -->
+            </div><!-- /.card -->
+        </div>
+    </div>
+</div>

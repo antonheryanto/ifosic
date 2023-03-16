@@ -1,0 +1,109 @@
+﻿@page
+@using Shared.Components.Page
+@model IndexModel
+@{
+    ViewData["Title"] = "Senarai Pengguna";
+}
+@section Styles {
+    <style>
+        .custom-select {
+            width: 150px;
+        }
+    </style>
+}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex align-items-center">
+                <h5 class="mr-auto card-title d-none d-lg-block">Tapisan</h5>
+                <div class="ml-auto mb-0">
+                    <form method="get" class="ml-auto input-group input-group-sm ">
+                        <select class="custom-select" asp-for="SearchBy">
+                            <option value="1">Name</option>
+                            <option value="2">Email</option>
+                            <option value="3">Status</option>
+                            <option value="4">Roles</option>
+                        </select>
+                        <input asp-for="Search" type="text" class="form-control" placeholder="Search..">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+                <a class="ml-1 align-self-end btn btn-sm btn-outline-primary" href="~/users/edit"><i class="fas fa-plus d-lg-none"></i> <span class="d-none d-lg-block"><i class="fas fa-plus"></i> Tambah</span></a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+            @foreach (var m in Model.Items) { 
+                <div class="col-md-6 co-lg-4">
+                    <div class="card border">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                            <h4 class="mr-auto card-title">@m.Name</h4>
+                            <div class="ml-auto align-self-end">
+                                            <a class="btn btn-sm btn-outline-danger" asp-page-handler="Delete" asp-page="index" asp-route-id="@m.Id" onclick="confirm('Are you sure?')"><i class="fa fa-trash"></i></a>
+                                <a class="btn btn-sm btn-outline-primary" href="~/users/edit/@m.Id"><i class="fas fa-edit"></i></a>
+                                <a class="btn btn-sm btn-outline-warning" href="~/users/auth/@m.Id"><i class="fas fa-user"></i></a>
+                            </div>
+                            </div>
+                        </div>
+                        <div class="card-body border">
+                            <div><i class="fa fa-phone"></i> @m.Phone</div>
+                            <div><i class="fa fa-envelope"></i> @m.Email</div>
+                            <span class="badge badge-success">@(m.IsActive ? "Active" : "Inactive")</span>
+                            <span class="badge badge-warning">@Html.Raw(string.Join("</span> <span class='badge badge-warning'>", (m.Roles ?? new()).Select(s => s.Name)))</span>
+                            <div><a class="btn btn-secondary" target="_blank" href="~/users/edit?token=@m.Token">Activation Link</a></div>
+                            <div class="text-muted">Log masuk pada: @m.SignInDate?.ToLocalTime()</div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex align-items-center">                                
+                                Dikemaskini pada: @m.UpdatedDate.ToLocalTime()
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+        @if (Model.Items.TotalPages > 1) {
+        <div class="card-footer">
+            @(await Component.InvokeAsync<PageViewComponent>(new { values = Model.Items, key = nameof(Model.PageNumber), parms = Model.Parms }))
+        </div>
+        }
+    </div>
+</div>
+@section scripts {
+    <script>
+        var $searchBy = $("#SearchBy")
+        function updateField() {
+            console.log("test")
+            if($searchBy.val() == 4)
+                $("#Search").replaceWith(`
+                <select class="custom-select" name="Search" id="Search">
+                    @if (Model.Roles?.Count > 0){
+                        @foreach (var m in Model.Roles)
+                        {
+                        <option value="@m.Key" selected="@(Model.Search == m.Key.ToString())">@m.Value</option>
+                        }
+                    }
+                </select>
+                `)
+            else if ($searchBy.val() == 3)
+                $("#Search").replaceWith(`
+                <select class="custom-select" name="Search" id="Search">
+                    <option value="0">InActive</option>
+                    <option value="1">Active</option>
+                </select>
+                `)
+            else
+                $("#Search").replaceWith(`
+                <input id="Search" name="Search" type="text" class="form-control" placeholder="Search..">
+                `)
+        }
+        updateField()
+        $searchBy.change(e => {
+            updateField()
+        })
+    </script>
+}

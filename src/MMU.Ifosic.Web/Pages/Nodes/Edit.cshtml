@@ -1,0 +1,63 @@
+﻿@page "{id:int?}"
+@model EditModel
+@{
+	ViewData["Title"] = "Kemaskini";
+}
+
+<div class="container">
+    <div class="card card-green card-outline">
+        <div class="card-header">Maklumat Ahli</div>
+        <div class="card-body border">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <form method="post">                
+                <input type="hidden" asp-for="Item.Id" />
+
+                <div class="mb-3">
+                    <label asp-for="Item.Title">Tajuk</label>
+                    <span asp-validation-for="Item.Title" class="text-danger"></span>
+                    <input type="text" class="form-control" placeholder="Nama Penuh" asp-for="Item.Title">
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Item.Body">Name Penuh</label>
+                    <span asp-validation-for="Item.Body" class="text-danger"></span>
+                    <textarea asp-for="Item.Body" class="form-control"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" asp-for="Item.IsPublished">
+                        <label class="form-check-label" asp-for="Item.IsPublished">
+                            Terbitkan
+                        </label>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-md-8"></div>
+                    <div class="col-md-4 text-right">
+                        <a href="~/" class="btn btn-secondary">Kembali</a>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+<script src="~/js/ckeditor5/ckeditor.js"></script>
+<script>
+    window.ClassicEditor
+        .create(document.querySelector('#Item_Body'))
+        .then(editor => {
+            editor.model.document.on('change', () => {
+                editor.updateSourceElement();
+            });
+            console.log(editor);
+        }).catch(error => {
+            console.error(error);
+        });
+    </script>
+}

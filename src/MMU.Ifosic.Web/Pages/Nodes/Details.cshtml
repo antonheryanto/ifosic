@@ -1,0 +1,23 @@
+﻿@page "{id}"
+@model DetailsModel
+@{
+	ViewData["Title"] = Model.Item.Title;
+}
+<div class="container">
+    <div class="card card-green card-outline">
+        <div class="card-header">
+            @if (!User.IsLogged()) {
+                @ViewData["Title"]
+            }
+            @if (User.IsAdmin())
+            {
+                <a class="ml-auto btn align-self-end btn-outline-primary"
+               href="~/nodes/edit?id=@Model.Item.Id"><i class="fa fa-edit"></i> Edit</a>
+            }
+        </div>
+        <div class="card-body border">
+            @Html.Raw(@Model.Item.Body)
+        </div>
+    </div>
+ </div>
+

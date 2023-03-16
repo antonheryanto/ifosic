@@ -1,0 +1,74 @@
+﻿@page "{id?}"
+@model AuthModel
+@{
+    ViewData["Title"] = "Log Masuk";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Klinik</title>
+    <link rel="icon" href="~/img/mmu_icon.png">
+    @*<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />*@
+    <link rel="stylesheet" href="~/css/adminlte.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Klinik.styles.css" asp-append-version="true" />
+</head>
+<body class="hold-transition layout-top-nav" style="background-image: url('/img/background.png');align-items: flex-start;padding: 10%;">
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                            <h4 class="mx-auto card-title"><span class="fa fa-user"></span> Inteligent DFOS  Characterisation System</h4>
+                        @*<a class="ml-auto align-self-end btn btn-success" href="~/Users/Edit"><i class="fa fa-edit"></i> Register</a>*@
+                    </div>
+                </div>
+
+
+                <div class="card-body register-card-body">
+                    <img src="~/img/mmu.png" width="200" class="mx-auto" />
+                    <img src="~/img/petronas.svg" width="200" class="mx-auto"/>
+
+                    <p class="login-box-msg">
+                        @*Sila masukkan maklumat*@
+                    <div asp-validation-summary="ModelOnly" class="text text-warning"></div>
+                    </p>
+
+                    <form action="" method="post" class="needs-validation" novalidate>
+
+                        <label asp-for="Username">Username</label>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Username" asp-for="Username">
+                        </div>
+                        <label asp-for="Password">Password</label>
+                        <span class="text-danger"><a href="~/users/forgot">Forgot? Click here</a></span>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                        <div class="mb-3">
+                            <input type="password" class="form-control" placeholder="Password" asp-for="Password">                            
+                        </div>
+                        <div class="row">
+                            <!-- /.col -->
+                            <div class="col-sm-3">
+                                <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+                            </div>
+                            <!-- /.col -->
+                        </div>
+                    </form>
+                </div>
+                <!-- /.form-box -->
+            </div><!-- /.card -->
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <partial name="_ValidationScriptsPartial" />
+}
+</body>
+</html>

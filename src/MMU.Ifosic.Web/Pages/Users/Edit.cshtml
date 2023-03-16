@@ -1,0 +1,123 @@
+﻿@page "{id?}"
+@model EditModel
+@{
+    ViewData["Title"] = User.IsLogged() ? (User.IsAdmin() && Model.Item?.Id != User.GetId() ? "Manage User" : "Manage My Profile") 
+        : (Model.Item?.Token is null ? "Pendaftaran Keahlian" : "Maklumat Pengguna");
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            @if (!ModelState.IsValid) {
+            <div class="card card-danger card-outline">
+                <div class="card-header">
+                    <h5 class="card-title m-0">Terdapat masalah</h5>
+                </div>
+                <div class="card-body register-card-body">
+                        <div asp-validation-summary="All" class="text text-warning"></div>
+                </div>
+            </div>
+            }
+
+            <form action="" method="post" class="needs-validation" novalidate>
+                <div class="card card-green card-outline">
+                    <div class="card-header">
+                        <h5 class="card-title m-0">@ViewData["Title"]</h5>
+                    </div>
+                    <div class="card-body register-card-body">
+                        <input type="hidden" asp-for="Item.Id"/>
+                    
+                        <label asp-for="Item.Name">Name Mengikut No. KP</label>
+                        <span asp-validation-for="Item.Name" class="text-danger"></span>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Nama Penuh" asp-for="Item.Name">
+                        </div>
+
+                        <label asp-for="Item.Phone">Telefon</label>
+                        <span asp-validation-for="Item.Phone" class="text-danger"></span>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Telefon" asp-for="Item.Phone">                            
+                        </div>
+                        
+                        <label asp-for="Item.Email">Emel</label>
+                        <span asp-validation-for="Item.Email" class="text-danger"></span>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Emel" asp-for="Item.Email">                            
+                        </div>
+                        
+                        @if ((User.IsAdmin() && Model.Item?.Id != 0) || (User.IsLogged() && User.GetId() == Model.Item?.Id) || !string.IsNullOrEmpty(Model.Item?.Token))
+                        {
+                            <input type="hidden" asp-for="Item.Token" />
+                            <span asp-validation-for="Item.Password" class="text-danger"></span>
+                            <div class="mb-3">
+                                <input type="password" class="form-control" placeholder="Kata Laluan/Password" asp-for="Item.Password">
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <div class="mb-3">
+                                <input type="password" class="form-control" placeholder="Retype password" asp-for="Password">                                
+                            </div>
+                        }
+
+                        @if (User.IsAdmin() && Model?.Item?.Id != 0)
+                        {
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" asp-for="Item.IsActive"> 
+                                        <label asp-for="Item.IsActive">Active</label>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <fieldset>
+                                    @if (User.IsAdmin())
+                                    {
+                                        <legend>Roles</legend>
+                                    }
+                                @foreach (var m in Model?.Roles) {
+                                    <input type="hidden" asp-for="Roles[m.Key].Id" />
+                                    <input type="hidden" asp-for="Roles[m.Key].Name" />
+                                    @if (User.IsAdmin()) {
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" asp-for="Roles[m.Key].IsActive"> 
+                                        <label asp-for="Roles[m.Key].IsActive">@m.Value.Name</label>
+                                    </div>
+                                    } else {
+                                        <input type="hidden" asp-for="Roles[m.Key].IsActive" />
+                                    }
+                                }
+                                </fieldset>
+                            </div>
+                        </div>
+                        @if (!User.IsLogged() && Model.Item?.Token is not null) {
+                        <div class="row">
+                            <div class="col-12">
+                                <span asp-validation-for="IsAgree" class="text-danger"></span>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsAgree">
+                                    <label for="IsAgree">Setuju dengan terma dan syarat </label>
+                                    <span><a href="~/nodes/details/1" target="_blank">Rujuk</a></span>
+                                        
+                                </div>
+                            </div>
+                        </div>
+                        }
+                        <div class="row">
+                            <div class="col-8"></div>
+                            <div class="col-4">
+                                <button type="submit" class="btn btn-primary btn-block">Simpan</button>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <partial name="_ValidationScriptsPartial" />
+}

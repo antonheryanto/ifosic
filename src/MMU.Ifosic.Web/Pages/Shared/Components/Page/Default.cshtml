@@ -1,0 +1,21 @@
+@model PageViewModel
+
+<ul class="pagination pagination-sm m-0 float-right">
+    @{
+        Model.Parms[Model.Key] = Model?.List?.PreviousPage.ToString() ?? "";
+    }
+    <li class='page-item @(Model.List.HasPreviousPage ? "" : "disabled")'>
+        <a asp-page="@Model.AspPage" asp-all-route-data = "Model.Parms" class="page-link">&laquo;</a>
+    </li>
+    @for (int i = Model.List.PageStart; i < Model.List.PageStart + Model.List.PageDisplayed; i++)
+    {
+        Model.Parms[Model.Key] = i.ToString();
+        <li class='page-item @(Model.List.PageIndex == i ? "active" : "")'>
+            <a asp-page="@Model.AspPage" asp-all-route-data = "Model.Parms" class="page-link">@i</a>
+        </li>
+    }
+    @{Model.Parms[Model.Key] = Model.List.NextPage.ToString();}
+    <li class='page-item @(Model.List.HasNextPage ? "" : "disabled")'>
+        <a asp-page="@Model.AspPage" asp-all-route-data = "Model.Parms" class="page-link">&raquo;</a>
+    </li>
+</ul>
