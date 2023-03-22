@@ -1,0 +1,57 @@
+﻿@page "{id?}"
+@model IndexModel
+@{
+	ViewData["Title"] = "Fiber Managements";
+	bool isList = Model.Item.Id == 0;
+}
+
+<div class="container">
+	<div class="card">
+		<div class="card-header">
+			<div class="d-flex align-items-center">
+				<h5 class="mr-auto card-title d-none d-lg-block">@(isList ? "List of Fibers" : Model.Item.Name)</h5>
+				<a class="ml-1 align-self-end btn btn-sm btn-outline-primary" href="~/fibers/edit@(isList ? "" : $"/{Model.Item.Id}")">
+					<i class="fas fa-plus d-lg-none"></i>
+					<span class="d-none d-lg-block"><i class="fas fa-plus"></i>@(isList ? "Add" : "Edit")</span>
+				</a>
+			</div>
+		</div>
+		<div class="card-body">
+			<div class="row">
+				@if (!isList)
+				{
+
+				}
+				else
+				{
+
+				@foreach (var m in Model.Items)
+				{
+					<div class="col-md-6 co-lg-4">
+						<div class="card border">
+							<div class="card-header">
+								<div class="d-flex align-items-center">
+									<h4 class="mr-auto card-title"><a href="~/fibers/@m.Id">@m.Name</a></h4>
+									<div class="ml-auto align-self-end">
+										<a class="btn btn-sm btn-outline-primary" href="~/fibers/edit/@m.Id"><i class="fas fa-edit"></i> Edit</a>
+									</div>
+								</div>
+							</div>
+							<div class="card-body border">
+								<h6>Used by Projects:</h6>
+							@if (m.Projects?.Count > 0) {
+									@foreach (var f in m.Projects) {
+										<a href="~/projects/@f.Id">@f.Name</a><br />
+									}
+							}
+							</div>
+						</div>
+					</div>
+				}
+				}
+			</div>
+		</div>
+		<div class="card-footer">
+		</div>
+	</div>
+</div>

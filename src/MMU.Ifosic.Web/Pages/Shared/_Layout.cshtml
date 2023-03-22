@@ -29,6 +29,7 @@
                         {
                             @if (User.IsAdmin())
                             {
+                                <li class="nav-item"><a class="nav-link" href="~/fibers">Fibers</a></li>
                                 <li class="nav-item"><a class="nav-link" href="~/users">Users</a></li>
                             }
                             <li class="nav-item"><a class="nav-link" href="~/users/edit/@User.GetId()">@User.GetName()</a></li>
