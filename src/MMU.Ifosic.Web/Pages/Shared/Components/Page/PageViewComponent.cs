@@ -1,7 +1,7 @@
 ﻿using MMU.Ifosic.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MMU.Ifosic.Pages.Shared.Components.Page;
+namespace MMU.Ifosic.Web.Pages.Shared.Components.Page;
 
 public class PageViewComponent : ViewComponent
 {

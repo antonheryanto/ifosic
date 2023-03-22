@@ -1,10 +1,52 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+	<div class="card">
+		<div class="card-header">
+			<div class="d-flex align-items-center">
+				<h5 class="mr-auto card-title d-none d-lg-block">List of Projects</h5>
+				<a class="ml-1 align-self-end btn btn-sm btn-outline-primary" href="~/projects/edit">
+					<i class="fas fa-plus d-lg-none"></i>
+					<span class="d-none d-lg-block"><i class="fas fa-plus"></i>Add</span>
+				</a>
+			</div>
+		</div>
+		<div class="card-body">
+			<div class="row">
+				@foreach (var m in Model.Items)
+				{
+					<div class="col-md-6 co-lg-4">
+						<div class="card border">
+							<div class="card-header">
+								<div class="d-flex align-items-center">
+									<h4 class="mr-auto card-title"><a href="~/projects/@m.Id">@m.Name</a></h4>
+									<div class="ml-auto align-self-end">
+										<a class="btn btn-sm btn-outline-primary" href="~/projects/edit/@m.Id"><i class="fas fa-edit"></i> Edit</a>
+									</div>
+								</div>
+							</div>
+							<div class="card-body border">
+							@if (m.Fibers?.Count > 0) {
+								@foreach (var f in m.Fibers) {
+									@f.Name<br />
+								}
+							}
+							</div>
+							<div class="card-footer">
+								<div class="d-flex align-items-center">
+									Last Update At: @m.UpdatedDate.ToLocalTime()
+								</div>
+							</div>
+						</div>
+					</div>
+				}
+			</div>
+		</div>
+		<div class="card-footer">
+		</div>
+	</div>
 </div>

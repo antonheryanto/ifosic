@@ -1,0 +1,23 @@
+﻿@page "{id}"
+@model IndexModel
+@{
+	ViewData["Title"] = "Project Details";
+}
+<div class="container">
+	<div class="card">
+		<div class="card-header">
+			<div class="d-flex align-items-center">
+				<h5 class="mr-auto card-title d-none d-lg-block">@Model.Item.Name</h5>
+				<a class="ml-1 align-self-end btn btn-sm btn-outline-primary" href="~/projects/edit/@Model.Item.Id">
+					<i class="fas fa-plus d-lg-none"></i>
+					<span class="d-none d-lg-block"><i class="fas fa-plus"></i>Edit</span>
+				</a>
+			</div>
+		</div>
+		<div class="card-body">
+			<div class="row">
+			</div>
+		</div>
+	</div>
+</div>
+

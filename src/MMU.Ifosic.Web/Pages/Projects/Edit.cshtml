@@ -1,0 +1,71 @@
+﻿@page "{id?}"
+@model EditModel
+@{
+	ViewData["Title"] = "Manage Project";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            @if (!ModelState.IsValid)
+            {
+                <div class="card card-danger card-outline">
+                    <div class="card-header">
+                        <h5 class="card-title m-0">Error</h5>
+                    </div>
+                    <div class="card-body register-card-body">
+                        <div asp-validation-summary="All" class="text text-warning"></div>
+                    </div>
+                </div>
+            }
+
+            <form action="" method="post" class="needs-validation" novalidate>
+                <div class="card card-green card-outline">
+                    <div class="card-header">
+                        <h5 class="card-title m-0">@ViewData["Title"]</h5>
+                    </div>
+                    <div class="card-body register-card-body">
+                        <input type="hidden" asp-for="Item.Id" />
+
+                        <label asp-for="Item.Name">Title</label>
+                        <span asp-validation-for="Item.Name" class="text-danger"></span>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Project Title" asp-for="Item.Name">
+                        </div>
+
+                        <label asp-for="Item.Description">Description</label>
+                        <span asp-validation-for="Item.Description" class="text-danger"></span>
+                        <div class="mb-3">
+                            <textarea class="form-control" asp-for="Item.Description"></textarea>
+                        </div>
+
+                        <label asp-for="Item.Description">Fibers</label>
+                        <div class="row">
+                            @foreach (var m in Model.Fibers) {
+                            <div class="col-2">
+                                <input type="hidden" asp-for="Fibers[m.Key].Id" />
+                                <input type="hidden" asp-for="Fibers[m.Key].Name" />
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="Fibers[m.Key].IsActive">
+                                    <label asp-for="Fibers[m.Key].IsActive">@m.Value.Name</label>
+                                </div>                                        
+                            </div>
+                            }
+                        </div>
+
+                        <div class="row">
+                            <div class="col-8"></div>
+                            <div class="col-4">
+                                <button type="submit" class="btn btn-primary btn-block">Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Exceptional;
 
-namespace MMU.Ifosic.Pages.Users;
+namespace MMU.Ifosic.Web.Pages.Users;
 
 [Authorize(Roles = "Admin")]
 public class IndexModel : PageModel

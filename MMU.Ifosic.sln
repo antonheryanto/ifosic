@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MMU.Ifosic.Web", "src\MMU.Ifosic.Web\MMU.Ifosic.Web.csproj", "{6F6BBEEF-0B4F-4E29-B5C7-A08912815F48}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MMU.Ifosic", "src\MMU.Ifosic\MMU.Ifosic.csproj", "{9907526E-18F5-459A-8949-A6923343E859}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MMU.Ifosic", "src\MMU.Ifosic\MMU.Ifosic.csproj", "{9907526E-18F5-459A-8949-A6923343E859}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

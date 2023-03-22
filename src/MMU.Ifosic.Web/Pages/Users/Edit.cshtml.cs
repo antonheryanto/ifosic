@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace MMU.Ifosic.Pages.Users;
+namespace MMU.Ifosic.Web.Pages.Users;
+
+[Authorize]
 public class EditModel : PageModel
 {
     private readonly Db _db;

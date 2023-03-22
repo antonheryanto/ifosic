@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace MMU.Ifosic.Pages.Users;
+namespace MMU.Ifosic.Web.Pages.Users;
 public class ForgotModel : PageModel
 {
     private readonly Db _db;

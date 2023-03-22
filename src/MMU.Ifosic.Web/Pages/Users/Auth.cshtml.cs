@@ -10,7 +10,7 @@ using MMU.Ifosic.Models;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 
-namespace MMU.Ifosic.Pages.Users;
+namespace MMU.Ifosic.Web.Pages.Users;
 
 public class AuthModel : PageModel
 {

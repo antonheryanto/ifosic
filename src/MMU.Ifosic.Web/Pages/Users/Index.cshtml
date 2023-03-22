@@ -2,7 +2,7 @@
 @using Shared.Components.Page
 @model IndexModel
 @{
-    ViewData["Title"] = "Senarai Pengguna";
+    ViewData["Title"] = "List Users";
 }
 @section Styles {
     <style>
@@ -15,7 +15,7 @@
     <div class="card">
         <div class="card-header">
             <div class="d-flex align-items-center">
-                <h5 class="mr-auto card-title d-none d-lg-block">Tapisan</h5>
+                <h5 class="mr-auto card-title d-none d-lg-block">Filter</h5>
                 <div class="ml-auto mb-0">
                     <form method="get" class="ml-auto input-group input-group-sm ">
                         <select class="custom-select" asp-for="SearchBy">
@@ -30,7 +30,7 @@
                         </div>
                     </form>
                 </div>
-                <a class="ml-1 align-self-end btn btn-sm btn-outline-primary" href="~/users/edit"><i class="fas fa-plus d-lg-none"></i> <span class="d-none d-lg-block"><i class="fas fa-plus"></i> Tambah</span></a>
+                <a class="ml-1 align-self-end btn btn-sm btn-outline-primary" href="~/users/edit"><i class="fas fa-plus d-lg-none"></i> <span class="d-none d-lg-block"><i class="fas fa-plus"></i> Add</span></a>
             </div>
         </div>
         <div class="card-body">
@@ -42,9 +42,9 @@
                             <div class="d-flex align-items-center">
                             <h4 class="mr-auto card-title">@m.Name</h4>
                             <div class="ml-auto align-self-end">
-                                            <a class="btn btn-sm btn-outline-danger" asp-page-handler="Delete" asp-page="index" asp-route-id="@m.Id" onclick="confirm('Are you sure?')"><i class="fa fa-trash"></i></a>
-                                <a class="btn btn-sm btn-outline-primary" href="~/users/edit/@m.Id"><i class="fas fa-edit"></i></a>
-                                <a class="btn btn-sm btn-outline-warning" href="~/users/auth/@m.Id"><i class="fas fa-user"></i></a>
+                                @*<a class="btn btn-sm btn-outline-danger" asp-page-handler="Delete" asp-page="index" asp-route-id="@m.Id" onclick="confirm('Are you sure?')"><i class="fa fa-trash"></i></a>*@
+                                <a class="btn btn-sm btn-outline-primary" href="~/users/edit/@m.Id"><i class="fas fa-edit"></i> Edit</a>
+                                <a class="btn btn-sm btn-outline-warning" href="~/users/auth/@m.Id"><i class="fas fa-user"></i> LogAs</a>
                             </div>
                             </div>
                         </div>
@@ -54,11 +54,11 @@
                             <span class="badge badge-success">@(m.IsActive ? "Active" : "Inactive")</span>
                             <span class="badge badge-warning">@Html.Raw(string.Join("</span> <span class='badge badge-warning'>", (m.Roles ?? new()).Select(s => s.Name)))</span>
                             <div><a class="btn btn-secondary" target="_blank" href="~/users/edit?token=@m.Token">Activation Link</a></div>
-                            <div class="text-muted">Log masuk pada: @m.SignInDate?.ToLocalTime()</div>
+                            <div class="text-muted">Last Sign in at: @m.SignInDate?.ToLocalTime()</div>
                         </div>
                         <div class="card-footer">
                             <div class="d-flex align-items-center">                                
-                                Dikemaskini pada: @m.UpdatedDate.ToLocalTime()
+                                Last Update At: @m.UpdatedDate.ToLocalTime()
                             </div>
                         </div>
                     </div>

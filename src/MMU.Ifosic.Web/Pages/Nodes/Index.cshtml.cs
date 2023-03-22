@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
 
-namespace MMU.Ifosic.Pages.Nodes;
+namespace MMU.Ifosic.Web.Pages.Nodes;
 
 [Authorize]
 public class IndexModel : PageModel

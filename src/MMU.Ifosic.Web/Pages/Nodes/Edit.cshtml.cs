@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace MMU.Ifosic.Pages.Nodes;
+namespace MMU.Ifosic.Web.Pages.Nodes;
 
 [Authorize]
 public class EditModel : PageModel

@@ -2,7 +2,7 @@ using MMU.Ifosic.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace MMU.Ifosic.Pages.Nodes;
+namespace MMU.Ifosic.Web.Pages.Nodes;
 
 public class DetailsModel : PageModel
 {
