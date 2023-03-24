@@ -175,7 +175,7 @@
 
 		function renderHeatMap() {
 			console.log('generate heatmap');
-			Highcharts.getJSON('@($"{Request.Scheme}://{this.Request.Host}{this.Request.PathBase}/api/project/1")', fdd => heatmap(fdd));
+			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}")', fdd => heatmap(fdd));
 		};
 	</script>
 	<script>
