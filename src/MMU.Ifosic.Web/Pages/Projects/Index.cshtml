@@ -33,7 +33,7 @@
 		var dates = @Json.Serialize(Model.Data.MeasurementStart);
 	</script>
 	<script>
-		var colors = ['#4403A9', '#2BA512', '#325AE0', '#0DE94B', '#6DF912'];
+		var colors = ['rgba(68,3,169, 16)', 'rgba(43,165,18, 16)', 'rgba(50,90,224, 16)', 'rgba(13,233,75, 16)', 'rgba(109,249,16, 16)'];
 		var boundaryBands = [];
 		for (var i = 1; i < boundaries.length; i++) {
 			boundaryBands.push({ color: colors[i-1], from: boundaries[i-1], to: boundaries[i], label: { text: `F${i}` } });
@@ -48,7 +48,11 @@
 			freqTimes.push([new Date(dates[i]), times[i]]);
 		}
 
-		var yAxis = { title: { text: 'Frequency Shift (GHz)' } };
+		var yAxis = { 
+			min: -5,
+			max: 20,
+			title: { text: 'Frequency Shift (GHz)' } 
+		};
 
 		Highcharts.chart('plot1', {
 			chart: { type: 'scatter', zoomType: 'xy' },
@@ -61,19 +65,21 @@
 				type: 'datetime'
 			},
 			series: [{
-				color: 'red',
+				//color: 'blue',
 				data: freqTimes,
-				//lineWidth: 0.5,
 				name: 'Frequency Shift'
 			}]
 		});
 		Highcharts.chart('plot2', {
-			chart: { zoomType: 'x' },
+			chart: { zoomType: 'xy' },
 			title: { text: 'Frequency shift vs Distance' },
 			legend: { enabled: false },
+			yAxis,
 			xAxis: { 
 				title: { text: 'Distance (m)' },
 				plotBands: boundaryBands,
+				min: boundaries[0] - 5,
+				max: boundaries[boundaries.length - 1] + 5,
 				//plotBands: [{ from: 2, to: 5, label: { text: 'F1' } }]
 			},
 			tooltip: {
@@ -83,7 +89,8 @@
 			series: [{
 				type: 'line',
 				data: freqDistance,
-				lineWidth: 0.5,
+				color: 'black',
+				//lineWidth: 0.5,
 				name: 'Frequency Shift'
 			}]		
 		});
