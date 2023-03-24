@@ -18,9 +18,6 @@
 			<div id="plot1"></div>
 			<div id="plot2"></div>
 		</div>
-		<div class="card-footer">
-			<pre></pre>
-		</div>
 	</div>
 </div>
 
@@ -33,6 +30,7 @@
 		var times = @Json.Serialize(Model.Lines);
 		var boundaries = @Json.Serialize(Model.Boundaries);
 		var boundaryIndexes = @Json.Serialize(Model.Data.ToBoundariesIndex(Model.Boundaries));
+		var dates = @Json.Serialize(Model.Data.MeasurementStart);
 	</script>
 	<script>
 		var colors = ['#4403A9', '#2BA512', '#325AE0', '#0DE94B', '#6DF912'];
@@ -47,17 +45,21 @@
 			freqDistance.push([distances[i], freq[i]]);
 		}
 		for (var i = 0; i < times.length; i++) {
-			freqTimes.push([i, times[i]]);
+			freqTimes.push([new Date(dates[i]), times[i]]);
 		}
 
 		var yAxis = { title: { text: 'Frequency Shift (GHz)' } };
 
 		Highcharts.chart('plot1', {
-			chart: { type: 'scatter' },
+			chart: { type: 'scatter', zoomType: 'xy' },
 			title: { text: 'Frequency shift vs Time' },
 			//subtitle: { text: 'show fiber boundaries' },
+			legend: { enabled: false },
 			yAxis,
-			xAxis: { title: { text: 'Times (hours)' } },
+			xAxis: { 
+				title: { text: 'Times (hours)' },
+				type: 'datetime'
+			},
 			series: [{
 				color: 'red',
 				data: freqTimes,
@@ -66,12 +68,17 @@
 			}]
 		});
 		Highcharts.chart('plot2', {
-			//chart: { zoomType: 'x' },
+			chart: { zoomType: 'x' },
 			title: { text: 'Frequency shift vs Distance' },
+			legend: { enabled: false },
 			xAxis: { 
 				title: { text: 'Distance (m)' },
 				plotBands: boundaryBands,
 				//plotBands: [{ from: 2, to: 5, label: { text: 'F1' } }]
+			},
+			tooltip: {
+				headerFormat: '<b>{series.name}</b><br>',
+				pointFormat: '{point.x:.2f}: {point.y:.2f} m'
 			},
 			series: [{
 				type: 'line',
