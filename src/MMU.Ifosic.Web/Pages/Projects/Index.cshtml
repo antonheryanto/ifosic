@@ -140,16 +140,24 @@
 			let data = [];
 			let n = fdd.traces.length;
 			for (var i = 0; i < n; i++) {
-				for (var j = 0, k = 600; k < 1000; j++, k++) {
-					data.push([j, i, fdd.traces[i][k]]);
+				for (var j = 0, k = boundaryIndexes[0] - 25; k < boundaryIndexes[boundaryIndexes.length - 1] + 25; j++, k++) {
+					data.push([distances[k], i, fdd.traces[i][k]]);
 				}
 			}
 
 			Highcharts.chart('plot3', {
 				yAxis: {
+					minPadding: 0,
+					maxPadding: 0,
+					startOnTick: false,
+					endOnTick: false,
+					reversed: true,
 					min: 0,
 					max: n,
 					title: { text: 'Times (hours)' }
+				},
+				xAxis: {
+					title: { text: 'Distance (m)' }
 				},
 				colorAxis: {
 					stops: [
