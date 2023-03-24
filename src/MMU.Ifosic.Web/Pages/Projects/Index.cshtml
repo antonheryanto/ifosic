@@ -15,9 +15,70 @@
 			</div>
 		</div>
 		<div class="card-body">
-			<div class="row">
-			</div>
+			<div id="plot1"></div>
+			<div id="plot2"></div>
+		</div>
+		<div class="card-footer">
+			<pre></pre>
 		</div>
 	</div>
 </div>
 
+@section scripts{
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/boost.js"></script>
+	<script>
+		var distances = @Json.Serialize(Model.Data.Distance);
+		var freq = @Json.Serialize(Model.Data.Traces[26]);
+		var times = @Json.Serialize(Model.Lines);
+		var boundaries = @Json.Serialize(Model.Boundaries);
+		var boundaryIndexes = @Json.Serialize(Model.Data.ToBoundariesIndex(Model.Boundaries));
+	</script>
+	<script>
+		var colors = ['#4403A9', '#2BA512', '#325AE0', '#0DE94B', '#6DF912'];
+		var boundaryBands = [];
+		for (var i = 1; i < boundaries.length; i++) {
+			boundaryBands.push({ color: colors[i-1], from: boundaries[i-1], to: boundaries[i], label: { text: `F${i}` } });
+		}
+
+		var freqDistance = [];
+		var freqTimes = [];
+		for (var i = 0; i < distances.length; i++) {
+			freqDistance.push([distances[i], freq[i]]);
+		}
+		for (var i = 0; i < times.length; i++) {
+			freqTimes.push([i, times[i]]);
+		}
+
+		var yAxis = { title: { text: 'Frequency Shift (GHz)' } };
+
+		Highcharts.chart('plot1', {
+			chart: { type: 'scatter' },
+			title: { text: 'Frequency shift vs Time' },
+			//subtitle: { text: 'show fiber boundaries' },
+			yAxis,
+			xAxis: { title: { text: 'Times (hours)' } },
+			series: [{
+				color: 'red',
+				data: freqTimes,
+				//lineWidth: 0.5,
+				name: 'Frequency Shift'
+			}]
+		});
+		Highcharts.chart('plot2', {
+			//chart: { zoomType: 'x' },
+			title: { text: 'Frequency shift vs Distance' },
+			xAxis: { 
+				title: { text: 'Distance (m)' },
+				plotBands: boundaryBands,
+				//plotBands: [{ from: 2, to: 5, label: { text: 'F1' } }]
+			},
+			series: [{
+				type: 'line',
+				data: freqDistance,
+				lineWidth: 0.5,
+				name: 'Frequency Shift'
+			}]		
+		});
+	</script>
+}
