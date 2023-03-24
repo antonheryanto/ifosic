@@ -7,6 +7,19 @@
 	<div class="card">
 		<div class="card-header">
 			<div class="d-flex align-items-center">
+				<h5 class="mr-auto card-title d-none d-lg-block">Heatmap plot</h5>
+				<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>
+			</div>
+		</div>
+		<div class="card-body">
+			<div id="plot3"></div>
+
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card-header">
+			<div class="d-flex align-items-center">
 				<h5 class="mr-auto card-title d-none d-lg-block">@Model.Item.Name</h5>
 				<a class="ml-1 align-self-end btn btn-sm btn-outline-primary" href="~/projects/edit/@Model.Item.Id">
 					<i class="fas fa-plus d-lg-none"></i>
@@ -19,18 +32,44 @@
 			<div id="plot2"></div>
 		</div>
 	</div>
+
+	<div class="card">
+		<div class="card-header">
+			<div class="d-flex align-items-center">
+				<h5 class="mr-auto card-title d-none d-lg-block">Fiber Coefficents</h5>
+				@*<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>*@
+				<div class="ml-1 align-self-end">
+					<select class="form-control" onload="fiber()">
+						<option value="1">Fiber 1</option>
+						<option value="2">Fiber 2</option>
+						<option value="3">Fiber 3</option>
+						<option value="4">Fiber 4</option>
+						<option value="5">Fiber 5</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="card-body">
+			<div id="plot4"></div>
+			<div id="plot5"></div>
+		</div>
+	</div>
+	<br />
 </div>
 
 @section scripts{
 	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/boost-canvas.js"></script>
 	<script src="https://code.highcharts.com/modules/boost.js"></script>
+	<script src="https://code.highcharts.com/modules/data.js"></script>
+	<script src="https://code.highcharts.com/modules/heatmap.js"></script>
 	<script>
 		var distances = @Json.Serialize(Model.Data.Distance);
-		var freq = @Json.Serialize(Model.Data.Traces[26]);
+		var freq = @Json.Serialize(Model.Data.Traces[50]);
 		var times = @Json.Serialize(Model.Lines);
 		var boundaries = @Json.Serialize(Model.Boundaries);
 		var boundaryIndexes = @Json.Serialize(Model.Data.ToBoundariesIndex(Model.Boundaries));
-		var dates = @Json.Serialize(Model.Data.MeasurementStart);
+		var dates = @Json.Serialize(Model.Data.MeasurementStart);		
 	</script>
 	<script>
 		var colors = ['rgba(68,3,169, 16)', 'rgba(43,165,18, 16)', 'rgba(50,90,224, 16)', 'rgba(13,233,75, 16)', 'rgba(109,249,16, 16)'];
@@ -40,10 +79,11 @@
 		}
 
 		var freqDistance = [];
-		var freqTimes = [];
 		for (var i = 0; i < distances.length; i++) {
 			freqDistance.push([distances[i], freq[i]]);
 		}
+
+		var freqTimes = [];
 		for (var i = 0; i < times.length; i++) {
 			freqTimes.push([new Date(dates[i]), times[i]]);
 		}
@@ -70,6 +110,7 @@
 				name: 'Frequency Shift'
 			}]
 		});
+
 		Highcharts.chart('plot2', {
 			chart: { zoomType: 'xy' },
 			title: { text: 'Frequency shift vs Distance' },
@@ -80,11 +121,10 @@
 				plotBands: boundaryBands,
 				min: boundaries[0] - 5,
 				max: boundaries[boundaries.length - 1] + 5,
-				//plotBands: [{ from: 2, to: 5, label: { text: 'F1' } }]
 			},
 			tooltip: {
 				headerFormat: '<b>{series.name}</b><br>',
-				pointFormat: '{point.x:.2f}: {point.y:.2f} m'
+				pointFormat: '{point.y:.2f} GHz at {point.x:.2f}m'
 			},
 			series: [{
 				type: 'line',
@@ -94,5 +134,160 @@
 				name: 'Frequency Shift'
 			}]		
 		});
+	</script>
+	<script>
+		function heatmap(fdd) {
+			let data = [];
+			let n = fdd.traces.length;
+			for (var i = 0; i < n; i++) {
+				for (var j = 0, k = 600; k < 1000; j++, k++) {
+					data.push([j, i, fdd.traces[i][k]]);
+				}
+			}
+
+			Highcharts.chart('plot3', {
+				yAxis: {
+					min: 0,
+					max: n,
+					title: { text: 'Times (hours)' }
+				},
+				colorAxis: {
+					stops: [
+						[0.2, '#DA72E1'],
+						[0.4, '#0600F4'],
+						[0.6, '#198C00'],
+						[0.8, '#FFF900'],
+						[1.0, '#FF1D00']
+					],
+					min: -25,
+					max: 25
+				},
+				chart: { type: 'heatmap' },
+				boost: { useGPUTranslations: true },
+				series: [{
+					data,
+					boostThreshold: 100,
+					borderWidth: 0,
+					nullColor: '#EFEFEF',
+				}]
+			});
+		}
+
+		function renderHeatMap() {
+			console.log('generate heatmap');
+			Highcharts.getJSON('http://localhost:5115/api/project/1', fdd => heatmap(fdd));
+		};
+	</script>
+	<script>
+		var freqFiber = [
+			["7/17/2018 1:53:00 AM", 0],
+			["7/17/2018 2:26:00 AM", 0],
+			["7/17/2018 2:29:00 AM", 5],
+			["7/17/2018 3:10:00 AM", 5],
+			["7/17/2018 3:55:00 AM", 5],
+			["7/17/2018 3:59:00 AM", 10],
+			["7/17/2018 4:55:00 AM", 10],
+			["7/17/2018 5:40:00 AM", 10],
+			["7/17/2018 5:52:00 AM", 15],
+			["7/17/2018 6:31:00 AM", 15],
+			["7/17/2018 7:13:00 AM", 15],
+			["7/17/2018 7:25:00 AM", 20],
+			["7/17/2018 7:53:00 AM", 20],
+			["7/17/2018 8:32:00 AM", 20],
+			["7/17/2018 8:43:00 AM", 25],
+			["7/17/2018 9:23:00 AM", 25],
+			["7/17/2018 10:01:00 AM",25],
+			["7/17/2018 10:07:00 AM",30],
+			["7/17/2018 10:52:00 AM",30],
+			["7/17/2018 11:32:00 AM",30],
+			["7/17/2018 11:53:00 AM",0],
+			["7/17/2018 2:45:00 PM", 0],
+			["7/17/2018 5:23:00 PM", 0],
+			["7/17/2018 8:21:00 PM", 0],
+			["7/17/2018 10:27:00 PM", 0],
+			["7/18/2018 12:46:00 AM", 0,],
+			["7/18/2018 1:07:00 AM", 30],
+			["7/18/2018 1:29:00 AM", 30],
+			["7/18/2018 1:35:00 AM", 25],
+			["7/18/2018 2:17:00 AM", 25],
+			["7/18/2018 2:58:00 AM", 25],
+			["7/18/2018 3:05:00 AM", 20],
+			["7/18/2018 3:53:00 AM", 20],
+			["7/18/2018 4:29:00 AM", 20],
+			["7/18/2018 4:41:00 AM", 15],
+			["7/18/2018 5:23:00 AM", 15],
+			["7/18/2018 5:58:00 AM", 15],
+			["7/18/2018 6:02:00 AM", 10],
+			["7/18/2018 6:49:00 AM", 10],
+			["7/18/2018 7:29:00 AM", 10],
+			["7/18/2018 7:32:00 AM", 5],
+			["7/18/2018 8:19:00 AM", 5],
+			["7/18/2018 8:58:00 AM", 5],
+			["7/18/2018 9:01:00 AM", 0],
+			["7/18/2018 9:58:00 AM", 0],
+			["7/18/2018 10:31:00 AM", 0],
+		];
+		//var freqFiber = [];
+		//for (var i = 0; i < temperatures.length; i++) {
+		//	freqFiber.push([Date.parse(dates[i]), temperatures[i]]);
+		//}
+
+		function fiber()
+		{
+			Highcharts.chart('plot4', {
+				chart: { type: 'scatter', zoomType: 'xy' },
+				title: { text: 'Fiber calibration' },
+				legend: { enabled: false },
+				yAxis: {
+					min: -5,
+					title: { text: 'Freq shift(Ghz)' },
+				},
+				xAxis: {
+					title: { text: 'Times (hours)' },
+					type: 'datetime'
+				},
+				series: [{
+					color: 'green',
+					type: 'line',
+					data: freqFiber,
+					name: 'Frequency Shift'
+				}]
+			});
+
+			Highcharts.chart('plot5', {
+				title: {
+					text: 'Scatter plot with regression line'
+				},
+				xAxis: {
+					min: -0.5,
+					max: 5.5
+				},
+				yAxis: {
+					min: 0
+				},
+				series: [{
+					type: 'line',
+					name: 'Regression Line',
+					data: [[0, 1.11], [5, 4.51]],
+					marker: {
+						enabled: false
+					},
+					states: {
+						hover: {
+							lineWidth: 0
+						}
+					},
+					enableMouseTracking: false
+				}, {
+					type: 'scatter',
+					name: 'Observations',
+					data: [1, 1.5, 2.8, 3.5, 3.9, 4.2],
+					marker: {
+						radius: 4
+					}
+				}]
+			});
+		}
+		fiber();
 	</script>
 }

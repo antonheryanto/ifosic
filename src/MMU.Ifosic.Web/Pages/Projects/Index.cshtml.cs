@@ -28,8 +28,9 @@ public class IndexModel : PageModel
             .FirstOrDefaultAsync(f => f.Id == id) ?? new();
 		Data = FrequencyShiftDistance.Load(Path.Combine(_path, $"{id}.bin"));        
         Lines = new double[Data.Traces.Count];
-        for (int i = 0; i < Data.Traces.Count; i++)
+		Boundaries = new double[] { 33.57, 35.21, 38.45, 41.74, 45.12, 46.82 };
+        var index = Data.ToBoundariesIndex(Boundaries);
+		for (int i = 0; i < Data.Traces.Count; i++)
             Lines[i] = Data.Traces[i][800];
-        Boundaries = new double[] { 33.57, 35.21, 38.45, 41.74, 45.12, 46.82 };
 	}
 }

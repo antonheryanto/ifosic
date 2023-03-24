@@ -26,6 +26,12 @@ builder.Services.AddRazorPages();
 var app = builder.Build();
 // Error Page
 app.MapGet("/error/{path?}/{subPath?}", ExceptionalMiddleware.HandleRequestAsync);
+app.MapGet("/api/project/{id}", (int id) => {
+    var path = cfg.GetValue<string>("ProjectPath") ?? Path.Combine(Environment.CurrentDirectory, "projects");
+    var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
+    return Results.Ok(fdd);
+});
+
 app.UseExceptional();
 app.UseStaticFiles();
 app.UseRouting();
