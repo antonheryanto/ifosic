@@ -29,7 +29,13 @@ app.MapGet("/error/{path?}/{subPath?}", ExceptionalMiddleware.HandleRequestAsync
 app.MapGet("/api/project/{id}", (int id) => {
     var path = cfg.GetValue<string>("ProjectPath") ?? Path.Combine(Environment.CurrentDirectory, "projects");
     var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
-    return Results.Ok(fdd);
+    var data = new List<double[]>();
+    var start = 500;
+    var stop = 1200;
+	for (int i = 0; i < fdd.Traces.Count; i++)
+		for (int j = start; j < stop; j++)
+			data.Add(new double[] { fdd.Distance[j], i, fdd.Traces[i][j] });
+    return Results.Ok(new { start, stop, data });
 });
 
 app.UseExceptional();

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
+using Org.BouncyCastle.Utilities;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MMU.Ifosic.Web.Pages.Projects;
 
@@ -19,6 +21,8 @@ public class IndexModel : PageModel
     public FrequencyShiftDistance Data { get; set; } = new();
     public double[] Lines { get; set; } = Array.Empty<double>();
 	public double[] Boundaries { get; set; } = Array.Empty<double>();
+	public List<double[]> FreqDistance { get; set; } = new();
+
 
 	public async Task OnGetAsync(int id = 0)
     {
@@ -32,5 +36,10 @@ public class IndexModel : PageModel
         var index = Data.ToBoundariesIndex(Boundaries);
 		for (int i = 0; i < Data.Traces.Count; i++)
             Lines[i] = Data.Traces[i][800];
-	}
+        
+        for (var i = 0; i < Data.Traces.Count; i++)
+        {
+			FreqDistance.Add(new double[] { Data.Distance[i], Data.Traces[50][i] });
+	    }
+    }
 }

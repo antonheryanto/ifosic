@@ -3,20 +3,7 @@
 @{
 	ViewData["Title"] = "Project Details";
 }
-<div class="container">
-	<div class="card">
-		<div class="card-header">
-			<div class="d-flex align-items-center">
-				<h5 class="mr-auto card-title d-none d-lg-block">Heatmap plot</h5>
-				<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>
-			</div>
-		</div>
-		<div class="card-body">
-			<div id="plot3"></div>
-
-		</div>
-	</div>
-
+<div class="container">	
 	<div class="card">
 		<div class="card-header">
 			<div class="d-flex align-items-center">
@@ -30,6 +17,19 @@
 		<div class="card-body">
 			<div id="plot1"></div>
 			<div id="plot2"></div>
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card-header">
+			<div class="d-flex align-items-center">
+				<h5 class="mr-auto card-title d-none d-lg-block">Heatmap plot</h5>
+				<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>
+			</div>
+		</div>
+		<div class="card-body">
+			<div id="plot3"></div>
+
 		</div>
 	</div>
 
@@ -59,28 +59,25 @@
 
 @section scripts{
 	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/data.js"></script>	
+	<script src="https://code.highcharts.com/modules/heatmap.js"></script>
+	<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 	<script src="https://code.highcharts.com/modules/boost-canvas.js"></script>
 	<script src="https://code.highcharts.com/modules/boost.js"></script>
-	<script src="https://code.highcharts.com/modules/data.js"></script>
-	<script src="https://code.highcharts.com/modules/heatmap.js"></script>
 	<script>
 		var distances = @Json.Serialize(Model.Data.Distance);
 		var freq = @Json.Serialize(Model.Data.Traces[50]);
 		var times = @Json.Serialize(Model.Lines);
 		var boundaries = @Json.Serialize(Model.Boundaries);
 		var boundaryIndexes = @Json.Serialize(Model.Data.ToBoundariesIndex(Model.Boundaries));
-		var dates = @Json.Serialize(Model.Data.MeasurementStart);		
+		var dates = @Json.Serialize(Model.Data.MeasurementStart);
+		var freqDistance = @Json.Serialize(Model.FreqDistance);
 	</script>
 	<script>
-		var colors = ['rgba(68,3,169, 16)', 'rgba(43,165,18, 16)', 'rgba(50,90,224, 16)', 'rgba(13,233,75, 16)', 'rgba(109,249,16, 16)'];
+		var colors = ['rgba(68,3,169, 0.3)', 'rgba(43,165,18, 0.3)', 'rgba(50,90,224, 0.3)', 'rgba(13,233,75, 0.3)', 'rgba(109,249,16, 0.3)'];
 		var boundaryBands = [];
 		for (var i = 1; i < boundaries.length; i++) {
-			boundaryBands.push({ color: colors[i-1], from: boundaries[i-1], to: boundaries[i], label: { text: `F${i}` } });
-		}
-
-		var freqDistance = [];
-		for (var i = 0; i < distances.length; i++) {
-			freqDistance.push([distances[i], freq[i]]);
+			boundaryBands.push({ color: colors[i - 1], from: boundaries[i - 1], to: boundaries[i], label: { text: `F${i}` } });
 		}
 
 		var freqTimes = [];
@@ -136,27 +133,34 @@
 		});
 	</script>
 	<script>
-		function heatmap(fdd) {
-			let data = [];
-			let n = fdd.traces.length;
-			for (var i = 0; i < n; i++) {
-				for (var j = 0, k = boundaryIndexes[0] - 25; k < boundaryIndexes[boundaryIndexes.length - 1] + 25; j++, k++) {
-					data.push([distances[k], i, fdd.traces[i][k]]);
-				}
-			}
-
-			Highcharts.chart('plot3', {
+		let heatmapChart;
+		function heatmap(fdd) {			
+			return Highcharts.chart('plot3', {
+				chart: { type: 'heatmap' },
+				title: { text: ''},
+				legend: {enable: false},
+				tooltip: { enable: false },
 				yAxis: {
 					minPadding: 0,
 					maxPadding: 0,
 					startOnTick: false,
 					endOnTick: false,
 					reversed: true,
-					min: 0,
-					max: n,
 					title: { text: 'Times (hours)' }
 				},
 				xAxis: {
+					//plotBands: boundaryBands,
+					//min: 26,
+					//max: 60,
+					min: boundaries[0] - 5,
+					max: boundaries[boundaries.length - 1] + 5,
+					labels: {
+						align: 'left',
+						x: 5,
+						y: 14,
+						format: '{value}' // long month
+					},
+					showLastLabel: false,
 					title: { text: 'Distance (m)' }
 				},
 				colorAxis: {
@@ -168,22 +172,36 @@
 						[1.0, '#FF1D00']
 					],
 					min: -25,
-					max: 25
+					max: 25,
+					startOnTick: false,
+					endOnTick: false,
+					labels: {
+						format: '{value} GHz'
+					}
 				},
-				chart: { type: 'heatmap' },
 				boost: { useGPUTranslations: true },
 				series: [{
-					data,
+					showInLegend: false,
+					data: fdd.data,
 					boostThreshold: 100,
 					borderWidth: 0,
 					nullColor: '#EFEFEF',
+					tooltip: {
+						headerFormat: 'Frequency Shift<br/>',
+						pointFormat: '{point.x}:00: {point.y}:00: <b>{point.value} (Ghz)</b>'
+					},
+					turboThreshold: Number.MAX_VALUE // #3404, remove after 4.0.5 release
 				}]
 			});
 		}
 
 		function renderHeatMap() {
-			console.log('generate heatmap');
-			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}")', fdd => heatmap(fdd));
+			console.log('generate heatmap');			
+			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}")', fdd => {
+				const startTime = performance.now();
+				heatmapChart = heatmap(fdd);
+				console.log(`loaded in ${performance.now() - startTime} ms`);
+			});			
 		};
 	</script>
 	<script>
