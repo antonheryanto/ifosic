@@ -59,9 +59,11 @@
 
 @section scripts{
 	<script src="https://code.highcharts.com/highcharts.js"></script>
-	<script src="https://code.highcharts.com/modules/data.js"></script>	
+	<script src="https://code.highcharts.com/modules/annotations.js"></script>
+	<script src="https://code.highcharts.com/modules/data.js"></script>
 	<script src="https://code.highcharts.com/modules/heatmap.js"></script>
 	<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
 	<script src="https://code.highcharts.com/modules/boost-canvas.js"></script>
 	<script src="https://code.highcharts.com/modules/boost.js"></script>
 	<script>
@@ -91,7 +93,7 @@
 			title: { text: 'Frequency Shift (GHz)' } 
 		};
 
-		Highcharts.chart('plot1', {
+		const plot1 = Highcharts.chart('plot1', {
 			chart: { type: 'scatter', zoomType: 'xy' },
 			title: { text: 'Frequency shift vs Time' },
 			//subtitle: { text: 'show fiber boundaries' },
@@ -102,13 +104,12 @@
 				type: 'datetime'
 			},
 			series: [{
-				//color: 'blue',
 				data: freqTimes,
 				name: 'Frequency Shift'
 			}]
 		});
 
-		Highcharts.chart('plot2', {
+		const plot2 = Highcharts.chart('plot2', {
 			chart: { zoomType: 'xy' },
 			title: { text: 'Frequency shift vs Distance' },
 			legend: { enabled: false },
@@ -116,17 +117,28 @@
 			xAxis: { 
 				title: { text: 'Distance (m)' },
 				plotBands: boundaryBands,
-				min: boundaries[0] - 5,
+				min: boundaries[0] - 3,
 				max: boundaries[boundaries.length - 1] + 5,
 			},
 			tooltip: {
 				headerFormat: '<b>{series.name}</b><br>',
 				pointFormat: '{point.y:.2f} GHz at {point.x:.2f}m'
 			},
+			plotOptions: {
+				series: {
+					allowPointSelect: true
+				}
+			},
 			series: [{
+				zoneAxis: 'x',
+				zones: [
+					{ value: boundaries[0], color: '#eeeeee' },
+					{ value: boundaries[boundaries.length - 1], color: 'black' },
+					{ value: 100, color: '#eeeeee' },
+				],
 				type: 'line',
 				data: freqDistance,
-				color: 'black',
+				//color: 'black',
 				//lineWidth: 0.5,
 				name: 'Frequency Shift'
 			}]		
@@ -152,8 +164,8 @@
 					//plotBands: boundaryBands,
 					//min: 26,
 					//max: 60,
-					min: boundaries[0] - 5,
-					max: boundaries[boundaries.length - 1] + 5,
+					min: boundaries[0] - 3,
+					max: boundaries[boundaries.length - 1] + 4,
 					labels: {
 						align: 'left',
 						x: 5,
@@ -205,96 +217,108 @@
 		};
 	</script>
 	<script>
-		var freqFiber = [
-			["7/17/2018 1:53:00 AM", 0],
-			["7/17/2018 2:26:00 AM", 0],
-			["7/17/2018 2:29:00 AM", 5],
-			["7/17/2018 3:10:00 AM", 5],
-			["7/17/2018 3:55:00 AM", 5],
-			["7/17/2018 3:59:00 AM", 10],
-			["7/17/2018 4:55:00 AM", 10],
-			["7/17/2018 5:40:00 AM", 10],
-			["7/17/2018 5:52:00 AM", 15],
-			["7/17/2018 6:31:00 AM", 15],
-			["7/17/2018 7:13:00 AM", 15],
-			["7/17/2018 7:25:00 AM", 20],
-			["7/17/2018 7:53:00 AM", 20],
-			["7/17/2018 8:32:00 AM", 20],
-			["7/17/2018 8:43:00 AM", 25],
-			["7/17/2018 9:23:00 AM", 25],
-			["7/17/2018 10:01:00 AM",25],
-			["7/17/2018 10:07:00 AM",30],
-			["7/17/2018 10:52:00 AM",30],
-			["7/17/2018 11:32:00 AM",30],
-			["7/17/2018 11:53:00 AM",0],
-			["7/17/2018 2:45:00 PM", 0],
-			["7/17/2018 5:23:00 PM", 0],
-			["7/17/2018 8:21:00 PM", 0],
-			["7/17/2018 10:27:00 PM", 0],
-			["7/18/2018 12:46:00 AM", 0,],
-			["7/18/2018 1:07:00 AM", 30],
-			["7/18/2018 1:29:00 AM", 30],
-			["7/18/2018 1:35:00 AM", 25],
-			["7/18/2018 2:17:00 AM", 25],
-			["7/18/2018 2:58:00 AM", 25],
-			["7/18/2018 3:05:00 AM", 20],
-			["7/18/2018 3:53:00 AM", 20],
-			["7/18/2018 4:29:00 AM", 20],
-			["7/18/2018 4:41:00 AM", 15],
-			["7/18/2018 5:23:00 AM", 15],
-			["7/18/2018 5:58:00 AM", 15],
-			["7/18/2018 6:02:00 AM", 10],
-			["7/18/2018 6:49:00 AM", 10],
-			["7/18/2018 7:29:00 AM", 10],
-			["7/18/2018 7:32:00 AM", 5],
-			["7/18/2018 8:19:00 AM", 5],
-			["7/18/2018 8:58:00 AM", 5],
-			["7/18/2018 9:01:00 AM", 0],
-			["7/18/2018 9:58:00 AM", 0],
-			["7/18/2018 10:31:00 AM", 0],
+		var pressure = @Json.Serialize(Model.Data.References["Pressure"]);
+		var refFreq = [
+			0,0,
+			2.0,1.8,1.8,
+			4.4,4.6,4.2,
+			6.8, 7.0, 7.0,
+			9.8, 10, 10,
+			12.6, 12.8, 12.6,
+			15.4, 15.6, 15.4,
+			0, 0,0,0,0,0,
+			15.0, 15.4,
+			12.8, 12.8, 12.6,
+			10.2, 10, 10,
+			7.4, 7.2, 7.0,
+			4.4, 4.4, 4.4,
+			1.6, 1.4, 1.4,
+			0, 0,
 		];
-		//var freqFiber = [];
-		//for (var i = 0; i < temperatures.length; i++) {
-		//	freqFiber.push([Date.parse(dates[i]), temperatures[i]]);
-		//}
+		var fiberRef = []
+		var fiberFreq = []
+		for (var i = 0; i < pressure.length; i++) {
+			fiberRef.push([new Date(pressure[i].item1), pressure[i].item2])
+			fiberFreq.push([new Date(pressure[i].item1), refFreq[i] ?? 0])
+		}
+		
 
 		function fiber()
 		{
 			Highcharts.chart('plot4', {
-				chart: { type: 'scatter', zoomType: 'xy' },
+				chart: { zoomType: 'xy' },
 				title: { text: 'Fiber calibration' },
 				legend: { enabled: false },
-				yAxis: {
-					min: -5,
-					title: { text: 'Freq shift(Ghz)' },
-				},
+				yAxis: [{
+					min: 0,
+					max: 20,
+					title: { text: 'Frequency Shift (Ghz)' },
+				},{
+					opposite: true,
+					min: 0,
+					max: 40,
+					title: { text: 'Pressure (mA)' },
+				}],
 				xAxis: {
 					title: { text: 'Times (hours)' },
-					type: 'datetime'
 				},
 				series: [{
+					yAxis: 0,
+					type: 'scatter',
+					data: fiberFreq,
 					color: 'green',
-					type: 'line',
-					data: freqFiber,
+					
+				},{
+					yAxis: 1,
+					type: 'spline',
+					data: fiberRef,
+					dashStyle: 'dash',
+					color: 'black',
 					name: 'Frequency Shift'
 				}]
 			});
 
-			Highcharts.chart('plot5', {
+			const plot5 = Highcharts.chart('plot5', {
 				title: {
-					text: 'Scatter plot with regression line'
+					text: 'Regression line off Presure vs Frequency Shift'
 				},
 				xAxis: {
-					min: -0.5,
-					max: 5.5
+					title: { text: 'Pressure (mA)' },
+					min: 0,
+					max: 40
 				},
 				yAxis: {
-					min: 0
+					title: { text: 'Frequency Shift (GHz)' },
+					min: 0,
+					max: 25
 				},
+				annotations: [{
+					draggable: '',
+					labelOptions: {
+						backgroundColor: 'rgba(255,255,255,0.5)',
+						verticalAlign: 'top',
+					},
+					labels: [{
+						point: {
+							xAxis: 0,
+							yAxis: 0,
+							x: 25,
+							y: 15
+						},
+						text: 'Fiber Coefficents = 0.5253'
+					}]
+				}],
 				series: [{
 					type: 'line',
-					name: 'Regression Line',
-					data: [[0, 1.11], [5, 4.51]],
+					name: 'Regression Line',					
+					data: [
+						[5, 2.07],
+						[10, 4.7],
+						[15, 7.32],
+						[20, 9.95],
+						[25, 12.58],
+						[30, 15.2],
+					],
 					marker: {
 						enabled: false
 					},
@@ -307,7 +331,14 @@
 				}, {
 					type: 'scatter',
 					name: 'Observations',
-					data: [1, 1.5, 2.8, 3.5, 3.9, 4.2],
+					data: [
+						[5, 1.87],
+						[10, 4.4],
+						[15, 6.93],
+						[20, 9.93],
+						[25, 12.67],
+						[30, 15.47],
+					],
 					marker: {
 						radius: 4
 					}

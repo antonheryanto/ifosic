@@ -21,7 +21,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 });
 builder.Services.AddDbContext<Db>(o => o.UseSqlite(cn));
 builder.Services.AddEmail(cfg);
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages().AddJsonOptions(o => o.JsonSerializerOptions.IncludeFields = true);
 
 var app = builder.Build();
 // Error Page
@@ -29,9 +29,11 @@ app.MapGet("/error/{path?}/{subPath?}", ExceptionalMiddleware.HandleRequestAsync
 app.MapGet("/api/project/{id}", (int id) => {
     var path = cfg.GetValue<string>("ProjectPath") ?? Path.Combine(Environment.CurrentDirectory, "projects");
     var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
+    var boundaries = new double[] { fdd.Boundaries[0] - 3, fdd.Boundaries[^1] + 5 };
+    var indexes = fdd.ToBoundariesIndex(boundaries);
     var data = new List<double[]>();
-    var start = 500;
-    var stop = 1200;
+    var start = indexes[0];
+    var stop = indexes[1];
 	for (int i = 0; i < fdd.Traces.Count; i++)
 		for (int j = start; j < stop; j++)
 			data.Add(new double[] { fdd.Distance[j], i, fdd.Traces[i][j] });

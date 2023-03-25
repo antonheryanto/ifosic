@@ -1,5 +1,6 @@
 ﻿using MemoryPack;
 using MemoryPack.Compression;
+using System.Collections.Generic;
 using System.IO.Compression;
 
 namespace MMU.Ifosic.Models;
@@ -9,9 +10,43 @@ public partial class FrequencyShiftDistance
 {
     public Dictionary<string, string> Info { get; set; } = new();
     public List<double> Distance { get; set; } = new();    
+    public List<double> Boundaries { get; set; } = new();
+	public Dictionary<string, List<(DateTime Date, double Value)>> References { get; set; } = new();
 	public List<double[]> Traces { get; set; } = new();
     public List<DateTime?> MeasurementStart { get; set; } = new();
     public List<DateTime?> MeasurementEnd { get; set; } = new();
+
+    public void AddReference(string fileName)
+    {
+        using var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream);
+        string name = "Refence";
+        var rows = new List<(DateTime Date, double Value)>();
+		bool headerParse = false;
+        int i = 0;
+        while (!reader.EndOfStream)
+        {
+            var line = reader.ReadLine();
+            if (string.IsNullOrEmpty(line))
+                continue;
+			var cols = line.Split(',');
+            if (cols.Length < 2)
+                break;
+
+			if (!headerParse)
+            {
+                name = cols[1].Trim();
+                headerParse = true;
+                continue;
+            }
+
+            var d = DateTime.Now;
+            rows.Add((DateTime.TryParse(cols[0], out var date) ? date
+                : new DateTime(d.Year, d.Month, d.Day).AddHours(i++),
+                double.TryParse(cols[1], out var value) ? value : 0));
+		}
+        References[name] = rows;
+    }
 
     public static FrequencyShiftDistance Load(string fileName)
     {
@@ -22,7 +57,7 @@ public partial class FrequencyShiftDistance
         if (ext != ".zip")
             return o;
         o.ExtractFromZip(fileName);
-        o.Save(fileName.Replace(".zip", ".bin"));
+        //o.Save(fileName.Replace(".zip", ".bin"));
         return o;
     }
 
@@ -66,17 +101,17 @@ public partial class FrequencyShiftDistance
         }
     }
 
-    bool Save(string file)
+    public bool Save(string fileName)
     {
         using var compressor = new BrotliCompressor();
         MemoryPackSerializer.Serialize(compressor, this);
-        File.WriteAllBytes(file, compressor.ToArray());
+        File.WriteAllBytes(fileName, compressor.ToArray());
         return true;
     }
 
-    public static FrequencyShiftDistance? LoadBin(string file)
+    public static FrequencyShiftDistance? LoadBin(string fileName)
     {
-        var bin = File.ReadAllBytes(file);
+        var bin = File.ReadAllBytes(fileName);
         using var decompressor = new BrotliDecompressor();
         var decompressedBuffer = decompressor.Decompress(bin);
         return MemoryPackSerializer.Deserialize<FrequencyShiftDistance>(decompressedBuffer);
