@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
-using System.Data;
 
 namespace MMU.Ifosic.Web.Pages.Fibers;
 
@@ -15,13 +13,24 @@ public class EditModel : PageModel
     {
         _db = db;
     }
-    public Fiber Item { get; set; } = new();
+    [BindProperty] public Fiber Item { get; set; } = new();
 
-	public async Task OnGetAsync(int id = 0)
+    public async Task<IActionResult> OnGetAsync(int id = 0)
     {
         if (id < 0)
-            return;
+            return Redirect("~/fibers"); //disable create 
 
-		Item = await _db.Fibers.FindAsync(id) ?? new();
-	}
+        Item = await _db.Fibers.FindAsync(id) ?? new();
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        if (Item.Id == 0)
+            return Page();
+        
+        _db.Update(Item);
+        await _db.SaveChangesAsync();
+        return Redirect("~/fibers");
+    }
 }

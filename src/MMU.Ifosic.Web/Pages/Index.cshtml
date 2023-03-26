@@ -30,11 +30,9 @@
 								</div>
 							</div>
 							<div class="card-body border">
-							@if (m.Fibers?.Count > 0) {
-								@foreach (var f in m.Fibers) {
-									@f.Name<br />
-								}
-							}
+								<small>@m.Description</small><br />
+								Number of fibers @m.Fibers?.Count<br />
+								Layout: @m.Layout
 							</div>
 							<div class="card-footer">
 								<div class="d-flex align-items-center">

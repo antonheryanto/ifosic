@@ -43,22 +43,15 @@ public class Db : DbContext
         b.Entity<User>().HasMany(s => s.Roles).WithMany(s => s.Users).UsingEntity(j => j.HasData(new { RolesId = 1, UsersId = 1 }));
         // init node
         b.Entity<Node>().HasData(new Node { Id = 1, Title = "Term and Condition", Body = "Term and Condition", IsPublished = true, UserId = 1 });
-
-        b.Entity<Fiber>().HasData(
-            new Fiber { Id = 1, Coefficient = 0.1000, Name = "Fiber 1" },
-            new Fiber { Id = 2, Coefficient = 0.6340, Name = "Fiber 2" },
-            new Fiber { Id = 3, Coefficient = 0.5477, Name = "Fiber 3" },
-            new Fiber { Id = 4, Coefficient = 0.6602, Name = "Fiber 4" },
-            new Fiber { Id = 5, Coefficient = 0.5682, Name = "Fiber 5" }
-        );
         b.Entity<Project>().HasData(new Project { Id = 1, Name = "Set 1", CreatedById = 1, UpdatedById = 1 });
-        b.Entity<Project>().HasMany(s => s.Fibers).WithMany(s => s.Projects).UsingEntity(j => j.HasData(
-            new { FibersId = 1, ProjectsId = 1 },
-            new { FibersId = 2, ProjectsId = 1 },
-            new { FibersId = 3, ProjectsId = 1 },
-            new { FibersId = 4, ProjectsId = 1 },
-            new { FibersId = 5, ProjectsId = 1 }
-        ));
-
+        var list = new List<Fiber>
+        {
+            new Fiber { Id = 1, Coefficient = 0.1000, Name = "Fiber 1", ProjectId = 1 },
+            new Fiber { Id = 2, Coefficient = 0.6340, Name = "Fiber 2", ProjectId = 1 },
+            new Fiber { Id = 3, Coefficient = 0.5477, Name = "Fiber 3", ProjectId = 1 },
+            new Fiber { Id = 4, Coefficient = 0.6602, Name = "Fiber 4", ProjectId = 1 },
+            new Fiber { Id = 5, Coefficient = 0.5682, Name = "Fiber 5", ProjectId = 1 }
+        };
+        b.Entity<Fiber>().HasData(list);
     }
 }

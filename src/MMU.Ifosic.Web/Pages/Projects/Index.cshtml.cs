@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
@@ -24,12 +25,14 @@ public class IndexModel : PageModel
 	public List<double[]> FreqDistance { get; set; } = new();
 
 
-	public async Task OnGetAsync(int id = 0)
+	public async Task<IActionResult> OnGetAsync(int id = 0)
     {
-        if (id < 0)
-            return;
+        if (id < 1)
+            return Redirect("~/");
         Item = await _db.Projects.Include(i => i.Fibers)
             .FirstOrDefaultAsync(f => f.Id == id) ?? new();
+        Item.NumberOfFiber = Item.Fibers?.Count ?? Item.NumberOfFiber;
+        // load data
 		Data = FrequencyShiftDistance.Load(Path.Combine(_path, $"{id}.bin"));        
         Lines = new double[Data.Traces.Count];
 		Boundaries = new double[] { 33.57, 35.21, 38.45, 41.74, 45.12, 46.82 };
@@ -41,5 +44,7 @@ public class IndexModel : PageModel
         {
 			FreqDistance.Add(new double[] { Data.Distance[i], Data.Traces[50][i] });
 	    }
+
+        return Page();
     }
 }

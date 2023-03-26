@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
@@ -25,6 +24,6 @@ public class IndexModel : PageModel
             Item = await _db.Fibers.FindAsync(id) ?? new();
             return;
         }
-        Items = await _db.Fibers.Include(i => i.Projects).ToListAsync();
+        Items = await _db.Fibers.Include(i => i.Project).ToListAsync();
     }
 }

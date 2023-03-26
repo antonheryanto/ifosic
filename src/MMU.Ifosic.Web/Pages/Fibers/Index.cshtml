@@ -10,10 +10,12 @@
 		<div class="card-header">
 			<div class="d-flex align-items-center">
 				<h5 class="mr-auto card-title d-none d-lg-block">@(isList ? "List of Fibers" : Model.Item.Name)</h5>
+				@if (!isList) {
 				<a class="ml-1 align-self-end btn btn-sm btn-outline-primary" href="~/fibers/edit@(isList ? "" : $"/{Model.Item.Id}")">
 					<i class="fas fa-plus d-lg-none"></i>
 					<span class="d-none d-lg-block"><i class="fas fa-plus"></i>@(isList ? "Add" : "Edit")</span>
 				</a>
+				}
 			</div>
 		</div>
 		<div class="card-body">
@@ -31,19 +33,19 @@
 						<div class="card border">
 							<div class="card-header">
 								<div class="d-flex align-items-center">
-									<h4 class="mr-auto card-title"><a href="~/fibers/@m.Id">@m.Name</a></h4>
+									<h4 class="mr-auto card-title"><a href="~/fibers/@m.Id">@m.Project?.Name : @m.Name</a></h4>
 									<div class="ml-auto align-self-end">
 										<a class="btn btn-sm btn-outline-primary" href="~/fibers/edit/@m.Id"><i class="fas fa-edit"></i> Edit</a>
 									</div>
 								</div>
 							</div>
-							<div class="card-body border">
-								<h6>Used by Projects:</h6>
-							@if (m.Projects?.Count > 0) {
-									@foreach (var f in m.Projects) {
-										<a href="~/projects/@f.Id">@f.Name</a><br />
-									}
+							<div class="card-body border">						
+							@if (m.Project is not null) {
+								<a href="~/projects/@m.Project.Id?fiber=@m.Id">
+									please refer to the	@m.Project.Name for details.
+								</a><br />
 							}
+
 							</div>
 						</div>
 					</div>
