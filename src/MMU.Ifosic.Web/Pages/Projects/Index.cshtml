@@ -2,6 +2,7 @@
 @model IndexModel
 @{
 	ViewData["Title"] = "Project Details";
+	var url = $"//{Request.Host}{Request.PathBase}/api/project/{Model.Item.Id}";
 }
 <div class="container">	
 	<div class="card">
@@ -12,6 +13,18 @@
 					<i class="fas fa-plus d-lg-none"></i>
 					<span class="d-none d-lg-block"><i class="fas fa-plus"></i>Edit</span>
 				</a>
+			</div>
+		</div>
+		<div class="card-body">
+			<p>@Model.Item.Description</p>
+			Number of Fiber: @Model.Item.Fibers?.Count
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card-header">
+			<div class="d-flex align-items-center">
+				<h5 class="mr-auto card-title d-none d-lg-block">Frequency Shift</h5>				
 			</div>
 		</div>
 		<div class="card-body">
@@ -70,9 +83,9 @@
 		var distances = @Json.Serialize(Model.Data.Distance);
 		var freq = @Json.Serialize(Model.Data.Traces[50]);
 		var times = @Json.Serialize(Model.Lines);
-		var boundaries = @Json.Serialize(Model.Boundaries);
-		var boundaryIndexes = @Json.Serialize(Model.Data.ToBoundariesIndex(Model.Boundaries));
-		var dates = @Json.Serialize(Model.Data.MeasurementStart);
+		var boundaries = @Json.Serialize(Model.Data.Boundaries);
+		var boundaryIndexes = @Json.Serialize(Model.Data.Boundaries);
+		var rawDates = @Json.Serialize(Model.Data.MeasurementStart);
 		var freqDistance = @Json.Serialize(Model.FreqDistance);
 	</script>
 	<script>
@@ -82,14 +95,19 @@
 			boundaryBands.push({ color: colors[i - 1], from: boundaries[i - 1], to: boundaries[i], label: { text: `F${i}` } });
 		}
 
+		var dates = []
+		for (var i = 0; i < rawDates.length; i++) {
+			dates.push(Date.parse(rawDates[i]));
+		}
+
 		var freqTimes = [];
 		for (var i = 0; i < times.length; i++) {
-			freqTimes.push([new Date(dates[i]), times[i]]);
+			freqTimes.push([dates[i], times[i]]);
 		}
 
 		var yAxis = { 
 			min: -5,
-			max: 20,
+			max: 25,
 			title: { text: 'Frequency Shift (GHz)' } 
 		};
 
@@ -99,18 +117,36 @@
 			//subtitle: { text: 'show fiber boundaries' },
 			legend: { enabled: false },
 			yAxis,
-			xAxis: { 
+			xAxis: {
 				title: { text: 'Times (hours)' },
 				type: 'datetime'
+			},
+			plotOptions: {
+				series: {
+					cursor: 'pointer',
+					point: {
+						events: {
+							click: function () {
+								var index = dates.indexOf(this.x);
+								var url = `@(url)/location/${index}`;
+								Highcharts.getJSON(url, data => plot2.series[0].setData(data));
+							}
+						}
+					}
+				},
+				allowPointSelect: true
 			},
 			series: [{
 				data: freqTimes,
 				name: 'Frequency Shift'
 			}]
 		});
+		
 
 		const plot2 = Highcharts.chart('plot2', {
-			chart: { zoomType: 'xy' },
+			chart: {				
+				zoomType: 'xy' 
+			},
 			title: { text: 'Frequency shift vs Distance' },
 			legend: { enabled: false },
 			yAxis,
@@ -126,8 +162,24 @@
 			},
 			plotOptions: {
 				series: {
-					allowPointSelect: true
-				}
+					cursor: 'pointer',
+					point: {
+						events: {
+							click: function () {
+								var index = distances.indexOf(this.x);
+								var url = `@(url)/time/${index}`;
+								Highcharts.getJSON(url, data => {
+									var freqData = [];
+									for (var i = 0; i < data.length; i++) {
+										freqData.push([dates[i], data[i]]);
+									}
+									plot1.series[0].setData(freqData);
+								});
+							}
+						}
+					}
+				},
+				allowPointSelect: true
 			},
 			series: [{
 				zoneAxis: 'x',
@@ -157,7 +209,7 @@
 					maxPadding: 0,
 					startOnTick: false,
 					endOnTick: false,
-					reversed: true,
+					//reversed: true,
 					title: { text: 'Times (hours)' }
 				},
 				xAxis: {
@@ -217,7 +269,9 @@
 		};
 	</script>
 	<script>
-		var pressure = @Json.Serialize(Model.Data.References["Pressure"]);
+		var pressure = @(!Model.Data.References.ContainsKey("Pressure") ? "[]" : Json.Serialize(Model.Data.References["Pressure"]));
+		var fiberRef = []
+		var fiberFreq = []
 		var refFreq = [
 			0,0,
 			2.0,1.8,1.8,
@@ -235,8 +289,7 @@
 			1.6, 1.4, 1.4,
 			0, 0,
 		];
-		var fiberRef = []
-		var fiberFreq = []
+		
 		for (var i = 0; i < pressure.length; i++) {
 			fiberRef.push([new Date(pressure[i].item1), pressure[i].item2])
 			fiberFreq.push([new Date(pressure[i].item1), refFreq[i] ?? 0])
@@ -278,7 +331,7 @@
 				}]
 			});
 
-			const plot5 = Highcharts.chart('plot5', {
+			Highcharts.chart('plot5', {
 				title: {
 					text: 'Regression line off Presure vs Frequency Shift'
 				},

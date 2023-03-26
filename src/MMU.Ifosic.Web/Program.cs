@@ -2,6 +2,7 @@ using MMU.Ifosic.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Exceptional;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -24,10 +25,10 @@ builder.Services.AddEmail(cfg);
 builder.Services.AddRazorPages().AddJsonOptions(o => o.JsonSerializerOptions.IncludeFields = true);
 
 var app = builder.Build();
+var path = cfg.GetValue<string>("ProjectPath") ?? Path.Combine(Environment.CurrentDirectory, "projects");
 // Error Page
 app.MapGet("/error/{path?}/{subPath?}", ExceptionalMiddleware.HandleRequestAsync);
 app.MapGet("/api/project/{id}", (int id) => {
-    var path = cfg.GetValue<string>("ProjectPath") ?? Path.Combine(Environment.CurrentDirectory, "projects");
     var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
     var boundaries = new double[] { fdd.Boundaries[0] - 3, fdd.Boundaries[^1] + 5 };
     var indexes = fdd.ToBoundariesIndex(boundaries);
@@ -38,6 +39,23 @@ app.MapGet("/api/project/{id}", (int id) => {
 		for (int j = start; j < stop; j++)
 			data.Add(new double[] { fdd.Distance[j], i, fdd.Traces[i][j] });
     return Results.Ok(new { start, stop, data });
+});
+app.MapGet("/api/project/{id}/time/{location}", (int id, int location) =>
+{
+	var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
+	var freq = new double[fdd.Traces.Count];
+	for (int i = 0; i < fdd.Traces.Count; i++)
+		freq[i] = fdd.Traces[i][location];
+	return Results.Ok(freq);
+});
+
+app.MapGet("/api/project/{id}/location/{time}", (int id, int time) =>
+{
+	var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
+	var freq = new double[fdd.Distance.Count][];
+	for (var i = 0; i < freq.Length; i++)
+		freq[i] = new double[] { fdd.Distance[i], fdd.Traces[time][i] };
+	return Results.Ok(freq);
 });
 
 app.UseExceptional();

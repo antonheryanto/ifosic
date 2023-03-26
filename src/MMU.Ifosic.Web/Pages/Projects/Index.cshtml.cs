@@ -20,12 +20,10 @@ public class IndexModel : PageModel
     }
     public Project Item { get; set; } = new();
     public FrequencyShiftDistance Data { get; set; } = new();
-    public double[] Lines { get; set; } = Array.Empty<double>();
-	public double[] Boundaries { get; set; } = Array.Empty<double>();
+    public List<double> Lines { get; set; } = new();
 	public List<double[]> FreqDistance { get; set; } = new();
 
-
-	public async Task<IActionResult> OnGetAsync(int id = 0)
+	public async Task<IActionResult> OnGetAsync(int id = 0, int location = 800, int time = 50)
     {
         if (id < 1)
             return Redirect("~/");
@@ -34,16 +32,11 @@ public class IndexModel : PageModel
         Item.NumberOfFiber = Item.Fibers?.Count ?? Item.NumberOfFiber;
         // load data
 		Data = FrequencyShiftDistance.Load(Path.Combine(_path, $"{id}.bin"));        
-        Lines = new double[Data.Traces.Count];
-		Boundaries = new double[] { 33.57, 35.21, 38.45, 41.74, 45.12, 46.82 };
-        var index = Data.ToBoundariesIndex(Boundaries);
 		for (int i = 0; i < Data.Traces.Count; i++)
-            Lines[i] = Data.Traces[i][800];
+            Lines.Add(Data.Traces[i][location]);
         
-        for (var i = 0; i < Data.Traces.Count; i++)
-        {
-			FreqDistance.Add(new double[] { Data.Distance[i], Data.Traces[50][i] });
-	    }
+        for (var i = 0; i < Data.Distance.Count; i++)
+			FreqDistance.Add(new double[] { Data.Distance[i], Data.Traces[time][i] });
 
         return Page();
     }

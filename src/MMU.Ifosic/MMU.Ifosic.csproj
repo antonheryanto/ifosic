@@ -1,14 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-	<OutputType>Exe</OutputType>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<TargetFramework>net7.0-windows</TargetFramework>
+		<OutputType>WinExe</OutputType>
+		<UseWindowsForms>true</UseWindowsForms>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MemoryPack" Version="1.9.13" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="MemoryPack" Version="1.9.13" />
+		<PackageReference Include="MessagePack" Version="2.5.108" />
+		<PackageReference Include="OxyPlot.WindowsForms" Version="2.1.2" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.0" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<Compile Include="..\MMU.Ifosic.Web\Models\FrequencyShiftDistance.cs">
+			<Link>Models\FrequencyShiftDistance.cs</Link>
+		</Compile>
+	</ItemGroup>
 </Project>

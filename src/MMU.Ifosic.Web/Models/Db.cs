@@ -43,15 +43,20 @@ public class Db : DbContext
         b.Entity<User>().HasMany(s => s.Roles).WithMany(s => s.Users).UsingEntity(j => j.HasData(new { RolesId = 1, UsersId = 1 }));
         // init node
         b.Entity<Node>().HasData(new Node { Id = 1, Title = "Term and Condition", Body = "Term and Condition", IsPublished = true, UserId = 1 });
-        b.Entity<Project>().HasData(new Project { Id = 1, Name = "Set 1", CreatedById = 1, UpdatedById = 1 });
-        var list = new List<Fiber>
+        var projects = new List<Project>
         {
-            new Fiber { Id = 1, Coefficient = 0.1000, Name = "Fiber 1", ProjectId = 1 },
-            new Fiber { Id = 2, Coefficient = 0.6340, Name = "Fiber 2", ProjectId = 1 },
-            new Fiber { Id = 3, Coefficient = 0.5477, Name = "Fiber 3", ProjectId = 1 },
-            new Fiber { Id = 4, Coefficient = 0.6602, Name = "Fiber 4", ProjectId = 1 },
-            new Fiber { Id = 5, Coefficient = 0.5682, Name = "Fiber 5", ProjectId = 1 }
+            new Project { Id = 1, Name = "Set 1", CreatedById = 1, UpdatedById = 1, NumberOfFiber = 5 },
+            new Project { Id = 2, Name = "Set 2", CreatedById = 1, UpdatedById = 1, NumberOfFiber = 6 },
+            new Project { Id = 3, Name = "Set 3", CreatedById = 1, UpdatedById = 1, NumberOfFiber = 6 }
         };
-        b.Entity<Fiber>().HasData(list);
+        b.Entity<Project>().HasData(projects);
+        var fibers = new List<Fiber>();
+		for (int j = 0, k = 1; j < projects.Count; j++)
+		{
+            for (int i = 0; i < projects[j].NumberOfFiber; i++, k++)
+                fibers.Add(new Fiber { Id = k, Name = $"Fiber {i}", ProjectId = projects[j].Id });
+        }
+
+        b.Entity<Fiber>().HasData(fibers);
     }
 }
