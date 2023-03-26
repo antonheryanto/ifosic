@@ -3,10 +3,11 @@ using MMU.Ifosic.Models;
 using OxyPlot;
 using OxyPlot.WindowsForms;
 
-var fdd = FrequencyShiftDistance.Load(@"C:\Projects\MMU\Set03.zip");
-//fdd.GetBoundary(@"C:\Projects\MMU\Set02\Set02_Results.txt");
-//fdd.AddReference(@"C:\Projects\MMU\Set01\pressure.csv");
-//fdd.Save(@"C:\Projects\MMU\projects\3.bin");
+var id = 3;
+var path = $@"C:\\Projects\\MMU\\Set0{id}";
+var fdd = FrequencyShiftDistance.Load($"{path}.zip");
+fdd.AddReference($@"{path}\\pressure.csv");
+fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
 //fdd.ToMessagePack(@"C:\Projects\MMU\ifosic\src\Python\Set01.msgpack");
 
 // get freq on certain distance for range of time
