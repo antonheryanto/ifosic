@@ -53,11 +53,13 @@
                             <div><i class="fa fa-envelope"></i> @m.Email</div>
                             <span class="badge badge-success">@(m.IsActive ? "Active" : "Inactive")</span>
                             <span class="badge badge-warning">@Html.Raw(string.Join("</span> <span class='badge badge-warning'>", (m.Roles ?? new()).Select(s => s.Name)))</span>
+                        @if (!m.IsActive) {
                             <div><a class="btn btn-secondary" target="_blank" href="~/users/edit?token=@m.Token">Activation Link</a></div>
+                        }
                             <div class="text-muted">Last Sign in at: @m.SignInDate?.ToLocalTime()</div>
                         </div>
                         <div class="card-footer">
-                            <div class="d-flex align-items-center">                                
+                            <div class="d-flex align-items-center text-muted">
                                 Last Update At: @m.UpdatedDate.ToLocalTime()
                             </div>
                         </div>

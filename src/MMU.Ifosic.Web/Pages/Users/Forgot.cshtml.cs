@@ -32,12 +32,12 @@ public class ForgotModel : PageModel
     public async Task<IActionResult> OnPostAsync([FromServices] EmailService email, string? token)
     {
         if (string.IsNullOrEmpty(Email))
-            ModelState.AddModelError(nameof(Email), "please specifiy email");
+            ModelState.AddModelError(nameof(Email), "Please specifiy email");
 
         if (!string.IsNullOrEmpty(token) && (string.IsNullOrEmpty(Password) || Password != Confirm))
         {
-            ModelState.AddModelError(nameof(Password), "Katalaluan tak sama");
-            ModelState.AddModelError(nameof(Confirm), "Katalaluan tak sama");
+            ModelState.AddModelError(nameof(Password), "Password is not match");
+            ModelState.AddModelError(nameof(Confirm), "Password is not match");
         }
 
         if (!ModelState.IsValid)
@@ -62,16 +62,17 @@ public class ForgotModel : PageModel
 
         item.Token ??= item?.Email?.Encrypt().Password.Replace("+", "=");
         await _db.SaveChangesAsync();
+        const string APP_NAME = "Inteligent DFOS Characterisation System";
         Message = "A reset link has been sent to your registered email";
         var body = $@"
-                    You're receiving this e-mail because you requested a password reset for your user account at Sistem Khairat Surau Al-Amin.
+                    You're receiving this e-mail because you requested a password reset for your user account at {APP_NAME}.
                     <br><br>
-                    Please go to the <a href='{Request.Scheme}://{Request.Host}/users/forgot?token={item?.Token}'>following page and choose a new password</a>
+                    Please go to the <a href='https://{Request.Host}/users/forgot?token={item?.Token}'>following page and choose a new password</a>
                     <br><br>
-                    Your username, in case you've forgotten:{Email}
+                    Your username, in case you've forgotten: {Email}
                     <br><br>
                     Thank you.";
-        await email.SendAsync("Reset password at Khairat Surau Al-Amin", body, new MimeKit.MailboxAddress(item?.Name, item?.Email));
+        await email.SendAsync($"Reset password at {APP_NAME}", body, new MimeKit.MailboxAddress(item?.Name, item?.Email));
         return Page();
     }
 }

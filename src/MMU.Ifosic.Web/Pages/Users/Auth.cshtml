@@ -1,23 +1,10 @@
 ﻿@page "{id?}"
 @model AuthModel
 @{
-    ViewData["Title"] = "Log Masuk";
-    Layout = null;
+    ViewData["Title"] = "Authentication";
+    Layout = "_LayoutAnonymous";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Klinik</title>
-    <link rel="icon" href="~/img/mmu_icon.png">
-    @*<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />*@
-    <link rel="stylesheet" href="~/css/adminlte.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Klinik.styles.css" asp-append-version="true" />
-</head>
-<body class="hold-transition layout-top-nav" style="background-image: url('/img/background.png');align-items: flex-start;padding: 10%;">
 <div class="container">
     <div class="row">
         <div class="col-lg-6">
@@ -70,5 +57,3 @@
 @section scripts{
     <partial name="_ValidationScriptsPartial" />
 }
-</body>
-</html>

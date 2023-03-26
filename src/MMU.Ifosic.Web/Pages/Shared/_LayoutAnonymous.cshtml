@@ -1,0 +1,15 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Klinik</title>
+    <link rel="icon" href="~/img/mmu_icon.png">
+    <link rel="stylesheet" href="~/css/adminlte.min.css" />
+</head>
+<body class="hold-transition layout-top-nav" style="background-image: url('/img/background.png');align-items: flex-start;padding: 10%;">
+    @RenderBody()
+
+    @await RenderSectionAsync("scripts", required: false)
+</body>
+</html>

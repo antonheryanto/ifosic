@@ -52,7 +52,8 @@ public class EditModel : PageModel
     }
 
     static readonly TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-    const string EXIST = "sudah berdaftar";
+    const string EXIST = "is already registered";
+    const string PASSWORD_INVALID = "Password is not match";
     // validate IC or Passport
     public async Task<IActionResult> OnPostAsync([FromServices] EmailService email)
     {
@@ -61,19 +62,18 @@ public class EditModel : PageModel
 
         if (!User.IsLogged() && !string.IsNullOrEmpty(Item.Token) && (Password.IsNullOrEmpty() || Item.Password != Password))
         {
-            ModelState.AddModelError($"{nameof(Item)}.{nameof(Password)}", $"Katalaluan tak sama");
-            ModelState.AddModelError(nameof(Password), $"Katalaluan tak sama");
+            ModelState.AddModelError($"{nameof(Item)}.{nameof(Password)}", PASSWORD_INVALID);
+            ModelState.AddModelError(nameof(Password), PASSWORD_INVALID);
         }
         // validate email
         if (await _db.Users.AnyAsync(a => a.Email == Item.Email && (Item.Id == 0 || (Item.Id > 0 && a.Id != Item.Id))))
             ModelState.AddModelError(nameof(Item.Email), $"Emel {EXIST}");
         // validate phone
-        if (await _db.Users.AnyAsync(a => a.Phone == Item.Phone && (Item.Id == 0 || (Item.Id > 0 && a.Id != Item.Id))))
-            ModelState.AddModelError(nameof(Item.Phone), $"Telefon {EXIST}");
-        // validate ic or password
+        //if (await _db.Users.AnyAsync(a => a.Phone == Item.Phone && (Item.Id == 0 || (Item.Id > 0 && a.Id != Item.Id))))
+        //    ModelState.AddModelError(nameof(Item.Phone), $"Telefon {EXIST}");
         
         if (!User.IsLogged() && Item.Token is not null && !IsAgree)
-            ModelState.AddModelError(nameof(IsAgree), $"Sila pastikan terma dan syarat");
+            ModelState.AddModelError(nameof(IsAgree), $"Please agree to terms and conditions.");
         // make sure all data valid
         if (!ModelState.IsValid)
             return Page();
