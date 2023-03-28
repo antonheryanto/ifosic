@@ -5,130 +5,100 @@
 # label data generated using boundaries
 
 import msgpack
-import time
 import torch
 import torch.utils.data
-import torch.nn as nn
-import torch.optim as optim
-import torchvision
 
 def FromMessagePack(filename):
     with open(filename, "rb") as data_file:
         byte_data = data_file.read()
     data_loaded = msgpack.unpackb(byte_data)
     return data_loaded
-
-def ToMessagePack(data, filename):
-    with open(filename, "wb") as outfile:
-        packed = msgpack.packb(data)
-        outfile.write(packed)
-
-class Dataset(torch.utils.data.Dataset):
-    def __init__(self, filename: str):
-        # boundaryIndexes = [654,686,750,814,879,913]
-        # generate label noise or measurement
-        # generate base 16 input
-        data = FromMessagePack(filename)
-        index = data["BoundaryIndexes"]
-        self.traces = torch.tensor(data["Traces"])
-        
-        print(self.traces.shape)
-        self.traces = torchvision.transforms.Resize(self.traces, self.traces.shape[0].item(), 1024)
-        print(self.traces.shape)
-        self.labels = torch.zeros(self.traces.shape[0]).long()
-        self.labels[index[0]:index[-1]] = 1
-
-    def __getitem__(self, index):
-        return self.traces[index].unsqueeze(0), self.labels[index]
-    
-    def __len__(self):
-        return len(self.labels)
-
-class FreqCNN(nn.Module):
-    def __init__(self, features = 8):
-        super(FreqCNN, self).__init__()
-        self.feature = nn.Sequential(
-            nn.Conv1d(1, features, 3),
-            nn.BatchNorm1d(num_features=features),
-            nn.ReLU(inplace=True),
-            nn.Conv1d(features, features * 2, 3),
-            nn.BatchNorm1d(num_features= features * 2),
-            nn.ReLU(inplace=True),
-        )
-        self.fc = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(16 * 1946, 256),
-            nn.Linear(256, 2),
-        )
-
-    def forward(self, x):
-        x = self.feature(x)
-        x = self.fc(x)
-        return x
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # device object
-
-def train(train_loader, test_loader, model, output_path="model.pth"):
-    num_epochs = 5   #(set no of epochs)
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    criterion = nn.CrossEntropyLoss()
-    start_time = time.time() #(for showing time)
-    max_acc = 0
-    for epoch in range(num_epochs): #(loop for every epoch)
-        """ Training Phase """
-        model.train()    #(training model)
-        train_loss = 0.   #(set loss 0)
-        train_corrects = 0 
-        # load a batch data of images    
-        for i, (inputs, labels) in enumerate(train_loader):
-            inputs = inputs.to(device)
-            labels = labels.to(device) 
-            # forward inputs and get output
-            optimizer.zero_grad()
-            outputs = model(inputs)
-            _, preds = torch.max(outputs, 1)
-            loss = criterion(outputs, labels)
-            # get loss value and update the network weights
-            loss.backward()
-            optimizer.step()
-            train_loss += loss.item() * inputs.size(0)
-            train_corrects += torch.sum(preds == labels.data).item()
-        epoch_loss = train_loss / len(train_loader.dataset)
-        train_acc = train_corrects / len(train_loader.dataset) * 100.
-        
-        test_acc = test(test_loader, model)
-        print(f'Epoch [{epoch:04d} / num_epochs] Loss: {epoch_loss:.4f} Train Acc: {train_acc:.4f}% Test Acc: {test_acc:.4f}% Time: {(time.time() -start_time):.4f}s')    
-        if max_acc < test_acc:
-            max_acc = test_acc
-            torch.save(model.state_dict(), output_path)
-
-def test(test_loader, model):
-    """ Testing Phase """
-    model.eval()
-    test_acc = 0
-    with torch.no_grad():
-        test_corrects = 0
-        for inputs, labels in test_loader:
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-            outputs = model(inputs)
-            _, preds = torch.max(outputs, 1)
-            test_corrects += torch.sum(preds == labels.data).item()
-        test_acc = test_corrects / len(test_loader.dataset) * 100.
-    return test_acc
    
+def prepareItem(id = 1, start = 0, stop = 0, width = 1280):
+    filename = f"C:\Projects\MMU\Ifosic\src\Python\Set0{id}.msgpack";
+    data = FromMessagePack(filename)
+    index = data["BoundaryIndexes"]
+    traces = torch.tensor(data["Traces"]).transpose(0,1)
+    h, w = traces.shape
+    if stop == 0:
+        stop =  width if w > width else w
+    if w > width:
+        inputs = traces[:, start:stop] 
+    else:
+        inputs = torch.zeros(h, width)
+        inputs[:, start:stop] = traces
+    labels = torch.zeros(h).long()
+    labels[index[0]:index[-1]] = 1
+    return inputs, labels
+
+def prepareItems():
+    i1, l1 = prepareItem(id=1)
+    l1[653:659] = 2
+    l1[672:685] = 2
+    l1[719:723] = 3
+    l1[748] = 2
+    l1[814] = 2
+    l1[878:879] = 2
+    l1[913:919] = 2
+    i2, l2 = prepareItem(id=2)
+    l2[654:660] = 2
+    l2[665:681] = 2
+    l2[694] = 3
+    l2[711:718] = 2
+    l2[737:739] = 2
+    l2[744:756] = 3
+    l2[778:780] = 2
+    l2[793:794] = 3
+    l2[812:817] = 2
+    l2[830:831] = 3
+    l2[837:839] = 3
+    l2[844:849] = 2
+    i3, l3 = prepareItem(id=3, start=840, stop=2120)
+    l3[668:685] = 2
+    l3[780] = 2
+    l3[838] = 2
+    l3[904:908] = 2
+    l3[972:974] = 3
+    l3[1033:1040] = 2
+    l3[1064] = 3
+    l3[1071] = 3
+    l3[1093] = 3
+    l3[1098:1104] = 1
+    l3[1105:1106] = 2
+    inputs = torch.concat([i1, i2, i3])
+    labels = torch.concat([l1, l2, l3])
+    return inputs, labels
+
+def data_slider(data: torch.tensor, win = 5):
+    h,w = data.shape
+    hw = win // 2
+    slider = torch.zeros(data.shape[0], win, data.shape[1])
+    for i in range(win):
+        ss = 0 if i > hw else hw-i
+        se = 0 if i < hw else i-hw
+        ds = 0 if i < hw else i-hw
+        de = 0 if i > hw else hw-i
+        # print(ss, se, ds, de)
+        slider[ss:h-se,i,:] = data[ds:h-de]
+    return slider
+
+def prepareFrame(inputs, labels, dst = 'dataset_multi.pth'):
+    i1 = data_slider(inputs[0:1950])
+    i2 = data_slider(inputs[1950:1950*2])
+    i3 = data_slider(inputs[1950*2:1950*3])
+    return torch.concat([i1, i2, i3])
+    
+
+def split(data):
+    n = len(data)
+    nt = int(n * 0.9)
+    nv = n - nt
+    # check using ratio
+    train_set, val_set = torch.utils.data.random_split(data, [nt, nv]) 
 
 if __name__ == "__main__":
-    inputFile = "C:\Projects\MMU\Ifosic\src\Python\Set01.msgpack";
-    # data = Dataset(inputFile)
-    # train_loader = torch.utils.data.DataLoader(data, batch_size=16, shuffle=True, num_workers=2)
-    # test_loader = torch.utils.data.DataLoader(data, batch_size=16, shuffle=False, num_workers=2)
-    # model = FreqCNN().to(device)
-    # model.load_state_dict(torch.load('model.pth'))
-    # # train(train_loader, test_loader, model)
-    # x,y = next(iter(test_loader))
-    # x = x.to(device)
-    # print(x.shape)    
-    # o = model(x)
-    # _, pred = torch.max(o, 1)
-    # print(pred, y)
+    path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
+    inputs, labels =  prepareItems()
+    sliders = prepareFrame(inputs, labels)
+    torch.save((sliders, labels), f"{path}\\dataset.pth")
+    
