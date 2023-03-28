@@ -5,7 +5,10 @@
 data
 Migrations
 appsettings.*.json
-Python
+# Python
+*.pth
+*.onnx
+*.msgpack
 # User-specific files
 *.rsuser
 *.suo

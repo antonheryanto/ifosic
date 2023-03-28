@@ -12,8 +12,28 @@ public static class OxyPlotExtensions
 
     public static PlotView PlotScatter(this PlotView view, double[] y, int[]? x = null, OxyColor? color = null)
     {
-        var model = view.Model ??= new PlotModel { Title = "Freq vs Time" };
-        color ??= OxyColors.Red;
+		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
+		color ??= OxyColors.Red;
+		var scatters = new ScatterSeries
+		{
+			MarkerType = MarkerType.Circle,
+			MarkerFill = OxyColors.White,
+			MarkerStroke = color.Value,
+			MarkerStrokeThickness = 1,
+			MarkerSize = 3,
+		};
+
+		// get freq on certain distanct for range of time
+		for (int j = 0; j < y.Length; j++)
+		{
+			var v = x is not null && x.Length == y.Length ? x[j] : j;
+			scatters.Points.Add(new ScatterPoint(v, y[j]));
+		}
+
+		model.Series.Add(scatters);
+		if (view.Model is not null)
+            return view;
+
 		model.Axes.Add(new LinearAxis
 		{
 			Title = "Times",
@@ -23,27 +43,13 @@ public static class OxyPlotExtensions
 		model.Axes.Add(new LinearAxis
 		{
 			Title = "Freq",
-            Minimum = 0,
+            Minimum = -10,
+            Maximum = 10,
 			Position = AxisPosition.Left
 		});
-		var scatters = new ScatterSeries
-        {
-            MarkerType = MarkerType.Circle,
-            MarkerFill = OxyColors.White,
-            MarkerStroke = color.Value,
-            MarkerStrokeThickness = 1,
-            MarkerSize = 3,
-        };
 
-        // get freq on certain distanct for range of time
-        for (int j = 0; j < y.Length; j++)
-        {
-            var v = x is not null && x.Length == y.Length ? x[j] : j;
-            scatters.Points.Add(new ScatterPoint(v, y[j]));
-        }
-
-        model.Series.Add(scatters);
-        view.Dock = DockStyle.Fill;
+        view.Model = model;
+		view.Dock = DockStyle.Fill;
         return view;
     }
 
@@ -64,27 +70,51 @@ public static class OxyPlotExtensions
             };
             model.Annotations.Add(a);
         }
-        //var x = model.GetAxis("x");
-        //x.Minimum = boundaries[0]-10;
-        //x.Maximum = boundaries[^1]+10;
         return view;
     }
 
-    public static PlotView PlotLine(this PlotView view, IList<double> x, IList<double> y, double max = 0)
+	public static PlotView PlotBoundary(this PlotView view, IList<int> boundaries)
+	{
+		var model = view.Model;
+		var max = model.GetAxis("y").Maximum;
+		for (int i = 1; i < boundaries.Count; i++)
+		{
+			var a = new RectangleAnnotation
+			{
+				Fill = OxyColor.FromAColor(50, i % 2 == 0 ? OxyColors.Magenta : OxyColors.Yellow),
+				MinimumY = -max,
+				MaximumY = max,
+				MinimumX = boundaries[i - 1],
+				MaximumX = boundaries[i],
+				Layer = AnnotationLayer.AboveSeries
+			};
+			model.Annotations.Add(a);
+		}
+		return view;
+	}
+
+	public static PlotView PlotLine(this PlotView view, IList<double> x, IList<double>? y = null, double max = 0, double min=-9999)
     {
-        view.Dock = DockStyle.Fill;
-        var model = view.Model ??= new PlotModel { Title = "Freq vs Distance" };        
+        var model = view.Model ?? new PlotModel { Title = "Freq vs Distance" };        
         var line = new LineSeries { };
         for (int i = 0; i < x.Count; i++)
-            line.Points.Add(new DataPoint(y[i], x[i]));
+        {
+            if (y is null)
+				line.Points.Add(new DataPoint(i, x[i]));
+            else
+				line.Points.Add(new DataPoint(y[i], x[i]));
+		}
         model.Series.Add(line);
-        if (model.Axes.Count > 0)
-            return view;
-
+        
         if (max == 0)
             max = x.Select(Math.Abs).Max();
+        if (min == -9999)
+            min = -max;
 
-        model.Axes.Add(new LinearAxis
+        if (view.Model is not null)
+            return view;
+
+		model.Axes.Add(new LinearAxis
         {
             Key = "x",
             Title = "Distance (m)",            
@@ -94,11 +124,13 @@ public static class OxyPlotExtensions
         {
             Key = "y",
             Title = "Frequency Shift",
-            Minimum = -max,
+            Minimum = min,
             Maximum = max,
             Position = AxisPosition.Left
         });
-        
+
+		view.Model = model;
+		view.Dock = DockStyle.Fill;
         return view;
     }
 
@@ -142,8 +174,6 @@ public static class OxyPlotExtensions
             AbsoluteMinimum = 0,
             AbsoluteMaximum = data.GetLength(0) - 1,
             Title = titleXAxis,
-            //TicklineColor = OxyColors.White,
-            //TextColor = OxyColors.White,
             Position = AxisPosition.Bottom
         });
         model.Axes.Add(new LinearAxis
@@ -154,8 +184,6 @@ public static class OxyPlotExtensions
             Title = titleYAxis,
             StartPosition = 1,
             EndPosition = 0,
-            //TicklineColor = OxyColors.White,
-            //TextColor = OxyColors.White,
             Position = AxisPosition.Left
         });
         //// for display only

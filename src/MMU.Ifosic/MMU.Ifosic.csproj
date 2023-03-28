@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
@@ -10,8 +10,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MathNet.Numerics" Version="5.0.0" />
 		<PackageReference Include="MemoryPack" Version="1.9.13" />
 		<PackageReference Include="MessagePack" Version="2.5.108" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.14.1" />
 		<PackageReference Include="OxyPlot.WindowsForms" Version="2.1.2" />
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.0" />
 	</ItemGroup>
@@ -19,6 +21,9 @@
 	<ItemGroup>
 		<Compile Include="..\MMU.Ifosic.Web\Models\FrequencyShiftDistance.cs">
 			<Link>Models\FrequencyShiftDistance.cs</Link>
+		</Compile>
+		<Compile Include="..\MMU.Ifosic.Web\Models\Signal.cs">
+			<Link>Models\Signal.cs</Link>
 		</Compile>
 	</ItemGroup>
 </Project>
