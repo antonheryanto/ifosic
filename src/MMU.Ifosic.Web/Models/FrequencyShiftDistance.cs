@@ -7,6 +7,9 @@ using System.IO.Compression;
 
 namespace MMU.Ifosic.Models;
 
+public record Group(int X, double Y, int Id = -1);
+
+
 [MemoryPackable]
 public partial class FrequencyShiftDistance
 {
@@ -18,8 +21,9 @@ public partial class FrequencyShiftDistance
 	public List<double[]> Traces { get; set; } = new();
     public List<DateTime?> MeasurementStart { get; set; } = new();
     public List<DateTime?> MeasurementEnd { get; set; } = new();
+    public List<int> Categories { get; set; } = new();
 
-	public void GetBoundary(string fileName)
+    public void GetBoundary(string fileName)
     {
 		using var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         GetBoundary(stream);

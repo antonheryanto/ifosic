@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Exceptional;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.AspNetCore.Routing.Matching;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -56,6 +57,25 @@ app.MapGet("/api/project/{id}/location/{time}", (int id, int time) =>
 	for (var i = 0; i < freq.Length; i++)
 		freq[i] = new double[] { fdd.Distance[i], fdd.Traces[time][i] };
 	return Results.Ok(freq);
+});
+
+app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
+{
+	var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
+	var candidates = new List<double[]>();
+	var unix = new DateTime(1970, 1, 1);
+	// loop location within boundary of targeted fiber
+	for (int i = fdd.BoundaryIndexes[fiberId - 1]; i < fdd.BoundaryIndexes[fiberId]; i++)
+	{
+		// aggregate only good signal
+		if (fdd.Categories[i] != 1)
+			continue;
+
+		// get each time freq at that location
+		for (int j = 0; j < fdd.Traces.Count; j++)
+			candidates.Add(new double[] { fdd.MeasurementStart[j]?.Subtract(unix).TotalMilliseconds ?? 0, fdd.Traces[j][i] });
+	}
+	return Results.Ok(candidates);
 });
 
 app.UseExceptional();

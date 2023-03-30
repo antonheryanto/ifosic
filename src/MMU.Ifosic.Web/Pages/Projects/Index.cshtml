@@ -52,12 +52,10 @@
 				<h5 class="mr-auto card-title d-none d-lg-block">Fiber Coefficents</h5>
 				@*<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>*@
 				<div class="ml-1 align-self-end">
-					<select class="form-control" onload="fiber()">
-						<option value="1">Fiber 1</option>
-						<option value="2">Fiber 2</option>
-						<option value="3">Fiber 3</option>
-						<option value="4">Fiber 4</option>
-						<option value="5">Fiber 5</option>
+					<select class="form-control" onchange="getFiber(this.value)">
+					@for (int i = 1; i < Model.Item.NumberOfFiber + 1; i++) {
+						<option value="@(i)">Fiber @(i)</option>
+					}
 					</select>
 				</div>
 			</div>
@@ -269,62 +267,40 @@
 		};
 	</script>
 	<script>
-		var pressure = @(!Model.Data.References.ContainsKey("Pressure") ? "[]" : Json.Serialize(Model.Data.References["Pressure"]));
-		var fiberRef = []
-		var fiberFreq = []
-		var refFreq = [
-			0,0,
-			2.0,1.8,1.8,
-			4.4,4.6,4.2,
-			6.8, 7.0, 7.0,
-			9.8, 10, 10,
-			12.6, 12.8, 12.6,
-			15.4, 15.6, 15.4,
-			0, 0,0,0,0,0,
-			15.0, 15.4,
-			12.8, 12.8, 12.6,
-			10.2, 10, 10,
-			7.4, 7.2, 7.0,
-			4.4, 4.4, 4.4,
-			1.6, 1.4, 1.4,
-			0, 0,
-		];
-		
-		for (var i = 0; i < pressure.length; i++) {
-			fiberRef.push([new Date(pressure[i].item1), pressure[i].item2])
-			fiberFreq.push([new Date(pressure[i].item1), refFreq[i] ?? 0])
-		}
-		
+		var candidates = @(Json.Serialize(Model.Candidates));
+		var references = @(Json.Serialize(Model.References));
 
-		function fiber()
+		function fiberPlot(freqDist)
 		{
 			Highcharts.chart('plot4', {
 				chart: { zoomType: 'xy' },
 				title: { text: 'Fiber calibration' },
 				legend: { enabled: false },
+				
 				yAxis: [{
-					min: 0,
+					min: -1,
 					max: 20,
 					title: { text: 'Frequency Shift (Ghz)' },
 				},{
 					opposite: true,
-					min: 0,
-					max: 40,
+					min: -1,
+					max: 32,
 					title: { text: 'Pressure (mA)' },
 				}],
 				xAxis: {
+					type: 'datetime',
 					title: { text: 'Times (hours)' },
 				},
 				series: [{
 					yAxis: 0,
 					type: 'scatter',
-					data: fiberFreq,
-					color: 'green',
+					data: freqDist,
+					color: 'rgba(182,255,0,0.2)',
 					
 				},{
-					yAxis: 1,
+					yAxis: 1,					
 					type: 'spline',
-					data: fiberRef,
+					data: references,
 					dashStyle: 'dash',
 					color: 'black',
 					name: 'Frequency Shift'
@@ -398,6 +374,15 @@
 				}]
 			});
 		}
-		fiber();
+
+		function getFiber(id) {
+			console.log(`generate fiber ${id}`);
+			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}/fiber/")'+id, fdd => {
+				console.log(fdd.length);
+				fiberPlot(fdd);
+			});
+		}
+
+		fiberPlot(candidates);
 	</script>
 }

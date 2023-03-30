@@ -7,7 +7,7 @@ public class Signal
 {
 	private static readonly Microsoft.ML.OnnxRuntime.SessionOptions options = new();
 
-	public static double[] Inference(IList<double[]> traces, string modelFile)
+	public static int[] Inference(IList<double[]> traces, string modelFile)
 	{
 		using var session = new InferenceSession(modelFile, options);
 		var inputMeta = session.InputMetadata.First();
@@ -30,7 +30,7 @@ public class Signal
 		var data = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor(inputMeta.Key, inputs) };
 		using var results = session.Run(data);
 		var o = results.First().AsTensor<float>();
-		var rx = new double[traces.Count];
+		var rx = new int[traces.Count];
 		for (int i = 0; i < rx.Length; i++)
 		{
 			var max = float.MinValue;
