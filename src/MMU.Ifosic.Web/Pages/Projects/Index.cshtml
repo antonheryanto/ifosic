@@ -277,7 +277,7 @@
 			Highcharts.chart('plot4', {
 				chart: { zoomType: 'xy' },
 				title: { text: 'Fiber calibration' },
-				legend: { enabled: false },
+				legend: { enabled: true },
 				
 				yAxis: [{
 					min: -1,
@@ -295,27 +295,29 @@
 				},
 				series: [
 					{
+						name: 'Candidate',
 						yAxis: 0,
 						type: 'scatter',
 						data: freqDist,
 						color: 'rgba(182,255,0,0.2)',
 
 					},
-				{
-					yAxis: 0,
-					type: 'scatter',
-					data: freqAverage,
-						color: 'rgba(0,148,255,0.4)',
+					{
+						name: 'Average',
+						yAxis: 0,
+						type: 'scatter',
+						data: freqAverage,
+							color: 'rgba(0,148,255,0.4)',
 					
-				},
-				{
-					yAxis: 1,					
-					type: 'spline',
-					data: references,
-					dashStyle: 'dash',
-					color: 'black',
-					name: 'Frequency Shift'
-				}
+					},
+					{
+						name: 'Reference',
+						yAxis: 1,					
+						type: 'spline',
+						data: references,
+						dashStyle: 'dash',
+						color: 'black',
+					}
 				]
 			});
 
