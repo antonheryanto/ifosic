@@ -282,12 +282,12 @@
 				yAxis: [{
 					min: -1,
 					max: 20,
-					title: { text: 'Frequency Shift (Ghz)' },
+					title: { text: 'Frequency Shift (GHz)' },
 				},{
 					opposite: true,
 					min: -1,
 					max: 32,
-					title: { text: 'Pressure (mA)' },
+					title: { text: '@(Model.Reference) (@(Model.Unit))' },
 				}],
 				xAxis: {
 					type: 'datetime',
@@ -295,12 +295,12 @@
 				},
 				series: [
 					{
-						name: 'Candidate',
+						name: 'Original',
 						yAxis: 0,
 						type: 'scatter',
 						data: freqDist,
 						color: 'rgba(182,255,0,0.2)',
-
+						marker: { radius: 2 },
 					},
 					{
 						name: 'Average',
@@ -308,15 +308,15 @@
 						type: 'scatter',
 						data: freqAverage,
 							color: 'rgba(0,148,255,0.4)',
-					
 					},
 					{
-						name: 'Reference',
+						name: '@(Model.Reference)',
 						yAxis: 1,					
 						type: 'spline',
 						data: references,
 						dashStyle: 'dash',
 						color: 'black',
+						marker: { enabled: false },
 					}
 				]
 			});
