@@ -27,7 +27,7 @@ public class IndexModel : PageModel
 	public List<double[]> Candidates { get; set; } = new();
 	public List<double[]> References { get; set; } = new();
 	public List<double[]> Averages { get; set; } = new();
-	public string Reference { get; set; } = "Presure";
+	public string Reference { get; set; } = "Pressure";
 	public string Unit { get; set; } = "MPa";
 
 	public async Task<IActionResult> OnGetAsync(int id = 0, int location = 800, int time = 50, int fiberId=1)
