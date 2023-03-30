@@ -27,6 +27,10 @@ public class IndexModel : PageModel
 	public List<double[]> Candidates { get; set; } = new();
 	public List<double[]> References { get; set; } = new();
 	public List<double[]> Averages { get; set; } = new();
+	public List<double[]> AveragePoints { get; set; } = new();
+	public List<double[]> ReferencePoints { get; set; } = new();
+	public List<double[]> RegressionPoints { get; set; } = new();
+	public (double A, double B) Regression { get; set; } = new();
 	public string Reference { get; set; } = "Pressure";
 	public string Unit { get; set; } = "MPa";
 
@@ -45,7 +49,6 @@ public class IndexModel : PageModel
         for (var i = 0; i < Data.Distance.Count; i++)
 			FreqDistance.Add(new double[] { Data.Distance[i], Data.Traces[time][i] });
 
-		var boundaryDistance = new Dictionary<int, double>();
 		var unix = new DateTime(1970, 1, 1);
 		// loop location within boundary of targeted fiber
 		var times = new double[Data.Traces.Count];
@@ -82,14 +85,32 @@ public class IndexModel : PageModel
 		}
 
 		Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
-
+		var refValues = new Dictionary<double, int>();
 		if (Data.References.TryGetValue(Reference, out var value))
 		{
 			var timeDiff = (Data.MeasurementStart[0] - value[0].Date) ?? new TimeSpan();
 			foreach (var (d,v) in Data.References[Reference])
 			{
 				References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
+				if (!refValues.ContainsKey(v))
+					refValues.Add(v, 0);
+				refValues[v]++;
 			}
+		}
+
+		AveragePoints = Signal.GetAveragePoint(averages.Values.ToArray(), times);
+		var refArray = refValues.Keys.ToArray();
+		var refPoints = new double[refArray.Length];
+		for (int i = 0; i < refArray.Length; i++) {
+			refPoints[i] = AveragePoints[i][1];
+			ReferencePoints.Add(new double[] { refArray[i], AveragePoints[i][1] });
+		}
+
+		//var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
+		Regression = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refArray, refPoints);
+		for (int i = 0; i < refArray.Length; i++)
+		{
+			RegressionPoints.Add(new double[] { refArray[i], refArray[i] * Regression.B + Regression.A });
 		}
 
 		return Page();

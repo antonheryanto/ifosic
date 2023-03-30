@@ -268,11 +268,15 @@
 	</script>
 	<script>
 		var references = @(Json.Serialize(Model.References));
+		var referencePoints = @(Json.Serialize(Model.ReferencePoints));
 		var candidates = @(Json.Serialize(Model.Candidates));
 		var averages = @(Json.Serialize(Model.Averages));
+		var averagePoints = @(Json.Serialize(Model.AveragePoints));
+		var regressionPoints = @(Json.Serialize(Model.RegressionPoints));
+		var regression = @(Json.Serialize(Model.Regression));
 	</script>
 	<script>
-		function fiberPlot(freqDist, freqAverage)
+		function fiberPlot(freqDist, freqAverage, freqPoints, refPoints, slope, lines)
 		{
 			Highcharts.chart('plot4', {
 				chart: { zoomType: 'xy' },
@@ -317,7 +321,14 @@
 						dashStyle: 'dash',
 						color: 'black',
 						marker: { enabled: false },
-					}
+					},
+					{
+						name: 'Points',
+						yAxis: 0,
+						type: 'scatter',
+						data: freqPoints,
+						color: 'red',
+					},
 				]
 			});
 
@@ -348,20 +359,13 @@
 							x: 25,
 							y: 15
 						},
-						text: 'Fiber Coefficents = 0.5253'
+						text: 'Fiber Coefficents = @(Model.Regression.B)'
 					}]
 				}],
 				series: [{
 					type: 'line',
 					name: 'Regression Line',					
-					data: [
-						[5, 2.07],
-						[10, 4.7],
-						[15, 7.32],
-						[20, 9.95],
-						[25, 12.58],
-						[30, 15.2],
-					],
+					data: regressionPoints,
 					marker: {
 						enabled: false
 					},
@@ -374,14 +378,7 @@
 				}, {
 					type: 'scatter',
 					name: 'Observations',
-					data: [
-						[5, 1.87],
-						[10, 4.4],
-						[15, 6.93],
-						[20, 9.93],
-						[25, 12.67],
-						[30, 15.47],
-					],
+					data: refPoints,
 					marker: {
 						radius: 4
 					}
@@ -393,10 +390,11 @@
 			console.log(`generate fiber ${id}`);
 			var url = '@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}/fiber/")' + id;
 			Highcharts.getJSON(url, fdd => {
-				fiberPlot(fdd.candidates, fdd.averages);
+				console.log(fdd.regressionPoints)
+				fiberPlot(fdd.candidates, fdd.averages, fdd.averagePoints, fdd.referencePoints, fdd.regression.item2, fdd.regressionPoints);
 			});
 		}
 
-		fiberPlot(candidates, averages);
+		fiberPlot(candidates, averages, averagePoints, referencePoints, regression.item2, regressionPoints);
 	</script>
 }

@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
+using Org.BouncyCastle.Utilities;
 using StackExchange.Exceptional;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -65,6 +67,7 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 
 	// loop location within boundary of targeted fiber
 	var unix = new DateTime(1970, 1, 1); // TODO adjust based correct ref time
+	var times = new double[fdd.Traces.Count];
 	for (int i = fdd.BoundaryIndexes[fiberId - 1]; i < fdd.BoundaryIndexes[fiberId]; i++)
 	{
 		// aggregate only good signal
@@ -73,7 +76,10 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 
 		// get each time freq at that location
 		for (int j = 0; j < fdd.Traces.Count; j++)
-			candidates.Add(new double[] { fdd.MeasurementStart[j]?.Subtract(unix).TotalMilliseconds ?? 0, fdd.Traces[j][i] });
+		{
+			times[j] = fdd.MeasurementStart[j]?.Subtract(unix).TotalMilliseconds ?? 0;
+			candidates.Add(new double[] { times[j], fdd.Traces[j][i] });
+		}
 	}
 	var groups = candidates.GroupBy(x => x[0]).ToList();
 	var averages = new Dictionary<double, double>();
@@ -89,9 +95,39 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 		averages[group.Key] = sum / n;
 	}
 
-	var Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
+	var Reference = "Pressure";
+	var refValues = new Dictionary<double, int>();
+	if (fdd.References.TryGetValue(Reference, out var value))
+	{
+		var timeDiff = (fdd.MeasurementStart[0] - value[0].Date) ?? new TimeSpan();
+		foreach (var (d, v) in fdd.References[Reference])
+		{
+			if (!refValues.ContainsKey(v))
+				refValues.Add(v, 0);
+			refValues[v]++;
+		}
+	}
 
-	return Results.Ok(new { candidates, Averages });
+	var Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
+	var AveragePoints = Signal.GetAveragePoint(averages.Values.ToArray(), times);
+	var refArray = refValues.Keys.ToArray();
+	var refPoints = new double[refArray.Length];
+	var ReferencePoints = new List<double[]>();
+	for (int i = 0; i < refArray.Length; i++)
+	{
+		refPoints[i] = AveragePoints[i][1];
+		ReferencePoints.Add(new double[] { refArray[i], AveragePoints[i][1] });
+	}
+
+	//var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
+	var RegressionPoints = new List<double[]>();
+	var Regression = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refArray, refPoints);
+	for (int i = 0; i < refArray.Length; i++)
+	{
+		RegressionPoints.Add(new double[] { refArray[i], refArray[i] * Regression.B + Regression.A });
+	}
+
+	return Results.Ok(new { candidates, Averages, AveragePoints, ReferencePoints, Regression, RegressionPoints });
 });
 
 app.UseExceptional();
