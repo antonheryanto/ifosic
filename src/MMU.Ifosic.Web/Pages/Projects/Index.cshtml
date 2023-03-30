@@ -267,10 +267,12 @@
 		};
 	</script>
 	<script>
-		var candidates = @(Json.Serialize(Model.Candidates));
 		var references = @(Json.Serialize(Model.References));
-
-		function fiberPlot(freqDist)
+		var candidates = @(Json.Serialize(Model.Candidates));
+		var averages = @(Json.Serialize(Model.Averages));
+	</script>
+	<script>
+		function fiberPlot(freqDist, freqAverage)
 		{
 			Highcharts.chart('plot4', {
 				chart: { zoomType: 'xy' },
@@ -291,20 +293,30 @@
 					type: 'datetime',
 					title: { text: 'Times (hours)' },
 				},
-				series: [{
+				series: [
+					{
+						yAxis: 0,
+						type: 'scatter',
+						data: freqDist,
+						color: 'rgba(182,255,0,0.2)',
+
+					},
+				{
 					yAxis: 0,
 					type: 'scatter',
-					data: freqDist,
-					color: 'rgba(182,255,0,0.2)',
+					data: freqAverage,
+						color: 'rgba(0,148,255,0.4)',
 					
-				},{
+				},
+				{
 					yAxis: 1,					
 					type: 'spline',
 					data: references,
 					dashStyle: 'dash',
 					color: 'black',
 					name: 'Frequency Shift'
-				}]
+				}
+				]
 			});
 
 			Highcharts.chart('plot5', {
@@ -377,12 +389,12 @@
 
 		function getFiber(id) {
 			console.log(`generate fiber ${id}`);
-			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}/fiber/")'+id, fdd => {
-				console.log(fdd.length);
-				fiberPlot(fdd);
+			var url = '@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}/fiber/")' + id;
+			Highcharts.getJSON(url, fdd => {
+				fiberPlot(fdd.candidates, fdd.averages);
 			});
 		}
 
-		fiberPlot(candidates);
+		fiberPlot(candidates, averages);
 	</script>
 }

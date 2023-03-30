@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
 using Org.BouncyCastle.Utilities;
@@ -25,6 +26,7 @@ public class IndexModel : PageModel
 	public List<double[]> FreqDistance { get; set; } = new();
 	public List<double[]> Candidates { get; set; } = new();
 	public List<double[]> References { get; set; } = new();
+	public List<double[]> Averages { get; set; } = new();
 
 	public async Task<IActionResult> OnGetAsync(int id = 0, int location = 800, int time = 50, int fiberId=1)
     {
@@ -54,6 +56,22 @@ public class IndexModel : PageModel
 			for (int j = 0; j < Data.Traces.Count; j++)
 				Candidates.Add(new double[] { Data.MeasurementStart[j]?.Subtract(unix).TotalMilliseconds ?? 0, Data.Traces[j][i] });
 		}
+
+		var groups = Candidates.GroupBy(x => x[0]).ToList();
+		var averages = new Dictionary<double, double>();
+		foreach (var group in groups)
+		{
+			var sum = 0d;
+			var n = 0;
+			foreach (var v in group)
+			{
+				sum += v[1];
+				n++;
+			}
+			averages[group.Key] = sum / n;
+		}
+
+		Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
 
 		if (Data.References.TryGetValue("Pressure", out var value))
 		{
