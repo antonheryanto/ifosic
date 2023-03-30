@@ -27,6 +27,8 @@ public class IndexModel : PageModel
 	public List<double[]> Candidates { get; set; } = new();
 	public List<double[]> References { get; set; } = new();
 	public List<double[]> Averages { get; set; } = new();
+	public string Reference { get; set; } = "Presure";
+	public string Unit { get; set; } = "MPa";
 
 	public async Task<IActionResult> OnGetAsync(int id = 0, int location = 800, int time = 50, int fiberId=1)
     {
@@ -46,6 +48,7 @@ public class IndexModel : PageModel
 		var boundaryDistance = new Dictionary<int, double>();
 		var unix = new DateTime(1970, 1, 1);
 		// loop location within boundary of targeted fiber
+		var times = new double[Data.Traces.Count];
 		for (int i = Data.BoundaryIndexes[fiberId - 1]; i < Data.BoundaryIndexes[fiberId]; i++)
 		{
 			// aggregate only good signal
@@ -54,11 +57,16 @@ public class IndexModel : PageModel
 
 			// get each time freq at that location
 			for (int j = 0; j < Data.Traces.Count; j++)
-				Candidates.Add(new double[] { Data.MeasurementStart[j]?.Subtract(unix).TotalMilliseconds ?? 0, Data.Traces[j][i] });
+			{
+				times[j] = Data.MeasurementStart[j]?.Subtract(unix).TotalMilliseconds ?? 0;
+				Candidates.Add(new double[] { times[j], Data.Traces[j][i] });
+			}
 		}
 
 		var groups = Candidates.GroupBy(x => x[0]).ToList();
 		var averages = new Dictionary<double, double>();
+		var avDistance = new List<double>();
+		int g = 0;
 		foreach (var group in groups)
 		{
 			var sum = 0d;
@@ -69,14 +77,16 @@ public class IndexModel : PageModel
 				n++;
 			}
 			averages[group.Key] = sum / n;
+
+			g++;
 		}
 
 		Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
 
-		if (Data.References.TryGetValue("Pressure", out var value))
+		if (Data.References.TryGetValue(Reference, out var value))
 		{
 			var timeDiff = (Data.MeasurementStart[0] - value[0].Date) ?? new TimeSpan();
-			foreach (var (d,v) in Data.References["Pressure"])
+			foreach (var (d,v) in Data.References[Reference])
 			{
 				References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
 			}
