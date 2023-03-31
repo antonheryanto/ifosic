@@ -9,8 +9,91 @@ namespace MMU.Ifosic;
 
 public static class OxyPlotExtensions
 {
+	public static PlotView PlotScatter(this PlotView view, IList<Group> data, OxyColor? color = null)
+	{
+		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
+		color ??= OxyColors.Red;
+		var scatters = new ScatterSeries
+		{
+			MarkerType = MarkerType.Circle,
+			MarkerFill = OxyColors.White,
+			MarkerStroke = color.Value,
+			MarkerStrokeThickness = 1,
+			MarkerSize = 1,
+		};
 
-    public static PlotView PlotScatter(this PlotView view, double[] y, int[]? x = null, OxyColor? color = null)
+		// get freq on certain distanct for range of time
+		for (int j = 0; j < data.Count; j++)
+		{
+			scatters.Points.Add(new ScatterPoint(data[j].X, data[j].Y, 1, data[j].Id));
+		}
+
+		model.Series.Add(scatters);
+		if (view.Model is not null)
+			return view;
+
+		model.Axes.Add(new LinearAxis
+		{
+			Title = "Times",
+			Minimum = 0,
+			Position = AxisPosition.Bottom
+		});
+		model.Axes.Add(new LinearAxis
+		{
+			Title = "Freq",
+			Minimum = -5,
+			Maximum = 30,
+			Position = AxisPosition.Left
+		});
+
+		view.Model = model;
+		view.Dock = DockStyle.Fill;
+		return view;
+	}
+
+	public static PlotView PlotScatter(this PlotView view, IList<double[]> data, OxyColor? color = null)
+	{
+		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
+		color ??= OxyColors.Red;
+		var scatters = new ScatterSeries
+		{
+			MarkerType = MarkerType.Circle,
+			MarkerFill = OxyColors.White,
+			MarkerStroke = color.Value,
+			MarkerStrokeThickness = 1,
+			MarkerSize = 3,
+		};
+
+		// get freq on certain distanct for range of time
+		for (int j = 0; j < data.Count; j++)
+		{			
+			scatters.Points.Add(new ScatterPoint(data[j][0], data[j][1]));
+		}
+
+		model.Series.Add(scatters);
+		if (view.Model is not null)
+			return view;
+
+		model.Axes.Add(new LinearAxis
+		{
+			Title = "Times",
+			Minimum = 0,
+			Position = AxisPosition.Bottom
+		});
+		model.Axes.Add(new LinearAxis
+		{
+			Title = "Freq",
+			Minimum = -5,
+			Maximum = 30,
+			Position = AxisPosition.Left
+		});
+
+		view.Model = model;
+		view.Dock = DockStyle.Fill;
+		return view;
+	}
+
+	public static PlotView PlotScatter(this PlotView view, double[] y, int[]? x = null, OxyColor? color = null)
     {
 		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
 		color ??= OxyColors.Red;
