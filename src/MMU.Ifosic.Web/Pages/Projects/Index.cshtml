@@ -359,13 +359,13 @@
 							x: 25,
 							y: 15
 						},
-						text: 'Fiber Coefficents = @(Model.Regression.B)'
+						text: `Fiber Coefficents = ${slope}`
 					}]
 				}],
 				series: [{
 					type: 'line',
 					name: 'Regression Line',					
-					data: regressionPoints,
+					data: lines,
 					marker: {
 						enabled: false
 					},
@@ -390,8 +390,8 @@
 			console.log(`generate fiber ${id}`);
 			var url = '@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}/fiber/")' + id;
 			Highcharts.getJSON(url, fdd => {
-				console.log(fdd.regressionPoints)
-				fiberPlot(fdd.candidates, fdd.averages, fdd.averagePoints, fdd.referencePoints, fdd.regression.item2, fdd.regressionPoints);
+				console.log(fdd.slope)
+				fiberPlot(fdd.candidates, fdd.averages, fdd.averagePoints, fdd.referencePoints, fdd.slope, fdd.regressionPoints);
 			});
 		}
 
