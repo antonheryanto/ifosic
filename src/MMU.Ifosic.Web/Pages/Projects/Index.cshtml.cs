@@ -89,11 +89,13 @@ public class IndexModel : PageModel
 		if (!Data.References.TryGetValue(Reference, out var references))
 			return Page();
 
+		var refMax = double.MinValue;
         var refDate = references[0].Date;
         var timeDiff = refDate >= Data.MeasurementStart[0] ? new TimeSpan()
                 : (Data.MeasurementStart[0] - refDate) ?? new TimeSpan();
         foreach (var (d, v) in references)
         {
+			refMax = Math.Max(refMax, v);
             References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
             if (!refValues.ContainsKey(v))
                 refValues.Add(v, 0);
@@ -114,19 +116,30 @@ public class IndexModel : PageModel
 			averageIndex = i;
 			break;
 		}
-        var refArray = refValues.Keys.ToArray();
-		var refPoints = new double[refArray.Length];
+        var refArray = refValues.Keys.ToList();
+		var refMaxId = refArray.IndexOf(refMax);
+		var refStart = refMaxId < refArray.Count / 2 ? refMaxId : 0; 
+        var avgPoints = new List<double>();
+        var refPoints = new List<double>();
 		
-		for (int i = 0; i < refArray.Length; i++) {
-			refPoints[i] = AveragePoints[i+averageIndex][1];
-			ReferencePoints.Add(new double[] { refArray[i], refPoints[i] });
-		}
-
-		//var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
-		Regression = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refArray, refPoints);
-		for (int i = 0; i < refArray.Length; i++)
+		for (int i = 0, j = refStart; j < refArray.Count; i++, j++) {
+            var avgIdx = j + averageIndex;
+            if (avgIdx > AveragePoints.Count - 1)
+                continue;
+            refPoints.Add(refArray[j]);
+            avgPoints.Add(AveragePoints[avgIdx][1]);
+            ReferencePoints.Add(new double[] { refPoints[i], avgPoints[i] });
+        }
+        if (refPoints.Count < 2)
+        {
+            refPoints.Insert(0, 0);
+            avgPoints.Insert(0, 0);
+        }
+        //var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
+        Regression = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refPoints.ToArray(), avgPoints.ToArray());
+		for (int i = 0; i < refPoints.Count; i++)
 		{
-			RegressionPoints.Add(new double[] { refArray[i], refArray[i] * Regression.B + Regression.A });
+			RegressionPoints.Add(new double[] { refPoints[i], refPoints[i] * Regression.B + Regression.A });
 		}
 
 		return Page();

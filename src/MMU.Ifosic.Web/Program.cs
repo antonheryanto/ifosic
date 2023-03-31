@@ -98,11 +98,13 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 
 	var Reference = "Pressure";
 	var refValues = new Dictionary<double, int>();
-	if (fdd.References.TryGetValue(Reference, out var references))
+    var refMax = double.MinValue;
+    if (fdd.References.TryGetValue(Reference, out var references))
 	{
 		foreach (var (d, v) in references)
 		{
-			if (!refValues.ContainsKey(v))
+            refMax = Math.Max(refMax, v);
+            if (!refValues.ContainsKey(v))
 				refValues.Add(v, 0);
 			refValues[v]++;
 		}
@@ -122,22 +124,34 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
         break;
     }
 
-    var refArray = refValues.Keys.ToArray();
-	var refPoints = new double[refArray.Length];
-	var ReferencePoints = new List<double[]>();
-	for (int i = 0; i < refArray.Length; i++)
-	{
-		refPoints[i] = AveragePoints[i + averageIndex][1];
-		ReferencePoints.Add(new double[] { refArray[i], refPoints[i] });
-	}
+    var refArray = refValues.Keys.ToList();
+    var refMaxId = refArray.IndexOf(refMax);
+    var refStart = refMaxId < refArray.Count / 2 ? refMaxId : 0;
+    var avgPoints = new List<double>();
+    var refPoints = new List<double>();
+    var ReferencePoints = new List<double[]>();
+    for (int i = 0, j = refStart; j < refArray.Count; i++, j++)
+    {
+		var avgIdx = j + averageIndex;
+		if (avgIdx > AveragePoints.Count - 1)
+			continue;
+        refPoints.Add(refArray[j]);
+        avgPoints.Add(AveragePoints[avgIdx][1]);
+        ReferencePoints.Add(new double[] { refPoints[i], avgPoints[i] });
+    }
 
-	//var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
-	var RegressionPoints = new List<double[]>();
-	var Regression = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refArray, refPoints);
-	for (int i = 0; i < refArray.Length; i++)
+    //var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
+	if (refPoints.Count < 2)
 	{
-		RegressionPoints.Add(new double[] { refArray[i], refArray[i] * Regression.B + Regression.A });
-	}
+		refPoints.Insert(0, 0);
+        avgPoints.Insert(0, 0);
+    }
+    var Regression = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refPoints.ToArray(), avgPoints.ToArray());
+    var RegressionPoints = new List<double[]>();
+    for (int i = 0; i < refPoints.Count; i++)
+    {
+        RegressionPoints.Add(new double[] { refPoints[i], refPoints[i] * Regression.B + Regression.A });
+    }
 
 	return Results.Ok(new { candidates, Averages, AveragePoints, ReferencePoints, Slope = Regression.B, RegressionPoints });
 });
