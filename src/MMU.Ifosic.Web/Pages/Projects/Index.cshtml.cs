@@ -86,27 +86,40 @@ public class IndexModel : PageModel
 
 		Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
 		var refValues = new Dictionary<double, int>();
-		if (Data.References.TryGetValue(Reference, out var references))
-		{
-			var timeDiff = references[0].Date >= Data.MeasurementStart[0] ? new TimeSpan()
-				: (Data.MeasurementStart[0] - references[0].Date) ?? new TimeSpan();
-			foreach (var (d,v) in references)
-			{
-				References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
-				if (!refValues.ContainsKey(v))
-					refValues.Add(v, 0);
-				refValues[v]++;
-			}
-		}
-
-		if (refValues.Count == 0)
+		if (!Data.References.TryGetValue(Reference, out var references))
 			return Page();
-		AveragePoints = Signal.GetAveragePoint(averages.Values.ToArray(), times);
-		var refArray = refValues.Keys.ToArray();
+
+        var refDate = references[0].Date;
+        var timeDiff = refDate >= Data.MeasurementStart[0] ? new TimeSpan()
+                : (Data.MeasurementStart[0] - refDate) ?? new TimeSpan();
+        foreach (var (d, v) in references)
+        {
+            References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
+            if (!refValues.ContainsKey(v))
+                refValues.Add(v, 0);
+            refValues[v]++;
+        }
+
+        if (refValues.Count == 0)
+            return Page();
+
+        AveragePoints = Signal.GetAveragePoint(averages.Values.ToArray(), times);
+        var averageIndex = 0;
+        for (int i = 0; i < AveragePoints.Count; i++)
+		{
+			var second = AveragePoints[i][0];
+            var aDate = unix.AddMilliseconds(second);
+			if (refDate > aDate)
+				continue;
+			averageIndex = i;
+			break;
+		}
+        var refArray = refValues.Keys.ToArray();
 		var refPoints = new double[refArray.Length];
+		
 		for (int i = 0; i < refArray.Length; i++) {
-			refPoints[i] = AveragePoints[i][1];
-			ReferencePoints.Add(new double[] { refArray[i], AveragePoints[i][1] });
+			refPoints[i] = AveragePoints[i+averageIndex][1];
+			ReferencePoints.Add(new double[] { refArray[i], refPoints[i] });
 		}
 
 		//var p = MathNet.Numerics.Fit.Line(refArray, refPoints);

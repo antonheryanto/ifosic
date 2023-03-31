@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
+using NPOI.POIFS.Crypt.Dsig;
 using Org.BouncyCastle.Utilities;
 using StackExchange.Exceptional;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -97,10 +98,9 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 
 	var Reference = "Pressure";
 	var refValues = new Dictionary<double, int>();
-	if (fdd.References.TryGetValue(Reference, out var value))
+	if (fdd.References.TryGetValue(Reference, out var references))
 	{
-		var timeDiff = (fdd.MeasurementStart[0] - value[0].Date) ?? new TimeSpan();
-		foreach (var (d, v) in fdd.References[Reference])
+		foreach (var (d, v) in references)
 		{
 			if (!refValues.ContainsKey(v))
 				refValues.Add(v, 0);
@@ -110,13 +110,25 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 
 	var Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
 	var AveragePoints = Signal.GetAveragePoint(averages.Values.ToArray(), times);
-	var refArray = refValues.Keys.ToArray();
+	var refDate = references[0].Date;
+    var averageIndex = 0;
+    for (int i = 0; i < AveragePoints.Count; i++)
+    {
+        var second = AveragePoints[i][0];
+        var aDate = unix.AddMilliseconds(second);
+        if (refDate > aDate)
+            continue;
+        averageIndex = i;
+        break;
+    }
+
+    var refArray = refValues.Keys.ToArray();
 	var refPoints = new double[refArray.Length];
 	var ReferencePoints = new List<double[]>();
 	for (int i = 0; i < refArray.Length; i++)
 	{
-		refPoints[i] = AveragePoints[i][1];
-		ReferencePoints.Add(new double[] { refArray[i], AveragePoints[i][1] });
+		refPoints[i] = AveragePoints[i + averageIndex][1];
+		ReferencePoints.Add(new double[] { refArray[i], refPoints[i] });
 	}
 
 	//var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
