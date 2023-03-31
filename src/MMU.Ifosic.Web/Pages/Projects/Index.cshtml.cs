@@ -86,10 +86,11 @@ public class IndexModel : PageModel
 
 		Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
 		var refValues = new Dictionary<double, int>();
-		if (Data.References.TryGetValue(Reference, out var value))
+		if (Data.References.TryGetValue(Reference, out var references))
 		{
-			var timeDiff = (Data.MeasurementStart[0] - value[0].Date) ?? new TimeSpan();
-			foreach (var (d,v) in Data.References[Reference])
+			var timeDiff = references[0].Date >= Data.MeasurementStart[0] ? new TimeSpan()
+				: (Data.MeasurementStart[0] - references[0].Date) ?? new TimeSpan();
+			foreach (var (d,v) in references)
 			{
 				References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
 				if (!refValues.ContainsKey(v))
