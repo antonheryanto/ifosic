@@ -2,7 +2,11 @@
 using MemoryPack.Compression;
 using MessagePack;
 using MessagePack.Resolvers;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
+using Org.BouncyCastle.Utilities.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.IO.Compression;
 
 namespace MMU.Ifosic.Models;
@@ -23,6 +27,13 @@ public class Group
 	public override string ToString() => $"{X},{Y},{Id}";
 }
 
+public class Measurement
+{
+    public string Name { get; set; } = "Pressure";
+    public string Unit { get; set; } = "MPa";
+    public List<(DateTime Date, double Value)> Values { get; set; } = new();
+}
+
 
 [MemoryPackable]
 public partial class FrequencyShiftDistance
@@ -30,7 +41,8 @@ public partial class FrequencyShiftDistance
     public Dictionary<string, string> Info { get; set; } = new();
     public List<double> Distance { get; set; } = new();    
     public List<double> Boundaries { get; set; } = new();
-	public List<int> BoundaryIndexes { get; set; } = new();
+    //public List<int> PredictedBoundaries { get; set; } = new();
+    public List<int> BoundaryIndexes { get; set; } = new();	
 	public Dictionary<string, List<(DateTime Date, double Value)>> References { get; set; } = new();
 	public List<double[]> Traces { get; set; } = new();
     public List<DateTime?> MeasurementStart { get; set; } = new();
@@ -69,12 +81,49 @@ public partial class FrequencyShiftDistance
 
     public void AddReference(string fileName)
     {
+        var ext = Path.GetExtension(fileName);
+        if (ext == ".csv")
+            GetReferenceCsv(fileName);
+        else if (ext.StartsWith(".xls")) {
+            using var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            GetReferenceExcel(stream);
+        }
+    }
+
+    private void GetReferenceExcel(Stream stream)
+    {
+        using XSSFWorkbook xssWorkbook = new XSSFWorkbook(stream);
+        var sheet = xssWorkbook.GetSheetAt(0);
+        IRow headerRow = sheet.GetRow(sheet.FirstRowNum); // start from row 1
+        // get the name and unit of reference data
+        var fullname = (headerRow.GetCell(headerRow.FirstCellNum + 1)?.StringCellValue ?? "").Split("(");
+        var name = fullname[0]?.Trim();
+        var unit = fullname.Length > 0 ? fullname[1].Trim(')') : "";
+        var rows = new List<(DateTime Date, double Value)>();
+        for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++)
+        {
+            if (!(sheet.GetRow(i) is var row) || row is null || row.Cells.All(d => d.CellType == CellType.Blank)) 
+                continue;
+
+            var date = row.GetCell(row.FirstCellNum)?.DateCellValue ?? DateTime.Now;
+            var time = row.GetCell(row.FirstCellNum + 1)?.DateCellValue ?? DateTime.Now;
+            var value = row.GetCell(row.FirstCellNum + 3)?.NumericCellValue ??
+                (double.TryParse(row.GetCell(row.FirstCellNum + 3)?.ToString(), out var v) ? v : 0);
+            var datetime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second);
+            rows.Add((datetime, value));
+        }
+        References[name] = rows;
+    }
+
+    private void GetReferenceCsv(string fileName)
+    {
         using var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var reader = new StreamReader(stream);
         string name = "Reference";
         var rows = new List<(DateTime Date, double Value)>();
 		bool headerParse = false;
         int i = 0;
+        var now = DateTime.Now;
         while (!reader.EndOfStream)
         {
             var line = reader.ReadLine();
@@ -91,9 +140,8 @@ public partial class FrequencyShiftDistance
                 continue;
             }
 
-            var d = DateTime.Now;
             rows.Add((DateTime.TryParse(cols[0], out var date) ? date
-                : new DateTime(d.Year, d.Month, d.Day).AddHours(i++),
+                : new DateTime(now.Year, now.Month, now.Day).AddHours(i++),
                 double.TryParse(cols[1], out var value) ? value : 0));
 		}
         References[name] = rows;
@@ -164,6 +212,10 @@ public partial class FrequencyShiftDistance
             else if (entry.Name.EndsWith("_Results.txt"))
             {
                 GetBoundary(entry.Open());
+            }
+            else if (entry.Name.EndsWith("vs Time.xlsx"))
+            {
+                GetReferenceExcel(entry.Open());
             }
         }
     }

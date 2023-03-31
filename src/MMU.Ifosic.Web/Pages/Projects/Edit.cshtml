@@ -19,7 +19,7 @@
                 </div>
             }
 
-            <form action="" method="post" class="needs-validation" novalidate>
+            <form action="" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
                 <div class="card card-green card-outline">
                     <div class="card-header">
                         <h5 class="card-title m-0">@ViewData["Title"]</h5>
@@ -37,6 +37,13 @@
                         <span asp-validation-for="Item.NumberOfFiber" class="text-danger"></span>
                         <div class="mb-3">
                             <input type="text" class="form-control" asp-for="Item.NumberOfFiber">
+                        </div>
+
+                        <label asp-for="Upload">FDD Data</label>
+                        <span asp-validation-for="Upload" class="text-danger"></span>
+                        <div class="mb-3">
+                            <input asp-for="Upload" type="file" class="form-control">
+                            <span class="form-text">Please update zip file</span>
                         </div>
 
                         <label asp-for="Item.Description">Description</label>

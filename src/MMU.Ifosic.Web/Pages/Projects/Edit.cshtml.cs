@@ -1,22 +1,37 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
-using System.Data;
 
 namespace MMU.Ifosic.Web.Pages.Projects;
 
 [Authorize]
 public class EditModel : PageModel
 {
+    private static readonly string[] _mime = new string[]
+    {
+        "application/octet-stream",
+        "multipart/x-zip",
+        "application/zip",
+        "application/zip-compressed",
+        "application/x-zip-compressed",
+    };
+    
     private readonly Db _db;
-    public EditModel(Db db)
+    private const string FOLDER_NAME = "projects";
+    private readonly string _path = Path.Combine(Environment.CurrentDirectory, FOLDER_NAME);
+
+    public EditModel(Db db, IConfiguration cfg)
     {
         _db = db;
+        if (cfg.GetValue<string>("ProjectPath") is var name && name is not null)
+            _path = name;
     }
+
     [BindProperty] public Project Item { get; set; } = new();
+    [BindProperty] public IFormFile? Upload { get; set; }
+
 
     public async Task OnGetAsync(int id = 0)
     {
@@ -58,6 +73,20 @@ public class EditModel : PageModel
             _db.Projects.Add(Item);
         }
         await _db.SaveChangesAsync();
+
+
+        if (Item.Id > 0 && Upload is not null && Upload.Length > 0 && _mime.Contains(Upload.ContentType))
+        {
+            //var path = Path.Combine(_path, Item.Id.ToString());
+            var file = Path.Combine(_path, Upload.FileName);
+            using (var fileStream = new FileStream(file, FileMode.Create))
+            {
+                await Upload.CopyToAsync(fileStream);
+            }
+            var fdd = FrequencyShiftDistance.Load(file);
+            Signal.GetBoundary(fdd, Path.Combine(_path, "model.onnx"));
+            fdd.Save(Path.Combine(_path, $"{Item.Id}.bin")); ;
+        }
 
         return Redirect("~/projects/@Item.Id");
     }

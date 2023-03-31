@@ -17,6 +17,7 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0-preview.2.23128.3" />
+		<PackageReference Include="NPOI" Version="2.6.0" />
 		<PackageReference Include="StackExchange.Exceptional.AspNetCore" Version="2.2.32" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
 	</ItemGroup>

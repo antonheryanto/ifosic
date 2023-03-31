@@ -98,6 +98,8 @@ public class IndexModel : PageModel
 			}
 		}
 
+		if (refValues.Count == 0)
+			return Page();
 		AveragePoints = Signal.GetAveragePoint(averages.Values.ToArray(), times);
 		var refArray = refValues.Keys.ToArray();
 		var refPoints = new double[refArray.Length];

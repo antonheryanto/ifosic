@@ -1,11 +1,8 @@
-﻿using MathNet.Numerics.LinearAlgebra;
+﻿using MathNet.Numerics;
+using MathNet.Numerics.IntegralTransforms;
+using MathNet.Numerics.LinearAlgebra;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using MathNet.Numerics.LinearAlgebra;
-using System;
-using MathNet.Numerics.IntegralTransforms;
-using MathNet.Numerics;
-using MMU.Ifosic.Models;
 
 namespace MMU.Ifosic.Models;
 
@@ -52,9 +49,29 @@ public class Signal
 		return rx;
 	}
 
+	public static void GetBoundary(FrequencyShiftDistance fdd, string modelPath)
+	{
+		var transpose = new double[fdd.Distance.Count][];
+		var distances = new double[fdd.Distance.Count - 1];
+		for (int i = 0; i < fdd.Distance.Count; i++)
+		{
+			transpose[i] = new double[fdd.Traces.Count];
+			for (int j = 0; j < fdd.Traces.Count; j++)
+			{
+				transpose[i][j] = fdd.Traces[j][i];
+			}
+			if (i == 0)
+				continue;
+			distances[i - 1] = Distance.Euclidean(transpose[i - 1], transpose[i]);
+		}
+
+		var predictedBoundary = Inference(transpose, modelPath);
+		fdd.Categories = new(predictedBoundary);
+	}
+
 	public static List<double[]> GetAveragePoint(double[] averages, double[]? x = null)
 	{
-		var conv = Signal.Convolution(averages);
+		var conv = Convolution(averages);
 		var convDist = new double[conv.Length];
 		var timeGroups = new List<Group>();
 		var treshold = 0.001;
