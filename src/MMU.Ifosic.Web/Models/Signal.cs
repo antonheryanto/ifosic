@@ -127,9 +127,9 @@ public class Signal
 		return kernel;
 	}
 
-	public static double[] Convolution(double[] input)
+	public static double[] Convolution(double[] input, double sigma = 5)
 	{
-		var kernel = GaussianKernel((input.Length /2), 5);
+		var kernel = GaussianKernel((input.Length /2), sigma);
 		var inputC = new Complex32[kernel.Length];
 		for (int i = 0; i < input.Length; i++)
 		{
