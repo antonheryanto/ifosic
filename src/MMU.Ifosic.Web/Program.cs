@@ -127,7 +127,7 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 		RegressionPoints.Add(new double[] { refArray[i], refArray[i] * Regression.B + Regression.A });
 	}
 
-	return Results.Ok(new { candidates, Averages, AveragePoints, ReferencePoints, Regression, RegressionPoints });
+	return Results.Ok(new { candidates, Averages, AveragePoints, ReferencePoints, Slope = Regression.B, RegressionPoints });
 });
 
 app.UseExceptional();
