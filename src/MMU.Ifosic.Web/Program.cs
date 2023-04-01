@@ -25,7 +25,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 });
 builder.Services.AddDbContext<Db>(o => o.UseSqlite(cn));
 builder.Services.AddEmail(cfg);
-builder.Services.AddRazorPages().AddJsonOptions(o => o.JsonSerializerOptions.IncludeFields = true);
+builder.Services.AddRazorPages().AddJsonOptions(o => {
+	o.JsonSerializerOptions.IncludeFields = true;
+	o.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals;
+});
 
 var app = builder.Build();
 var path = cfg.GetValue<string>("ProjectPath") ?? Path.Combine(Environment.CurrentDirectory, "projects");
