@@ -33,8 +33,10 @@ public class IndexModel : PageModel
 	public (double A, double B) Regression { get; set; } = new();
 	public string Reference { get; set; } = "Pressure";
 	public string Unit { get; set; } = "MPa";
+	[BindProperty(SupportsGet = true)] public int LocationId { get; set; } = 800;
+	[BindProperty(SupportsGet = true)] public int Time { get; set; } = 500;
 
-	public async Task<IActionResult> OnGetAsync(int id = 0, int location = 800, int time = 50, int fiberId=1)
+    public async Task<IActionResult> OnGetAsync(int id = 0, int fiberId=1)
     {
         if (id < 1)
             return Redirect("~/");
@@ -44,10 +46,10 @@ public class IndexModel : PageModel
         // load data
 		Data = FrequencyShiftDistance.Load(Path.Combine(_path, $"{id}.bin"));
 		for (int i = 0; i < Data.Traces.Count; i++)
-            Lines.Add(Data.Traces[i][location]);
+            Lines.Add(Data.Traces[i][LocationId]);
         
         for (var i = 0; i < Data.Distance.Count; i++)
-			FreqDistance.Add(new double[] { Data.Distance[i], Data.Traces[time][i] });
+			FreqDistance.Add(new double[] { Data.Distance[i], Data.Traces[Time][i] });
 
 		var unix = new DateTime(1970, 1, 1);
 		// loop location within boundary of targeted fiber

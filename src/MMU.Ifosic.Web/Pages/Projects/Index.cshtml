@@ -87,6 +87,8 @@
 		var freqDistance = @Json.Serialize(Model.FreqDistance);
 	</script>
 	<script>
+		var locationId = @Model.LocationId;
+		var time = @Model.Time;
 		var colors = ['rgba(68,3,169, 0.3)', 'rgba(43,165,18, 0.3)', 'rgba(50,90,224, 0.3)', 'rgba(13,233,75, 0.3)', 'rgba(109,249,16, 0.3)'];
 		var boundaryBands = [];
 		for (var i = 1; i < boundaries.length; i++) {
@@ -121,13 +123,25 @@
 			},
 			plotOptions: {
 				series: {
+					allowPointSelect: true,
+					marker: {
+						states: {
+							select: {
+								fillColor: 'red',
+								radius: 7
+							}
+						}
+					},
 					cursor: 'pointer',
 					point: {
 						events: {
 							click: function () {
 								var index = dates.indexOf(this.x);
 								var url = `@(url)/location/${index}`;
-								Highcharts.getJSON(url, data => plot2.series[0].setData(data));
+								Highcharts.getJSON(url, data => {
+									plot2.series[0].setData(data);
+									plot2.series[0].data[locationId].select(true, false);
+								});
 							}
 						}
 					}
@@ -138,8 +152,7 @@
 				data: freqTimes,
 				name: 'Frequency Shift'
 			}]
-		});
-		
+		});		
 
 		const plot2 = Highcharts.chart('plot2', {
 			chart: {				
@@ -160,6 +173,19 @@
 			},
 			plotOptions: {
 				series: {
+					allowPointSelect: true,
+					marker: {
+						radius: 0.01,
+						states: {
+							hover: {
+								radius: 5
+							},
+							select: {
+								fillColor: 'red',
+								radius: 5
+							}
+						}
+					},
 					cursor: 'pointer',
 					point: {
 						events: {
@@ -193,6 +219,9 @@
 				name: 'Frequency Shift'
 			}]		
 		});
+
+		plot1.series[0].data[time].select(true, false);
+		plot2.series[0].data[locationId].select(true, false);
 	</script>
 	<script>
 		let heatmapChart;
