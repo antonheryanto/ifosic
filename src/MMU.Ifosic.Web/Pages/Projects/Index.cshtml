@@ -16,8 +16,13 @@
 			</div>
 		</div>
 		<div class="card-body">
+		@if (!string.IsNullOrEmpty(@Model.Item.Description)) {
 			<p>@Model.Item.Description</p>
-			Number of Fiber: @Model.Item.Fibers?.Count
+		}
+			Number of Fiber: @Model.Item.Fibers?.Count.<br/>
+			Distance: @Model.Data.Distance[^1] m.<br/>
+			Duration: @Model.Data.MeasurementStart[0] - @Model.Data.MeasurementEnd[^1].<br />
+
 		</div>
 	</div>
 
