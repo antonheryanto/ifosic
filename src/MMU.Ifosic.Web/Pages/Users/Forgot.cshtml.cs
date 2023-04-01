@@ -62,7 +62,7 @@ public class ForgotModel : PageModel
 
         item.Token ??= item?.Email?.Encrypt().Password.Replace("+", "=");
         await _db.SaveChangesAsync();
-        const string APP_NAME = "Inteligent DFOS Characterisation System";
+        const string APP_NAME = "Intelligent DFOS Characterisation System";
         Message = "A reset link has been sent to your registered email";
         var body = $@"
                     You're receiving this e-mail because you requested a password reset for your user account at {APP_NAME}.
