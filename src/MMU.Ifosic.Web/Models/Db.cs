@@ -26,7 +26,7 @@ public class Db : DbContext
         }
 
         b.Entity<User>().HasIndex(b => b.Email).IsUnique();
-        b.Entity<User>().HasIndex(b => b.Phone).IsUnique();
+        //b.Entity<User>().HasIndex(b => b.Phone).IsUnique();
         // init roles
         var roles = new string[] {
             "Admin",
@@ -40,7 +40,11 @@ public class Db : DbContext
             new User { Id = 2, Email = "ridz@mmu.edu.my", Name = "Ir. Prof. Dr. Mohd Ridzuan Bin Mokhtar", Password = pass, Salt = salt, IsActive = true, CreatedById = 1, UpdatedById = 1 },
             new User { Id = 3, Email = "khazaimatol@dkss.com.my", Name = "Dr Khazaimatol Shima Subari", Password = pass, Salt = salt, IsActive = true, CreatedById = 1, UpdatedById = 1 }
         );
-        b.Entity<User>().HasMany(s => s.Roles).WithMany(s => s.Users).UsingEntity(j => j.HasData(new { RolesId = 1, UsersId = 1 }));
+        b.Entity<User>().HasMany(s => s.Roles).WithMany(s => s.Users).UsingEntity(j => j.HasData(
+            new { RolesId = 1, UsersId = 1 },
+			new { RolesId = 1, UsersId = 2 },
+			new { RolesId = 1, UsersId = 3 }
+		));
         // init node
         b.Entity<Node>().HasData(new Node { Id = 1, Title = "Term and Condition", Body = "Term and Condition", IsPublished = true, UserId = 1 });
         var projects = new List<Project>
