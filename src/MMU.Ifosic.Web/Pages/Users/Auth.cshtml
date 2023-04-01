@@ -33,15 +33,15 @@
                         <div class="mb-3">
                             <input type="text" class="form-control" placeholder="Username" asp-for="Username">
                         </div>
-                        <label asp-for="Password">Password</label>
-                        <span class="text-danger"><a href="~/users/forgot">Forgot? Click here</a></span>
+                        <label asp-for="Password">Password</label>                        
                         <span asp-validation-for="Password" class="text-danger"></span>
                         <div class="mb-3">
-                            <input type="password" class="form-control" placeholder="Password" asp-for="Password">                            
+                            <input type="password" class="form-control" placeholder="Password" asp-for="Password">
+                            <div class="text-right"><a href="~/users/forgot">Need help?</a></div>
                         </div>
                         <div class="row">
                             <!-- /.col -->
-                            <div class="col-sm-3">
+                            <div class="col-mb-3">
                                 <button type="submit" class="btn btn-primary btn-block">Sign in</button>
                             </div>
                             <!-- /.col -->
