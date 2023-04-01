@@ -19,7 +19,7 @@
 		@if (!string.IsNullOrEmpty(@Model.Item.Description)) {
 			<p>@Model.Item.Description</p>
 		}
-			Number of Fiber: @Model.Item.Fibers?.Count.<br/>
+			Number of Fibers: @Model.Item.Fibers?.Count.<br/>
 			Distance: @Model.Data.Distance[^1] m.<br/>
 			Duration: @Model.Data.MeasurementStart[0] - @Model.Data.MeasurementEnd[^1].<br />
 
@@ -41,7 +41,7 @@
 	<div class="card">
 		<div class="card-header">
 			<div class="d-flex align-items-center">
-				<h5 class="mr-auto card-title d-none d-lg-block">Heatmap plot</h5>
+				<h5 class="mr-auto card-title d-none d-lg-block">Heatmap Plot</h5>
 				<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>
 			</div>
 		</div>
@@ -229,78 +229,6 @@
 		plot2.series[0].data[locationId].select(true, false);
 	</script>
 	<script>
-		let heatmapChart;
-		function heatmap(fdd) {			
-			return Highcharts.chart('plot3', {
-				chart: { type: 'heatmap' },
-				title: { text: ''},
-				legend: {enable: false},
-				tooltip: { enable: false },
-				yAxis: {
-					minPadding: 0,
-					maxPadding: 0,
-					startOnTick: false,
-					endOnTick: false,
-					//reversed: true,
-					title: { text: 'Time (hours)' }
-				},
-				xAxis: {
-					//plotBands: boundaryBands,
-					//min: 26,
-					//max: 60,
-					min: boundaries[0] - 3,
-					max: boundaries[boundaries.length - 1] + 4,
-					labels: {
-						align: 'left',
-						x: 5,
-						y: 14,
-						format: '{value}' // long month
-					},
-					showLastLabel: false,
-					title: { text: 'Distance (m)' }
-				},
-				colorAxis: {
-					stops: [
-						[0.2, '#DA72E1'],
-						[0.4, '#0600F4'],
-						[0.6, '#198C00'],
-						[0.8, '#FFF900'],
-						[1.0, '#FF1D00']
-					],
-					min: -25,
-					max: 25,
-					startOnTick: false,
-					endOnTick: false,
-					labels: {
-						format: '{value} GHz'
-					}
-				},
-				boost: { useGPUTranslations: true },
-				series: [{
-					showInLegend: false,
-					data: fdd.data,
-					boostThreshold: 100,
-					borderWidth: 0,
-					nullColor: '#EFEFEF',
-					tooltip: {
-						headerFormat: 'Frequency Shift<br/>',
-						pointFormat: '{point.x}:00: {point.y}:00: <b>{point.value} (Ghz)</b>'
-					},
-					turboThreshold: Number.MAX_VALUE // #3404, remove after 4.0.5 release
-				}]
-			});
-		}
-
-		function renderHeatMap() {
-			console.log('generate heatmap');			
-			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}")', fdd => {
-				const startTime = performance.now();
-				heatmapChart = heatmap(fdd);
-				console.log(`loaded in ${performance.now() - startTime} ms`);
-			});			
-		};
-	</script>
-	<script>
 		var references = @(Json.Serialize(Model.References));
 		var referencePoints = @(Json.Serialize(Model.ReferencePoints));
 		var candidates = @(Json.Serialize(Model.Candidates));
@@ -430,5 +358,77 @@
 		}
 
 		fiberPlot(candidates, averages, averagePoints, referencePoints, regression.item2, regressionPoints);
+	</script>
+
+	<script>
+		let heatmapChart;
+		heatmapChart = Highcharts.chart('plot3', {
+			chart: { type: 'heatmap' },
+			title: { text: '' },
+			legend: { enable: false },
+			tooltip: { enable: false },
+			yAxis: {
+				minPadding: 0,
+				maxPadding: 0,
+				startOnTick: false,
+				endOnTick: false,
+				//reversed: true,
+				title: { text: 'Time (hours)' }
+			},
+			xAxis: {
+				//plotBands: boundaryBands,
+				//min: 26,
+				//max: 60,
+				min: boundaries[0] - 3,
+				max: boundaries[boundaries.length - 1] + 4,
+				labels: {
+					align: 'left',
+					x: 5,
+					y: 14,
+					format: '{value}' // long month
+				},
+				showLastLabel: false,
+				title: { text: 'Distance (m)' }
+			},
+			colorAxis: {
+				stops: [
+					[0.2, '#DA72E1'],
+					[0.4, '#0600F4'],
+					[0.6, '#198C00'],
+					[0.8, '#FFF900'],
+					[1.0, '#FF1D00']
+				],
+				min: -25,
+				max: 25,
+				startOnTick: false,
+				endOnTick: false,
+				labels: {
+					format: '{value} GHz'
+				}
+			},
+			boost: { useGPUTranslations: true },
+			series: [{
+				showInLegend: false,
+				//data: fdd.data,
+				boostThreshold: 100,
+				borderWidth: 0,
+				nullColor: '#EFEFEF',
+				tooltip: {
+					headerFormat: 'Frequency Shift<br/>',
+					pointFormat: '{point.x}:00: {point.y}:00: <b>{point.value} (Ghz)</b>'
+				},
+				turboThreshold: Number.MAX_VALUE // #3404, remove after 4.0.5 release
+			}]
+		});
+
+		function renderHeatMap() {
+			console.log('generate heatmap');
+			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}")', fdd => {
+				const startTime = performance.now();
+				heatmapChart.series[0].setData(fdd.data);
+				console.log(`loaded in ${performance.now() - startTime} ms`);
+			});
+		};
+		renderHeatMap();
 	</script>
 }
