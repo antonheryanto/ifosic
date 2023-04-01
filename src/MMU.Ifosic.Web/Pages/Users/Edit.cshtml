@@ -45,9 +45,10 @@
                             <input type="email" class="form-control" placeholder="Email" asp-for="Item.Email">                            
                         </div>
                         
-                        @if ((User.IsAdmin() && Model.Item?.Id != 0) || (User.IsLogged() && User.GetId() == Model.Item?.Id) || !string.IsNullOrEmpty(Model.Item?.Token))
+                        @if (User.IsAdmin() || (User.IsLogged() && User.GetId() == Model.Item?.Id) || !string.IsNullOrEmpty(Model.Item?.Token))
                         {
                             <input type="hidden" asp-for="Item.Token" />
+                            <label asp-for="Item.Password">Password</label>
                             <span asp-validation-for="Item.Password" class="text-danger"></span>
                             <div class="mb-3">
                                 <input type="password" class="form-control" placeholder="Password" asp-for="Item.Password">
@@ -58,9 +59,13 @@
                             </div>
                         }
 
-                        @if (User.IsAdmin() && Model?.Item?.Id != 0)
+                        @if (User.IsAdmin())
                         {
-                            <div class="row">
+                            if (Model.Item?.Id == 0)
+                            {
+                                <input type="hidden" asp-for="Item.IsActive" />
+                            } else {
+                                <div class="row">
                                 <div class="col-12">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" asp-for="Item.IsActive"> 
@@ -68,6 +73,7 @@
                                     </div>
                                 </div>
                             </div>
+                            }
                         }
                         
                         <div class="row">

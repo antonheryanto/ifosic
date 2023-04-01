@@ -57,6 +57,11 @@ public class EditModel : PageModel
     // validate IC or Passport
     public async Task<IActionResult> OnPostAsync([FromServices] EmailService email)
     {
+        if (string.IsNullOrEmpty(Item.Email))
+            ModelState.AddModelError($"{nameof(Item.Email)}", $"{nameof(Item.Email)} is required");
+        if (string.IsNullOrEmpty(Item.Phone))
+            ModelState.AddModelError($"{nameof(Item.Phone)}", $"{nameof(Item.Phone)} is required");
+
         // reformat phone
         Item.Phone = string.Join("", (Item?.Phone ?? "").Trim().Split('-'));
 
@@ -66,12 +71,12 @@ public class EditModel : PageModel
             ModelState.AddModelError(nameof(Password), PASSWORD_INVALID);
         }
         // validate email
-        if (await _db.Users.AnyAsync(a => a.Email == Item.Email && (Item.Id == 0 || (Item.Id > 0 && a.Id != Item.Id))))
-            ModelState.AddModelError(nameof(Item.Email), $"Emel {EXIST}");
-        // validate phone
-        //if (await _db.Users.AnyAsync(a => a.Phone == Item.Phone && (Item.Id == 0 || (Item.Id > 0 && a.Id != Item.Id))))
-        //    ModelState.AddModelError(nameof(Item.Phone), $"Telefon {EXIST}");
-        
+        if (!string.IsNullOrEmpty(Item.Email) && await _db.Users.AnyAsync(a => a.Email == Item.Email && (Item.Id == 0 || (Item.Id > 0 && a.Id != Item.Id))))
+            ModelState.AddModelError(nameof(Item.Email), $"Email {EXIST}");
+        //validate phone
+        if (!string.IsNullOrEmpty(Item.Phone) && await _db.Users.AnyAsync(a => a.Phone == Item.Phone && (Item.Id == 0 || (Item.Id > 0 && a.Id != Item.Id))))
+            ModelState.AddModelError(nameof(Item.Phone), $"Phone {EXIST}");
+
         if (!User.IsLogged() && Item.Token is not null && !IsAgree)
             ModelState.AddModelError(nameof(IsAgree), $"Please agree to terms and conditions.");
         // make sure all data valid
