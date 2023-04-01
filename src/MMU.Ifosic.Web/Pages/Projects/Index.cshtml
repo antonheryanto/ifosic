@@ -240,6 +240,13 @@
 	<script>
 		function fiberPlot(freqDist, freqAverage, freqPoints, refPoints, slope, lines)
 		{
+			let maxY = 0;
+			for (let i = 0; i < freqAverage.length;i++) {
+				if (maxY < freqAverage[i][1])
+					maxY = freqAverage[i][1];
+			}
+			console.log(maxY)
+			
 			Highcharts.chart('plot4', {
 				chart: { zoomType: 'xy' },
 				title: { text: 'Fiber calibration' },
@@ -247,7 +254,7 @@
 				
 				yAxis: [{
 					min: -1,
-					max: 20,
+					max: maxY,
 					title: { text: 'Frequency Shift (GHz)' },
 				},{
 					opposite: true,
@@ -273,7 +280,7 @@
 						yAxis: 0,
 						type: 'scatter',
 						data: freqAverage,
-							color: 'rgba(0,148,255,0.4)',
+						color: 'rgba(0,148,255,0.4)',
 					},
 					{
 						name: '@(Model.Reference)',
@@ -352,7 +359,6 @@
 			console.log(`generate fiber ${id}`);
 			var url = '@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}/fiber/")' + id;
 			Highcharts.getJSON(url, fdd => {
-				console.log(fdd.slope)
 				fiberPlot(fdd.candidates, fdd.averages, fdd.averagePoints, fdd.referencePoints, fdd.slope, fdd.regressionPoints);
 			});
 		}
