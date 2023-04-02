@@ -85,7 +85,7 @@ public class EditModel : PageModel
             }
             var fdd = FrequencyShiftDistance.Load(file);
             Signal.GetBoundary(fdd, Path.Combine(_path, "model.onnx"));
-            fdd.Save(Path.Combine(_path, $"{Item.Id}.bin")); ;
+            fdd.Save(Path.Combine(_path, $"{Item.Id}.bin"));
         }
 
         return Redirect("~/projects/@Item.Id");

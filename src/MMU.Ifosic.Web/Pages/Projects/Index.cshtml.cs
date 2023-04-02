@@ -33,8 +33,8 @@ public class IndexModel : PageModel
 	public (double A, double B) Regression { get; set; } = new();
 	public string Reference { get; set; } = "Pressure";
 	public string Unit { get; set; } = "MPa";
-	[BindProperty(SupportsGet = true)] public int LocationId { get; set; } = 800;
-	[BindProperty(SupportsGet = true)] public int Time { get; set; } = 500;
+	[BindProperty(SupportsGet = true)] public int LocationId { get; set; } = 700;
+	[BindProperty(SupportsGet = true)] public int Time { get; set; } = 100;
 
     public async Task<IActionResult> OnGetAsync(int id = 0, int fiberId=1)
     {
@@ -131,11 +131,14 @@ public class IndexModel : PageModel
             refPoints.Add(refArray[j]);
             avgPoints.Add(AveragePoints[avgIdx][1]);
             ReferencePoints.Add(new double[] { refPoints[i], avgPoints[i] });
-        }
+        }		
         if (refPoints.Count < 2)
         {
-            refPoints.Insert(0, 0);
-            avgPoints.Insert(0, 0);
+			for (int i = refPoints.Count; i < 3; i++)
+			{
+				refPoints.Insert(0, 0);
+				avgPoints.Insert(0, 0);
+			}
         }
         //var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
         Regression = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refPoints.ToArray(), avgPoints.ToArray());
