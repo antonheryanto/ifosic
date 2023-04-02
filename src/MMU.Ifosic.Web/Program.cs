@@ -72,10 +72,11 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 	// loop location within boundary of targeted fiber
 	var unix = new DateTime(1970, 1, 1); // TODO adjust based correct ref time
 	var times = new double[fdd.Traces.Count];
+	var usesCategory = fdd.Categories.Where(w => w > 0).Count() > fdd.Categories.Count * 0.1;
 	for (int i = fdd.BoundaryIndexes[fiberId - 1]; i < fdd.BoundaryIndexes[fiberId]; i++)
 	{
 		// aggregate only good signal
-		if (fdd.Categories[i] != 1)
+		if (usesCategory && fdd.Categories[i] != 1)
 			continue;
 
 		// get each time freq at that location

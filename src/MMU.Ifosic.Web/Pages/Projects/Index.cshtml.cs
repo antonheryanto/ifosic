@@ -54,10 +54,11 @@ public class IndexModel : PageModel
 		var unix = new DateTime(1970, 1, 1);
 		// loop location within boundary of targeted fiber
 		var times = new double[Data.Traces.Count];
+		var usesCategory = Data.Categories.Where(w => w > 0).Count() > Data.Categories.Count * 0.1;
 		for (int i = Data.BoundaryIndexes[fiberId - 1]; i < Data.BoundaryIndexes[fiberId]; i++)
 		{
 			// aggregate only good signal
-			if (Data.Categories[i] != 1)
+			if (usesCategory && Data.Categories[i] != 1)
 				continue;
 
 			// get each time freq at that location
