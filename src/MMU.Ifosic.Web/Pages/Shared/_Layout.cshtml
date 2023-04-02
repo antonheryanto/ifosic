@@ -29,8 +29,8 @@
                         {
                             @if (User.IsAdmin())
                             {
-                                <li class="nav-item"><a class="nav-link" href="~/fibers">Fibers</a></li>
-                                <li class="nav-item"><a class="nav-link" href="~/users">Users</a></li>
+                                <li class="nav-item"><a class="nav-link" href="~/fibers"><img src="~/img/fiber.png" width="24" /> Fibers</a></li>
+                                <li class="nav-item"><a class="nav-link" href="~/users"><img src="~/img/users.png" width="24" /> Users</a></li>
                             }
                             <li class="nav-item"><a class="nav-link" href="~/pdf/manual.pdf" target="_blank"><img src="~/img/doc.png" width="24" /> Manual</a></li>
                             <li class="nav-item"><a class="nav-link" href="~/users/edit/@User.GetId()" title="@User.GetName()"><img src="~/img/user.png" width="24"/> Profile</a></li>
