@@ -8,7 +8,7 @@ from UNet import UNet
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # device object
 
 def train(train_loader, test_loader, model, output_path="model.pth"):
-    num_epochs = 20   #(set no of epochs)
+    num_epochs = 50   #(set no of epochs)
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     criterion = nn.CrossEntropyLoss()
     start_time = time.time() #(for showing time)
@@ -62,23 +62,33 @@ def test(test_loader, model):
 if __name__ == "__main__":
     path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
     # data = Dataset(f"{path}\\dataset.pth")
-    data = Dataset(f"{path}\\dataset_0.pth")
+    data = Dataset(f"{path}\\dataset_all.pth")
     # check using roi
     # train_set = data
+    i1 = torch.arange(640,940)
+    i2 = torch.arange(650,860) 
+    i3 = torch.arange(660,1110)
     indicies = torch.concat([
-        torch.arange(640,940),
-        torch.arange(1950+650,1950+860),
-        torch.arange(2*1950+660,2*1950+1110)
+        i1+1950*0,
+        i2+1950*1,
+        i3+1950*2,
+        i1+1950*3,
+        i2+1950*4,
+        i3+1950*5,
+        i1+1950*6,
+        i2+1950*7,
+        i3+1950*8,
+        i2+1950*9,
     ])
     val_set = torch.utils.data.Subset(data, indicies)
-    # print(len(train_set), len(val_set))
-    # train_loader = torch.utils.data.DataLoader(train_set, batch_size=32, shuffle=True, num_workers=2)
-    val_loader = torch.utils.data.DataLoader(data, batch_size=32, shuffle=False, num_workers=2)
+    print(len(data), len(val_set))
+    train_loader = torch.utils.data.DataLoader(data, batch_size=32, shuffle=True, num_workers=2)
+    val_loader = torch.utils.data.DataLoader(val_set, batch_size=32, shuffle=False, num_workers=2)
     model = UNet(width=64).to(device)
     model_path = f"{path}\\model.pth"
     # model = torch.load(model_path)
     model.load_state_dict(torch.load(model_path))
-    # train(train_loader, test_loader, model, model_path)
+    # train(train_loader, val_loader, model, model_path)
     print(test(val_loader, model))
     # x,y = next(iter(test_loader))
     # print(x.shape, y)

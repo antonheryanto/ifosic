@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 class UNet(nn.Module):
-    def __init__(self, width = 32, in_channels=1, out_channels=1, nf=8):
+    def __init__(self, width = 64, in_channels=1, out_channels=1, nf=8):
         super(UNet, self).__init__()
         
         self.encoder = nn.Sequential(

@@ -160,6 +160,13 @@ def prepareFrame(inputs, labels, dst = 'dataset_multi.pth'):
     i3 = data_slider(inputs[1950*2:1950*3])
     return torch.concat([i1, i2, i3])
     
+def prepare2d(path: str):
+    i1, l1 = prepareItem2d(1, width=64)
+    i2, l2 = prepareItem2d(2, width=64)
+    i3, l3 = prepareItem2d(3, width=64)
+    labels = prepareItems(l1, l2, l3)
+    inputs = torch.concat([i1, i2, i3]).unsqueeze(1)
+    torch.save((inputs, labels), path)
 
 def split(data):
     n = len(data)
@@ -169,11 +176,18 @@ def split(data):
     train_set, val_set = torch.utils.data.random_split(data, [nt, nv]) 
 
 if __name__ == "__main__":
-    path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
-    i1, l1 = prepareItem2d(1, width=64)
-    i2, l2 = prepareItem2d(2, width=64)
-    i3, l3 = prepareItem2d(3, width=64)
-    labels = prepareItems(l1, l2, l3)
-    inputs = torch.concat([i1, i2, i3]).unsqueeze(1)
-    torch.save((inputs, labels), f"{path}\\dataset.pth")
+    path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'    
+    # i,l = torch.load(f"{path}\\dataset.pth")
+    # i0,l0 = torch.load(f"{path}\\dataset_0.pth")
+    # i1,l1 = torch.load(f"{path}\\dataset_1.pth")
+    # print(i.shape, i1.shape)
+    # torch.save((torch.cat([i, i0, i1]), torch.cat([l, l0, l1])), f"{path}\\dataset_all.pth")
+    i,l = torch.load(f"{path}\\dataset_all.pth")
+    i4,l4 = torch.load(f"{path}\\dataset4.pth")
+    print(i.shape, i4.shape)
+    torch.save((torch.cat([i, i4]), torch.cat([l, l4])), f"{path}\\dataset_all.pth")
+
+
+
+    
     
