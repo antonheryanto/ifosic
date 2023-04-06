@@ -6,21 +6,21 @@ using OxyPlot.WindowsForms;
 using System.Runtime.Intrinsics.X86;
 using static System.Net.WebRequestMethods;
 
-var id = 1;
+var id = 4;
 int fiberId = 1;
 //var path = $@"C:\\Projects\\MMU\\Set0{id}";
 var path = $@"C:\Projects\MMU\projects\";
 //var fdd = FrequencyShiftDistance.Load($"{path}.zip");
 //fdd.AddReference($@"{path}\\pressure.csv");
 //fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
-//fdd.ToMessagePack($@"C:\Projects\MMU\ifosic\src\Python\Set0{id}.msgpack");
 var fdd = FrequencyShiftDistance.Load($@"C:\Projects\MMU\projects\{id}.bin");
 //fdd.AddReference(@"C:\Projects\MMU\Set01\Set01_Pressure vs Time.xlsx");
 
 // get the distance
 var distanceIndex = new List<int>();
 Signal.GetBoundary(fdd, Path.Combine(path, "model.onnx"));
-fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
+//fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
+fdd.ToMessagePack($@"C:\Projects\MMU\ifosic\src\Python\Set0{id}.msgpack");
 
 
 var transpose = new double[fdd.Distance.Count][];
@@ -157,8 +157,8 @@ var plots = new PlotView[] {
          .PlotLine(distanceDict)
          .PlotLine(distanceSmooth)
          .PlotBoundary(fdd.BoundaryIndexes),
-    //new PlotView()
-    //    .PlotLine(averages.Values.ToArray())
+    new PlotView()
+        .PlotLine(averages.Values.ToArray()),
     //    .PlotLine(avDistance)
   //      .PlotLine(conv)
   //      .PlotLine(convDist)
@@ -175,7 +175,7 @@ var plots = new PlotView[] {
         //.PlotScatter(ftd, times, color: OxyColors.Purple),
     //plotFT,
 	//plotFD.PlotBoundary(fdd.Boundaries),
-    //new PlotView().PlotScatter(fdd.TemperatureEnd.ToArray()),
+    //new PlotView().PlotScatter(fdd.Distance),
 };
 
 var t = new TableLayoutPanel

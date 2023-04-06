@@ -16,7 +16,7 @@ class SignalNet(nn.Module):
         )
         self.fc = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(16 * 320, 256),
+            nn.Linear(16 * 128, 256),
             nn.Dropout(0.1),
             # target class: noise, signal, transition, leak
             nn.Linear(256, out_channels)

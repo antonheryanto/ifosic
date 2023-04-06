@@ -7,6 +7,9 @@
 import msgpack
 import torch
 import torch.utils.data
+import PIL.Image as Image
+import numpy
+import math
 
 def FromMessagePack(filename):
     with open(filename, "rb") as data_file:
@@ -14,7 +17,7 @@ def FromMessagePack(filename):
     data_loaded = msgpack.unpackb(byte_data)
     return data_loaded
    
-def prepareItem(id = 1, start = 0, stop = 0, width = 1280):
+def prepareItem2(id = 1, start = 0, stop = 0, width = 1280):
     filename = f"C:\Projects\MMU\Ifosic\src\Python\Set0{id}.msgpack";
     data = FromMessagePack(filename)
     index = data["BoundaryIndexes"]
@@ -27,6 +30,19 @@ def prepareItem(id = 1, start = 0, stop = 0, width = 1280):
     else:
         inputs = torch.zeros(h, width)
         inputs[:, start:stop] = traces
+    labels = torch.zeros(h).long()
+    labels[index[0]:index[-1]] = 1
+    return inputs, labels
+
+def prepareItem(id = 1, width = 512):
+    filename = f"C:\Projects\MMU\Ifosic\src\Python\Set0{id}.msgpack";
+    data = FromMessagePack(filename)
+    index = data["BoundaryIndexes"]
+    traces = torch.tensor(data["Traces"]).transpose(0,1)    
+    h, w = traces.shape
+    img = Image.fromarray(traces.numpy())
+    imgR = img.resize((width, h))
+    inputs = torch.tensor(numpy.array(imgR))
     labels = torch.zeros(h).long()
     labels[index[0]:index[-1]] = 1
     return inputs, labels
@@ -53,7 +69,7 @@ def prepareItems():
     l2[830:831] = 3
     l2[837:839] = 3
     l2[844:849] = 2
-    i3, l3 = prepareItem(id=3, start=840, stop=2120)
+    i3, l3 = prepareItem(id=3)#, start=840, stop=2120)
     l3[668:685] = 2
     l3[780] = 2
     l3[838] = 2
@@ -69,10 +85,37 @@ def prepareItems():
     labels = torch.concat([l1, l2, l3])
     return inputs, labels
 
+def make_grids(inputs: torch.tensor, labels: torch.tensor, g = 512):
+    n = math.ceil(inputs.shape[1] / g)
+    grids = torch.zeros(inputs.shape[0], g * n)
+    grids[:,:inputs.shape[1]] = inputs
+    shaped = grids.reshape(grids.shape[0], grids.shape[1] // g, g)
+    lgrids = torch.zeros(labels.shape[0] * n).long()
+    k = 0
+    for j in range(labels.shape[0]):
+        for i in range(n):
+            lgrids[k] = labels[j]
+            k += 1
+    imgs = shaped.reshape(shaped.shape[0] * shaped.shape[1], shaped.shape[2])
+    return imgs, lgrids
+
 def data_slider(data: torch.tensor, win = 5):
     h,w = data.shape
     hw = win // 2
     slider = torch.zeros(data.shape[0], win, data.shape[1])
+    for i in range(win):
+        ss = 0 if i > hw else hw-i
+        se = 0 if i < hw else i-hw
+        ds = 0 if i < hw else i-hw
+        de = 0 if i > hw else hw-i
+        # print(ss, se, ds, de)
+        slider[ss:h-se,i,:] = data[ds:h-de]
+    return slider
+
+def label_slider(data:torch.tensor, win = 5):
+    h,w = data.shape
+    hw = win // 2
+    slider = torch.zeros(data.shape[0], win)
     for i in range(win):
         ss = 0 if i > hw else hw-i
         se = 0 if i < hw else i-hw
@@ -99,6 +142,6 @@ def split(data):
 if __name__ == "__main__":
     path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
     inputs, labels =  prepareItems()
-    sliders = prepareFrame(inputs, labels)
-    torch.save((sliders, labels), f"{path}\\dataset.pth")
+    inputs = inputs.unsqueeze(1).unsqueeze(-1)
+    torch.save((inputs, labels), f"{path}\\dataset.pth")
     

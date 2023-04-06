@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.onnx
 from model import SignalNet
 
-def model_save(model: nn.Module, model_path: str, onnx_path: str, height = 1280):
+def model_save(model: nn.Module, model_path: str, onnx_path: str, height = 512):
     state_dict = torch.load(model_path)
     layer_names = [i for i, j in state_dict.items()]
     in_channels = state_dict[layer_names[0]].shape[1]
