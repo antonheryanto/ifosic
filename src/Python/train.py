@@ -40,6 +40,8 @@ def train(train_loader, test_loader, model, output_path="model.pth"):
         if max_acc < test_acc:
             max_acc = test_acc
             torch.save(model.state_dict(), output_path)
+        if max_acc == 100:
+            return
 
 def test(test_loader, model):
     """ Testing Phase """
@@ -60,23 +62,23 @@ def test(test_loader, model):
 if __name__ == "__main__":
     path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
     # data = Dataset(f"{path}\\dataset.pth")
-    data = Dataset(f"{path}\\dataset_512_64.pth")
+    data = Dataset(f"{path}\\dataset_0.pth")
     # check using roi
-    train_set = data
+    # train_set = data
     indicies = torch.concat([
         torch.arange(640,940),
         torch.arange(1950+650,1950+860),
         torch.arange(2*1950+660,2*1950+1110)
     ])
     val_set = torch.utils.data.Subset(data, indicies)
-    print(len(train_set), len(val_set))
-    train_loader = torch.utils.data.DataLoader(train_set, batch_size=32, shuffle=True, num_workers=2)
-    test_loader = torch.utils.data.DataLoader(val_set, batch_size=32, shuffle=False, num_workers=2)
-    model = UNet().to(device)
+    # print(len(train_set), len(val_set))
+    # train_loader = torch.utils.data.DataLoader(train_set, batch_size=32, shuffle=True, num_workers=2)
+    val_loader = torch.utils.data.DataLoader(data, batch_size=32, shuffle=False, num_workers=2)
+    model = UNet(width=64).to(device)
     model_path = f"{path}\\model.pth"
     # model = torch.load(model_path)
-    # model.load_state_dict(torch.load(model_path))
-    train(train_loader, test_loader, model, model_path)
-    print(test(test_loader, model))
+    model.load_state_dict(torch.load(model_path))
+    # train(train_loader, test_loader, model, model_path)
+    print(test(val_loader, model))
     # x,y = next(iter(test_loader))
     # print(x.shape, y)
