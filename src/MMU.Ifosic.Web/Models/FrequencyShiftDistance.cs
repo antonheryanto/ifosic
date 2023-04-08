@@ -274,14 +274,18 @@ public partial class FrequencyShiftDistance
 		var bin = File.ReadAllBytes(fileName);
 		return MessagePackSerializer.Deserialize<FrequencyShiftDistance>(bin, _options);
 	}
+
 	static readonly MessagePackSerializerOptions _options = ContractlessStandardResolver.Options;
 	    //.WithCompression(MessagePackCompression.Lz4BlockArray);
-	public bool ToMessagePack(string fileName)
-	{
-		if (string.IsNullOrWhiteSpace(fileName))
-			return false;
-		var bytes = MessagePackSerializer.Serialize(this, _options);
-		File.WriteAllBytes(fileName, bytes);
-		return true;
-	}
+
+    public bool ToMessagePack(string fileName) => ToMessagePack(this, fileName);
+
+    public static bool ToMessagePack<T>(T value, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return false;
+        var bytes = MessagePackSerializer.Serialize(value, _options);
+        File.WriteAllBytes(fileName, bytes);
+        return true;
+    }
 }

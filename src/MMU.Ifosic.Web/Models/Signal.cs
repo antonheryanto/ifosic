@@ -3,37 +3,84 @@ using MathNet.Numerics.IntegralTransforms;
 using MathNet.Numerics.LinearAlgebra;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace MMU.Ifosic.Models;
+
+public class NumberToGrid
+{
+	private readonly double _step = 0;
+	private readonly double[] _values = Array.Empty<double>();
+    public NumberToGrid(double min = 0, double max = 9, int length = 10)
+    {
+        _step = (max - min) / (length - 1.0);
+		_values = new double[length];
+		for (int i = 0; i < length; i++) { 
+			_values[i] = min + _step * i;
+		}
+    }
+
+	public Tensor<float> ToTensor(double[][] values)
+	{
+		Tensor<float> item = new DenseTensor<float>(new int[] { values.Length, 1, values[0].Length, _values.Length });
+		for (int i = 0; i < values.Length; i++)
+		{ 
+			for (int j = 0; j < values[i].Length; j++) {
+				var v = values[i][j];
+				var id = GetClass(v);
+				item[i, 0, j, id] = 1;
+			}
+		}
+        return item;
+    }
+
+    public double[][] GetItem(double[] values)
+    {
+        var item = new double[values.Length][];
+		for (int i = 0; i < item.Length; i++)
+			item[i] = GetItem(values[i]);
+        return item;
+    }
+
+    public double[] GetItem(double v)
+	{
+		var item = new double[_values.Length];
+		item[GetClass(v)] = 1;
+		return item;
+	}
+
+	public int GetClass(double v)
+	{
+		if (v < _values[0])
+			return 0;
+		if (v > _values[^1])
+			return _values.Length - 1;
+
+		for (int i = 0; i < _values.Length; i++)
+		{
+			if (_values[i] > v)
+				return i;
+		}
+
+		return default;
+	}
+}
 
 public class Signal
 {
 	private static readonly Microsoft.ML.OnnxRuntime.SessionOptions options = new();
 
-	public static int[] Inference(IList<double[]> traces, string modelFile)
+	public static int[] Inference(Tensor<float> inputs, string modelFile)
 	{
 		using var session = new InferenceSession(modelFile, options);
 		var inputMeta = session.InputMetadata.First();
 		var dim = inputMeta.Value.Dimensions;
-		dim[0] = traces.Count;
-		Tensor<float> inputs = new DenseTensor<float>(dim);
-		var len = Math.Min(1280, traces[0].Length);
-		for (int i = 0; i < inputs.Dimensions[0]; i++)
-		{
-			for (int k = 0; k < len; k++)
-			{
-				inputs[i, 0, k] = i < 2 ? 0 : (float)traces[i-2][k];
-				inputs[i, 1, k] = i < 1 ? 0 : (float)traces[i-1][k];
-				inputs[i, 2, k] = (float)traces[i][k];
-				inputs[i, 3, k] = i > len - 1 ? 0 : (float)traces[i+1][k];
-				inputs[i, 4, k] = i > len - 2 ? 0 : (float)traces[i+2][k];
-			}
-		}
+		//dim[0] = traces.Count;
 
 		var data = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor(inputMeta.Key, inputs) };
 		using var results = session.Run(data);
 		var o = results.First().AsTensor<float>();
-		var rx = new int[traces.Count];
+		var rx = new int[inputs.Dimensions[0]];
 		for (int i = 0; i < rx.Length; i++)
 		{
 			var max = float.MinValue;
@@ -49,23 +96,102 @@ public class Signal
 		return rx;
 	}
 
+	public static double[][] Resize(IList<double[]> traces, int width = 512)
+	{
+		if (traces.Count == 0)
+			return Array.Empty<double[]>();
+		var (transpose, min, max) = Transpose(traces);
+		var scaller = max - min;
+		using var img = new SixLabors.ImageSharp.Image<L16>(transpose[0].Length, transpose.Length);
+		for (int y = 0; y < transpose.Length; y++)
+		{
+			for (int x = 0; x < transpose[y].Length; x++)
+			{
+				var r = transpose[y][x];
+				var f = (r - min) / scaller;
+				var v = (ushort)(f * ushort.MaxValue);
+				img[x, y] = new L16(v);
+			}
+		}
+		img.Mutate(x => x.Resize(width, img.Height));
+        //Tensor<float> inputs = new DenseTensor<float>(new int[] { img.Height, 1, img.Width, 64});
+        var inputs = new double[img.Height][];
+        img.ProcessPixelRows(accessor => { 
+			for (int y = 0; y < accessor.Height; y++)
+			{
+                var pixelRow = accessor.GetRowSpan(y);
+                inputs[y] = new double[accessor.Width];
+				for (int x = 0; x < inputs[y].Length; x++)
+				{
+                    ref var pixel = ref pixelRow[x];
+                    var f = 1.0 * pixel.PackedValue / ushort.MaxValue;
+                    var v = (f * scaller) + min;
+					inputs[y][x] = v;
+				}
+			}
+        });
+		return inputs;
+	}
+
+	// min max scaller 0 1, v - min / (max - min)
+	public static (double[][] Values, double Min, double Max) Transpose(IList<double[]> traces)
+	{
+        var transpose = new double[traces[0].Length][];
+		var min = double.MaxValue;
+		var max = double.MinValue;
+        for (int i = 0; i < transpose.Length; i++)
+        {
+            transpose[i] = new double[traces.Count];
+            for (int j = 0; j < transpose[i].Length; j++)
+            {
+                transpose[i][j] = traces[j][i];
+				min = Math.Min(min, transpose[i][j]);
+				max = Math.Max(max, transpose[i][j]);
+            }
+        }
+		return (transpose, min, max);
+    }
+
+	public static Tensor<float> Slider(IList<double[]> traces, int[] dim)
+	{
+        Tensor<float> inputs = new DenseTensor<float>(dim);
+        var len = Math.Min(1280, traces[0].Length);
+
+        for (int i = 0; i < inputs.Dimensions[0]; i++)
+        {
+            for (int k = 0; k < len; k++)
+            {
+                inputs[i, 0, k] = i < 2 ? 0 : (float)traces[i - 2][k];
+                inputs[i, 1, k] = i < 1 ? 0 : (float)traces[i - 1][k];
+                inputs[i, 2, k] = (float)traces[i][k];
+                inputs[i, 3, k] = i > len - 1 ? 0 : (float)traces[i + 1][k];
+                inputs[i, 4, k] = i > len - 2 ? 0 : (float)traces[i + 2][k];
+            }
+        }
+		return inputs;
+    }
+
 	public static void GetBoundary(FrequencyShiftDistance fdd, string modelPath)
 	{
-		var transpose = new double[fdd.Distance.Count][];
-		var distances = new double[fdd.Distance.Count - 1];
-		for (int i = 0; i < fdd.Distance.Count; i++)
-		{
-			transpose[i] = new double[fdd.Traces.Count];
-			for (int j = 0; j < fdd.Traces.Count; j++)
-			{
-				transpose[i][j] = fdd.Traces[j][i];
-			}
-			if (i == 0)
-				continue;
-			distances[i - 1] = Distance.Euclidean(transpose[i - 1], transpose[i]);
-		}
+        //var transpose = new double[fdd.Distance.Count][];
+        //var distances = new double[fdd.Distance.Count - 1];
+        //for (int i = 0; i < fdd.Distance.Count; i++)
+        //{
+        //	transpose[i] = new double[fdd.Traces.Count];
+        //	for (int j = 0; j < fdd.Traces.Count; j++)
+        //	{
+        //		transpose[i][j] = fdd.Traces[j][i];
+        //	}
+        //	if (i == 0)
+        //		continue;
+        //	distances[i - 1] = Distance.Euclidean(transpose[i - 1], transpose[i]);
+        //}
 
-		var predictedBoundary = Inference(transpose, modelPath);
+        var ix = Signal.Resize(fdd.Traces);
+        var ng = new NumberToGrid(-20, 30, 64);
+        var inputs = ng.ToTensor(ix);
+
+        var predictedBoundary = Inference(inputs, modelPath);
 		fdd.Categories = new(predictedBoundary);
 	}
 
