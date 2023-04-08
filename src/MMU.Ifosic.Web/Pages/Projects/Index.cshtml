@@ -28,7 +28,7 @@
 	<div class="card">
 		<div class="card-header">
 			<div class="d-flex align-items-center">
-				<h5 class="mr-auto card-title d-none d-lg-block">Frequency Shift</h5>				
+				<h5 class="mr-auto card-title d-none d-lg-block"><strong>FREQUENCY SHIFT PLOTS</strong></h5>
 			</div>
 		</div>
 		<div class="card-body">
@@ -40,7 +40,7 @@
 	<div class="card">
 		<div class="card-header">
 			<div class="d-flex align-items-center">
-				<h5 class="mr-auto card-title d-none d-lg-block">Waterfall Plot</h5>
+				<h5 class="mr-auto card-title d-none d-lg-block"><strong>HEATMAP PLOT</strong></h5>
 				<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>
 			</div>
 		</div>
@@ -53,7 +53,7 @@
 	<div class="card">
 		<div class="card-header">
 			<div class="d-flex align-items-center">
-				<h5 class="mr-auto card-title d-none d-lg-block">FIBER CHARACTERISATION</h5>
+				<h5 class="mr-auto card-title d-none d-lg-block"><strong>FIBER CHARACTERISATION</strong></h5>
 				@*<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>*@
 				<div class="ml-1 align-self-end">
 					<select class="form-control" onchange="getFiber(this.value)">
@@ -392,7 +392,7 @@
 					title: { text: 'Distance (m)' }
 				},
 				colorAxis: {
-					title: { text: 'Pressure (MPa)' },
+					title: { text: '<b>Frequency Shift (GHz)<b>' },
 					stops: [
 						[0.2, '#DA72E1'],
 						[0.4, '#0600F4'],
@@ -405,7 +405,7 @@
 					startOnTick: false,
 					endOnTick: false,
 					labels: {
-						format: '{value} MPa'
+						format: '{value} GHz'
 					}
 				},
 				boost: { useGPUTranslations: true },
