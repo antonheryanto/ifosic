@@ -16,7 +16,7 @@
 		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.14.1" />
 		<PackageReference Include="NPOI" Version="2.6.0" />
 		<PackageReference Include="OxyPlot.WindowsForms" Version="2.1.2" />
-		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.0" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -217,7 +217,50 @@ public static class OxyPlotExtensions
         return view;
     }
 
-    private static readonly OxyPalette _palette = OxyPalettes.Rainbow(500);    
+    private static readonly OxyPalette _palette = OxyPalettes.Rainbow(500);
+
+    public static PlotView PlotHeatmap(this PlotView view, double[][] image, double max = 30)
+    {
+        var model = new PlotModel { Title = "Image" };
+        var data = new double[image.Length, image[0].Length];
+        for (int i = 0; i < image.Length; i++)
+        {
+            for (int j = 0; j < data.GetLength(1); j++)
+            {
+                var v = image[i][j];
+                data[i, j] = v;
+            }
+        }
+
+        model.Axes.Add(new LinearColorAxis
+        {
+            Key = "linear",
+            Minimum = -max,
+            Maximum = max,
+            Palette = _palette,
+            RenderAsImage = true,
+            Position = AxisPosition.None
+        });
+
+        model.Series.Add(new HeatMapSeries
+        {
+            //XAxisKey = "x",
+            //YAxisKey = "y",
+            //ColorAxisKey = "linear",
+            X0 = 0,
+            X1 = data.GetLength(0),
+            Y0 = 0,
+            Y1 = data.GetLength(1),
+            Interpolate = true,
+            RenderMethod = HeatMapRenderMethod.Bitmap,
+            Data = data,
+        });
+        
+        model.InvalidatePlot(true);
+        view.Model = model;
+        view.Dock = DockStyle.Fill;
+        return view;
+    }
 
     public static PlotView PlotHeatmap(this PlotView view, FrequencyShiftDistance fdd, IList<int>? indexes = null, int start = 0, int stop = 0, double max = 0, string titleXAxis = "Distance (m)", string titleYAxis = "Time(s)")
     {

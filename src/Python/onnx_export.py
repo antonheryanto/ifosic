@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 import torch.onnx
 from model import SignalNet
+from UNet import UNet
 
-def model_save(model: nn.Module, model_path: str, onnx_path: str, height = 512):
+def model_save(model: nn.Module, model_path: str, onnx_path: str, height = 512, width = 64):
     state_dict = torch.load(model_path)
     layer_names = [i for i, j in state_dict.items()]
     in_channels = state_dict[layer_names[0]].shape[1]
-    x = torch.rand(1, in_channels, height, requires_grad=True)
+    x = torch.rand(1, in_channels, height, width, requires_grad=True)
     model.load_state_dict(state_dict)
     model.eval()
     torch.onnx.export(model,
@@ -30,6 +31,6 @@ def model_save(model: nn.Module, model_path: str, onnx_path: str, height = 512):
                       })
     
 if __name__ == "__main__":
-    path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
-    model = SignalNet(5)
-    model_save(model, f"{path}/model.pth", f"{path}/model.onnx")
+    path = r'C:\Projects\MMU\Ifosic\src\Python'
+    model = UNet()
+    model_save(model, f"{path}\model.pth", f"{path}\model.onnx")

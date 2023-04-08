@@ -1,9 +1,9 @@
 ﻿using MathNet.Numerics;
+using Microsoft.ML.OnnxRuntime.Tensors;
 using MMU.Ifosic;
 using MMU.Ifosic.Models;
 using OxyPlot;
 using OxyPlot.WindowsForms;
-using System.Runtime.Intrinsics.X86;
 using static System.Net.WebRequestMethods;
 
 var id = 4;
@@ -15,15 +15,12 @@ var path = $@"C:\Projects\MMU\projects\";
 //fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
 var fdd = FrequencyShiftDistance.Load($@"C:\Projects\MMU\projects\{id}.bin");
 //fdd.AddReference(@"C:\Projects\MMU\Set01\Set01_Pressure vs Time.xlsx");
-
 // get the distance
 var distanceIndex = new List<int>();
-Signal.GetBoundary(fdd, Path.Combine(path, "model.onnx"));
+Signal.GetBoundary(fdd, Path.Combine("C:\\Projects\\MMU\\Ifosic\\src\\Python", "model.onnx"));
 //fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
-fdd.ToMessagePack($@"C:\Projects\MMU\ifosic\src\Python\Set0{id}.msgpack");
+//fdd.ToMessagePack($@"C:\Projects\MMU\ifosic\src\Python\Set0{id}.msgpack");
 
-
-var transpose = new double[fdd.Distance.Count][];
 bool start = false;
 for (int i = 1; i < fdd.Categories.Count; i++)
 {
@@ -47,6 +44,7 @@ for (int i = 1; i < fdd.Categories.Count; i++)
 }
 
 var distanceDict = new double[fdd.Distance.Count];
+var transpose = new double[fdd.Distance.Count][];
 for (int i = 0; i < distanceIndex.Count - 1; i++)
 {
     for (int j = distanceIndex[i], k = 0; j < distanceIndex[i + 1]; j++, k++)
@@ -64,24 +62,6 @@ for (int i = 0; i < distanceIndex.Count - 1; i++)
     }
 }
 
-var distanceSmooth = Signal.Convolution(distanceDict, 4);
-
-// get freq on certain distance for range of time
-//var distanceIndex = new int[748]; // fdd.BoundaryIndexes[2] + 5;
-var plotFT = new PlotView();
-var projectY = new Dictionary<double, int>();  
-for (int i = 0; i < distanceIndex.Count; i++)
-{
-    var freqByTime = new double[fdd.Traces.Count];
-    for (int j = 0; j < fdd.Traces.Count; j++)
-    {
-        var v = fdd.Traces[j][distanceIndex[i]];
-		freqByTime[j] = v;
-        if (!projectY.TryAdd(v, 1))
-            projectY[v]++;
-	}
-	//plotFT.PlotScatter(freqByTime, color: OxyColors.Purple);
-}
 
 var candidates = new List<double[]>();
 // loop location within boundary of targeted fiber
@@ -99,83 +79,17 @@ for (int i = fdd.BoundaryIndexes[fiberId - 1]; i < fdd.BoundaryIndexes[fiberId];
 }
 
 
-
-var groups = candidates.GroupBy(x => x[0]).ToList();
-var averages = new Dictionary<double, double>();
-var projectX = new Dictionary<double, double>();
-var avDistance = new List<double>();
-int g = 0;
-foreach (var group in groups)
-{
-    var sum = 0d;
-    var n = 0;
-    foreach (var v in group)
-    {
-        sum += v[1];
-		n++;
-	}
-    projectX[group.Key] = sum;
-	averages[group.Key] = sum / n;
-    // get distance of neightboard point
-    if (g > 0)
-        avDistance.Add(MathNet.Numerics.Distance.Euclidean(
-            new double[] { g - 1, averages[g - 1] }, new double[] { g, averages[g] }));
-	g++;
-}
-avDistance.Add(0);
-
-
-// get freq vs distance
-// get group with 
-//var times = new int[] { 26, 35, 45, 46, 65, 83 };
-//var times = boundaryDistance.Keys.ToArray();
-//var plotFD = new PlotView();
-//var ftd = new double[times.Length];
-//var bIndex = 1;
-//for (int j = 0; j < ftd.Length; j++)
-//{
-//    var tx = times[j];
-//    for (int i = fdd.BoundaryIndexes[bIndex]; i < fdd.BoundaryIndexes[bIndex+1]; i++)
-//    {
-//        ftd[j] += fdd.Traces[tx][i];
-//    }
-//    ftd[j] /= fdd.BoundaryIndexes[bIndex+1] - fdd.BoundaryIndexes[bIndex];
-//    plotFD.PlotLine(fdd.Traces[tx]);
-//}
-
-var freqKeys = projectY.Keys.ToList().OrderBy(x => x);
-var freqValues = new List<double>();
-var freqTimes = new List<double>();
-foreach (var key in freqKeys)
-{
-    freqTimes.Add(key);
-    freqValues.Add(projectY[key]);
-}
-
 var plots = new PlotView[] {
-    new PlotView()
-         .PlotLine(distanceDict)
-         .PlotLine(distanceSmooth)
-         .PlotBoundary(fdd.BoundaryIndexes),
-    new PlotView()
-        .PlotLine(averages.Values.ToArray()),
-    //    .PlotLine(avDistance)
-  //      .PlotLine(conv)
-  //      .PlotLine(convDist)
-		//.PlotScatter(averagePoint),
-    //new PlotView().PlotLine(freqValues, freqTimes, min: 0),
-  //  new PlotView().PlotScatter(candidates)
-  //      .PlotScatter(averages.Values.ToArray(), color: OxyColors.Blue)
-		//.PlotLine(avDistance),
-    //new PlotView().PlotLine(predictedBoundary, min: 0).PlotBoundary(fdd.BoundaryIndexes),
-    //new PlotView().PlotLine(boundaryDistance.Values.ToArray(), min: 0).PlotBoundary(fdd.BoundaryIndexes),
-    //new PlotView().PlotLine(distances, min: 0).PlotBoundary(fdd.BoundaryIndexes)
+    //new PlotView().PlotHeatmap(ng.GetItem(ix[600]), max: 1),
     //new PlotView().PlotHeatmap(fdd, max: 25),
-    //new PlotView().PlotScatter(freqByTime)
-        //.PlotScatter(ftd, times, color: OxyColors.Purple),
-    //plotFT,
-	//plotFD.PlotBoundary(fdd.Boundaries),
-    //new PlotView().PlotScatter(fdd.Distance),
+    //new PlotView()
+    //     .PlotLine(distanceDict)
+    //     .PlotLine(distanceSmooth)
+    //     .PlotBoundary(fdd.BoundaryIndexes),
+    //new PlotView()
+    //    .PlotLine(conv)
+    //    .PlotLine(convDist)
+    //    .PlotScatter(averagePoint),
 };
 
 var t = new TableLayoutPanel

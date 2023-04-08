@@ -19,9 +19,10 @@ class UNet(nn.Module):
 
         # self.bottleneck = UNet._block(nf * 8, nf * 16, name="bottleneck")
         self.fc = nn.Sequential(
-            nn.Flatten(),
+            nn.Flatten(),            
             nn.Linear(64 * width * 2, 256),
-            nn.Linear(256, 4)
+            nn.ReLU(),
+            nn.Linear(256, 4),
         )
 
         # self.decoder = nn.Sequential(
