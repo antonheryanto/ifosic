@@ -3,7 +3,6 @@ using MathNet.Numerics.IntegralTransforms;
 using MathNet.Numerics.LinearAlgebra;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace MMU.Ifosic.Models;
 
@@ -58,7 +57,7 @@ public class NumberToGrid
 
 		for (int i = 0; i < _values.Length; i++)
 		{
-			if (_values[i] > v)
+			if (_values[i] >= v)
 				return i;
 		}
 
@@ -70,7 +69,7 @@ public class Signal
 {
 	private static readonly Microsoft.ML.OnnxRuntime.SessionOptions options = new();
 
-	public static int[] Inference(Tensor<float> inputs, string modelFile)
+	public static (int[], double[][]) Inference(Tensor<float> inputs, string modelFile)
 	{
 		using var session = new InferenceSession(modelFile, options);
 		var inputMeta = session.InputMetadata.First();
@@ -81,6 +80,7 @@ public class Signal
 		using var results = session.Run(data);
 		var o = results.First().AsTensor<float>();
 		var rx = new int[inputs.Dimensions[0]];
+		var pb = new double[o.Dimensions[0]][];
 		for (int i = 0; i < rx.Length; i++)
 		{
 			var max = float.MinValue;
@@ -92,9 +92,31 @@ public class Signal
 					rx[i] = j;
 				}
 			}
-		}
-		return rx;
+
+            var sum = 0d;
+			var exp = new float[o.Dimensions[1]];
+            for (int j = 0; j < exp.Length; j++)
+            {
+				exp[j] = MathF.Exp(o[i, j] - max);
+                sum += exp[j];
+            }
+			pb[i] = exp.Select(v => v / sum).ToArray();
+        }
+		return (rx, pb);
 	}
+
+	public static float[] Softmax(float[] values)
+	{
+        var maxVal = values.Max();
+		var o = new double[values.Length];
+		var sum = 0d;
+		for (int i = 0; i < o.Length; i++)
+		{
+			o[i] = Math.Exp(values[i] - maxVal);
+            sum += o[i];
+        }
+		return o.Select(v => (float)( v / sum)).ToArray();
+    }
 
 	public static double[][] Resize(IList<double[]> traces, int width = 512)
 	{
@@ -114,7 +136,6 @@ public class Signal
 			}
 		}
 		img.Mutate(x => x.Resize(width, img.Height));
-        //Tensor<float> inputs = new DenseTensor<float>(new int[] { img.Height, 1, img.Width, 64});
         var inputs = new double[img.Height][];
         img.ProcessPixelRows(accessor => { 
 			for (int y = 0; y < accessor.Height; y++)
@@ -171,28 +192,109 @@ public class Signal
 		return inputs;
     }
 
-	public static void GetBoundary(FrequencyShiftDistance fdd, string modelPath)
+	public static (IList<int>, IList<double>) GetBoundary(FrequencyShiftDistance fdd, string modelPath, int nFiber = 6, int width=512)
 	{
-        //var transpose = new double[fdd.Distance.Count][];
-        //var distances = new double[fdd.Distance.Count - 1];
-        //for (int i = 0; i < fdd.Distance.Count; i++)
-        //{
-        //	transpose[i] = new double[fdd.Traces.Count];
-        //	for (int j = 0; j < fdd.Traces.Count; j++)
-        //	{
-        //		transpose[i][j] = fdd.Traces[j][i];
-        //	}
-        //	if (i == 0)
-        //		continue;
-        //	distances[i - 1] = Distance.Euclidean(transpose[i - 1], transpose[i]);
-        //}
-
-        var ix = Signal.Resize(fdd.Traces);
+        var ix = Resize(fdd.Traces, width);
         var ng = new NumberToGrid(-20, 30, 64);
         var inputs = ng.ToTensor(ix);
+		var (pred, probabilities) = Inference(inputs, modelPath);
+        var distances = new double[fdd.Distance.Count - 1];
+		var idx = 2;// transitional probablities
+        for (int i = 2; i < ix.Length - 2; i++)
+        {
+            for (int j = i - 2; j < i + 2; j++)
+            {
+                distances[i] += Distance.Euclidean(ix[j], ix[i]) / 4;
+            }
+			distances[i] *= probabilities[i][idx];
+        }
 
-        var predictedBoundary = Inference(inputs, modelPath);
-		fdd.Categories = new(predictedBoundary);
+		// find the first and last 
+		int f = 0;
+		bool sf = false;
+		// list candidates
+		int start = 0;
+		int stop = pred.Length - 1;
+		for (int i = 0, j = pred.Length - 1; i < pred.Length - 1; i++, j--)
+		{
+			// search forward
+			if (start == 0 && pred[i] != 0 && pred[i+1] == 1)
+			{
+				start = i+1;
+			}
+
+            // search backward
+            if (stop == pred.Length -1 && pred[j] != 0 && pred[j - 1] == 1)
+            {
+				stop = j-1;
+            }
+        }
+
+		List<(int Index, double Value)> candidates = new();
+
+        for (int i = start + 1; i < stop; i++)
+		{
+			if (pred[i-1] == 2 && pred[i] == 1)
+				candidates.Add((i, distances[i]));
+		}
+
+        //candidates.Add((731, distances[731]));
+        //candidates.RemoveAt(3);
+        //candidates.RemoveAt(2);
+        //candidates.RemoveAt(1);
+
+        // if candidate more than possible fiber remove
+        // if candidate less than possible fiber add
+        // recursively check when candidate less 
+		
+        if (candidates.Count > 0 && candidates.Count < nFiber - 1)
+		{
+			int p = 0;
+		FindMore:
+            int maxP = candidates.Count - 1;
+			// candidates.Insert(0, (start, distances[start]));
+			// candidates.Add((stop, distances[stop]));
+            // find the boundary between found candidates			
+            while (candidates.Count < nFiber + 1)
+			{
+				var distance = double.MinValue;
+				var index = 0;
+				var range = 5;
+				for (int i = candidates[p].Index; i < candidates[p+1].Index; i++)
+				{
+					if (distance < distances[i] && (i > candidates[p].Index + range && i < candidates[p+1].Index - range))
+					{
+                        distance = distances[i];
+                        index = i;
+					}
+				}
+				if (index > 0)
+					candidates.Add((index, distance));
+				p++;
+				if (p == maxP)
+					break;
+			}
+
+			if (candidates.Count > 0 && candidates.Count < nFiber - 1)
+			{
+                candidates.Sort((p1, p2) => p1.Index.CompareTo(p2.Index));
+                goto FindMore;
+			}
+
+        }
+
+        if (candidates.Count > nFiber - 1)
+        {
+            candidates.Sort((p1, p2) => p1.Value.CompareTo(p2.Value));
+            candidates.RemoveRange(0, candidates.Count - (nFiber - 1));
+        }
+
+        candidates.Sort((p1, p2) => p1.Index.CompareTo(p2.Index));
+        candidates.Insert(0, (start, distances[start]));
+        candidates.Add((stop, distances[stop]));
+
+        fdd.Categories = new(pred);
+		return (candidates.Select(s => s.Index).ToList(), distances);
 	}
 
 	public static List<double[]> GetAveragePoint(double[] averages, double[]? x = null)
