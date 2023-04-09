@@ -33,7 +33,7 @@ public class IndexModel : PageModel
 	public (double A, double B) Regression { get; set; } = new();
 	public string Reference { get; set; } = "Pressure";
 	public string Unit { get; set; } = "MPa";
-	[BindProperty(SupportsGet = true)] public int LocationId { get; set; } = 700;
+    [BindProperty(SupportsGet = true)] public int LocationId { get; set; } = 700;
 	[BindProperty(SupportsGet = true)] public int Time { get; set; } = 100;
 
     public async Task<IActionResult> OnGetAsync(int id = 0, int fiberId=1)
@@ -71,8 +71,6 @@ public class IndexModel : PageModel
 
 		var groups = Candidates.GroupBy(x => x[0]).ToList();
 		var averages = new Dictionary<double, double>();
-		var avDistance = new List<double>();
-		int g = 0;
 		foreach (var group in groups)
 		{
 			var sum = 0d;
@@ -83,8 +81,6 @@ public class IndexModel : PageModel
 				n++;
 			}
 			averages[group.Key] = sum / n;
-
-			g++;
 		}
 
 		Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();

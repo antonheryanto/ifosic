@@ -239,12 +239,25 @@
 	<script>
 		function fiberPlot(freqDist, freqAverage, freqPoints, refPoints, slope, lines)
 		{
+			let minY = 0;
 			let maxY = 0;
 			for (let i = 0; i < freqAverage.length;i++) {
 				if (maxY < freqAverage[i][1])
 					maxY = freqAverage[i][1];
+				if (minY > freqAverage[i][1])
+					minY = freqAverage[i][1];
 			}
-			
+
+			let minY2 = 0;
+			let maxY2 = 0;
+			for (let i = 0; i < references.length; i++) {
+				if (maxY2 < references[i][1])
+					maxY2 = references[i][1];
+				if (minY2 > references[i][1])
+					minY2 = references[i][1];
+			}
+			console.log(maxY2, minY2)
+
 			Highcharts.chart('plot4', {
 				chart: { zoomType: 'xy' },
 				title: { text: 'Averaged Frequency Shift' },
@@ -392,7 +405,7 @@
 					title: { text: 'Distance (m)' }
 				},
 				colorAxis: {
-					title: { text: '<b>Frequency Shift (GHz)<b>' },
+					title: { text: 'Frequency Shift (GHz)' },
 					stops: [
 						[0.2, '#DA72E1'],
 						[0.4, '#0600F4'],

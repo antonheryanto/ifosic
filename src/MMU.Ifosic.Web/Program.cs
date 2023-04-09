@@ -150,14 +150,14 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 		refPoints.Insert(0, 0);
         avgPoints.Insert(0, 0);
     }
-    var Regression = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refPoints.ToArray(), avgPoints.ToArray());
+    var (A, B) = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refPoints.ToArray(), avgPoints.ToArray());
     var RegressionPoints = new List<double[]>();
     for (int i = 0; i < refPoints.Count; i++)
     {
-        RegressionPoints.Add(new double[] { refPoints[i], refPoints[i] * Regression.B + Regression.A });
+        RegressionPoints.Add(new double[] { refPoints[i], refPoints[i] * B + A });
     }
 
-	return Results.Ok(new { candidates, Averages, AveragePoints, ReferencePoints, Slope = Regression.B, RegressionPoints });
+	return Results.Ok(new { candidates, Averages, AveragePoints, ReferencePoints, Slope = B, RegressionPoints });
 });
 
 app.UseExceptional();
