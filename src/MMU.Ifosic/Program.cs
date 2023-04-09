@@ -6,18 +6,23 @@ using OxyPlot;
 using OxyPlot.WindowsForms;
 using static System.Net.WebRequestMethods;
 
+
+var root = $@"C:\\Projects\\MMU\\";
+var project = Path.Combine(root, "projects");
+var srcPath = Path.Combine(root, "Ifosic\\src\\Python");
 var id = 4;
 int fiberId = 1;
-//var path = $@"C:\\Projects\\MMU\\Set0{id}";
-var path = $@"C:\Projects\MMU\projects\";
-//var fdd = FrequencyShiftDistance.Load($"{path}.zip");
-//fdd.AddReference($@"{path}\\pressure.csv");
-//fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
-var fdd = FrequencyShiftDistance.Load($@"C:\Projects\MMU\projects\{id}.bin");
+//var fdd = FrequencyShiftDistance.Load(Path.Combine(root, "Set03b.zip"));
+var fdd = FrequencyShiftDistance.Load(Path.Combine(project, $"{id}.bin"));
+//var img = Signal.Resize(fdd.Traces);
+//var ng = new NumberToGrid(-20, 30, 64);
+//var ngC = ng.GetClass(27);
+
+//FrequencyShiftDistance.ToMessagePack(img, Path.Combine(srcPath, $"Set0{id}.msgpack"));
 //fdd.AddReference(@"C:\Projects\MMU\Set01\Set01_Pressure vs Time.xlsx");
 // get the distance
 var distanceIndex = new List<int>();
-Signal.GetBoundary(fdd, Path.Combine("C:\\Projects\\MMU\\Ifosic\\src\\Python", "model.onnx"));
+var (cxt, dxt) = Signal.GetBoundary(fdd, Path.Combine(srcPath, "model_512_64.onnx"));
 //fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
 //fdd.ToMessagePack($@"C:\Projects\MMU\ifosic\src\Python\Set0{id}.msgpack");
 
@@ -78,14 +83,18 @@ for (int i = fdd.BoundaryIndexes[fiberId - 1]; i < fdd.BoundaryIndexes[fiberId];
     }
 }
 
+var catD = fdd.Categories
+        //.Where((s, i) => i > 600 && i < 1250)
+        .Select(s => (double)s).ToList();
 
 var plots = new PlotView[] {
     //new PlotView().PlotHeatmap(ng.GetItem(ix[600]), max: 1),
     //new PlotView().PlotHeatmap(fdd, max: 25),
-    //new PlotView()
-    //     .PlotLine(distanceDict)
-    //     .PlotLine(distanceSmooth)
-    //     .PlotBoundary(fdd.BoundaryIndexes),
+    new PlotView()
+         .PlotLine(dxt)
+         .PlotBoundary(cxt)
+         .PlotLine(catD),
+         //.PlotBoundary(fdd.BoundaryIndexes),
     //new PlotView()
     //    .PlotLine(conv)
     //    .PlotLine(convDist)

@@ -32,5 +32,7 @@ def model_save(model: nn.Module, model_path: str, onnx_path: str, height = 512, 
     
 if __name__ == "__main__":
     path = r'C:\Projects\MMU\Ifosic\src\Python'
-    model = UNet()
-    model_save(model, f"{path}\model.pth", f"{path}\model.onnx")
+    height=512
+    width=64
+    model = UNet(height, width)
+    model_save(model, f"{path}\model_{height}_{width}.pth", f"{path}\model_{height}_{width}.onnx", height, width)

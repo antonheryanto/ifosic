@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 class UNet(nn.Module):
-    def __init__(self, width = 64, in_channels=1, out_channels=1, nf=8):
+    def __init__(self, height=256, width=64, in_channels=1, out_channels=1, nf=8):
         super(UNet, self).__init__()
         
         self.encoder = nn.Sequential(
@@ -20,7 +20,7 @@ class UNet(nn.Module):
         # self.bottleneck = UNet._block(nf * 8, nf * 16, name="bottleneck")
         self.fc = nn.Sequential(
             nn.Flatten(),            
-            nn.Linear(64 * width * 2, 256),
+            nn.Linear((height // 4) *  width, 256),
             nn.ReLU(),
             nn.Linear(256, 4),
         )

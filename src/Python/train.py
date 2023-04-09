@@ -103,7 +103,9 @@ def run():
 if __name__ == "__main__":
     path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
     # data = Dataset(f"{path}\\dataset.pth")
-    data = Dataset(f"{path}\\dataset_all.pth")
+    height = 512
+    width=64
+    data = Dataset(f"{path}\\dataset_{height}_{width}_allnew.pth")
     # check using roi
     # train_set = data
     i1 = torch.arange(640,940)
@@ -119,17 +121,18 @@ if __name__ == "__main__":
         i1+1950*6,
         i2+1950*7,
         i3+1950*8,
-        i2+1950*9,
+        # i2+1950*9,
     ])
     val_set = torch.utils.data.Subset(data, indicies)
     print(len(data), len(val_set))
     train_loader = torch.utils.data.DataLoader(data, batch_size=50, shuffle=True, num_workers=2)
     val_loader = torch.utils.data.DataLoader(val_set, batch_size=50, shuffle=False, num_workers=2)    
-    model = UNet(width=64).to(device)
-    model_path = f"{path}\\model.pth"
+    criterion = nn.CrossEntropyLoss()
+    model = UNet(height, width).to(device)
+    model_path = f"{path}\\model_{height}_{width}.pth"
     # model = torch.load(model_path)
     # model.load_state_dict(torch.load(model_path))
     train(train_loader, val_loader, model, model_path)
-    # print(test(val_loader, model))
+    print(test(val_loader, model, criterion))
     # x,y = next(iter(test_loader))
     # print(x.shape, y)
