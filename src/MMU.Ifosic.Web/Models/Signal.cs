@@ -231,8 +231,8 @@ public class Signal
         }
 
 		List<(int Index, double Value)> candidates = new();
-
-        for (int i = start + 1; i < stop; i++)
+		var range = 5;
+		for (int i = start + range; i < stop-range; i++)
 		{
 			if (pred[i-1] == 2 && pred[i] == 1)
 				candidates.Add((i, distances[i]));
@@ -249,6 +249,8 @@ public class Signal
 		
         if (candidates.Count > 0 && candidates.Count < nFiber - 1)
 		{
+			if (candidates.Count == 1)
+				candidates.Add((stop, distances[stop]));
 			int p = 0;
 		FindMore:
             int maxP = candidates.Count - 1;
@@ -259,7 +261,6 @@ public class Signal
 			{
 				var distance = double.MinValue;
 				var index = 0;
-				var range = 5;
 				for (int i = candidates[p].Index; i < candidates[p+1].Index; i++)
 				{
 					if (distance < distances[i] && (i > candidates[p].Index + range && i < candidates[p+1].Index - range))
@@ -275,15 +276,16 @@ public class Signal
 					break;
 			}
 
-			if (candidates.Count > 0 && candidates.Count < nFiber - 1)
+			candidates.Sort((p1, p2) => p1.Index.CompareTo(p2.Index));
+			if (candidates.Count > 0 && candidates.Count < (nFiber - 1 + (candidates[^1].Index == stop ? 1 : 0)))
 			{
-                candidates.Sort((p1, p2) => p1.Index.CompareTo(p2.Index));
-                goto FindMore;
+				if (candidates[^1].Index == stop)
+					p--;
+				goto FindMore;
 			}
+		}
 
-        }
-
-        if (candidates.Count > nFiber - 1)
+		if (candidates.Count > nFiber - 1 + (candidates[^1].Index == stop ? 1 : 0))
         {
             candidates.Sort((p1, p2) => p1.Value.CompareTo(p2.Value));
             candidates.RemoveRange(0, candidates.Count - (nFiber - 1));
@@ -291,9 +293,20 @@ public class Signal
 
         candidates.Sort((p1, p2) => p1.Index.CompareTo(p2.Index));
         candidates.Insert(0, (start, distances[start]));
-        candidates.Add((stop, distances[stop]));
+		if (candidates[^1].Index != stop)
+			candidates.Add((stop, distances[stop]));
 
         fdd.Categories = new(pred);
+		if (fdd.Boundaries.Count != nFiber || fdd.BoundaryIndexes.Count != nFiber)
+		{
+			fdd.BoundaryIndexes = candidates.Select(s => s.Index).ToList();
+			fdd.Boundaries.Clear();
+			foreach (var index in fdd.BoundaryIndexes)
+			{
+				fdd.Boundaries.Add(fdd.Distance[index]);
+			}
+		}
+
 		return (candidates.Select(s => s.Index).ToList(), distances);
 	}
 
