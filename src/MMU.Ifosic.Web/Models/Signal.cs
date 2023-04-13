@@ -248,7 +248,10 @@ public class Signal
         if (candidates.Count > 0 && candidates.Count < nFiber - 1)
 		{
 			if (candidates.Count == 1)
+			{
+				//candidates.Insert(0, (start, distances[start]));
 				candidates.Add((stop, distances[stop]));
+			}
 			int p = 0;
 		FindMore:
             int maxP = candidates.Count - 1;
@@ -275,12 +278,16 @@ public class Signal
 			}
 
 			candidates.Sort((p1, p2) => p1.Index.CompareTo(p2.Index));
-			if (candidates.Count > 0 && candidates.Count < (nFiber - 1 + (candidates[^1].Index == stop ? 1 : 0)))
+			if (candidates.Count > 0 && candidates.Count < (nFiber + (candidates[^1].Index == stop ? 1 : 0)))
 			{
 				if (candidates[^1].Index == stop)
 					p--;
 				goto FindMore;
 			}
+			if (candidates[0].Index == start)
+				candidates.RemoveAt(0);
+			if (candidates[^1].Index == stop)
+				candidates.RemoveAt(candidates.Count - 1);
 		}
 
 		if (candidates.Count > nFiber - 1 + (candidates[^1].Index == stop ? 1 : 0))

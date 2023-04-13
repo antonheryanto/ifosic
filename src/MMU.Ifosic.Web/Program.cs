@@ -72,7 +72,7 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 	// loop location within boundary of targeted fiber
 	var unix = new DateTime(1970, 1, 1); // TODO adjust based correct ref time
 	var times = new double[fdd.Traces.Count];
-	var usesCategory = fdd.Categories.Where(w => w > 0).Count() > fdd.Categories.Count * 0.1;
+	var usesCategory = fdd.Categories.Where(w => w > 0).Count() > fdd.Categories.Count * 0.08;
 	for (int i = fdd.BoundaryIndexes[fiberId - 1]; i < fdd.BoundaryIndexes[fiberId]; i++)
 	{
 		// aggregate only good signal
@@ -167,11 +167,12 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
     }
 
     //var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
-	if (refPoints.Count < 2)
+	while (refPoints.Count < 2)
 	{
 		refPoints.Insert(0, 0);
         avgPoints.Insert(0, 0);
     }
+
     var (A, B) = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refPoints.ToArray(), avgPoints.ToArray());
     var RegressionPoints = new List<double[]>();
     for (int i = 0; i < refPoints.Count; i++)
