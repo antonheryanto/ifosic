@@ -103,8 +103,8 @@ def run():
 if __name__ == "__main__":
     path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
     # data = Dataset(f"{path}\\dataset.pth")
-    height = 512
-    width=64
+    height = 256
+    width=32
     data = Dataset(f"{path}\\dataset_{height}_{width}_allnew.pth")
     # check using roi
     # train_set = data
@@ -115,12 +115,12 @@ if __name__ == "__main__":
         i1+1950*0,
         i2+1950*1,
         i3+1950*2,
-        i1+1950*3,
-        i2+1950*4,
-        i3+1950*5,
-        i1+1950*6,
-        i2+1950*7,
-        i3+1950*8,
+        # i1+1950*3,
+        # i2+1950*4,
+        # i3+1950*5,
+        # i1+1950*6,
+        # i2+1950*7,
+        # i3+1950*8,
         # i2+1950*9,
     ])
     val_set = torch.utils.data.Subset(data, indicies)

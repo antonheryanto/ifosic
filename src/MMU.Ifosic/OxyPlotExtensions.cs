@@ -25,7 +25,7 @@ public static class OxyPlotExtensions
 		// get freq on certain distanct for range of time
 		for (int j = 0; j < data.Count; j++)
 		{
-			scatters.Points.Add(new ScatterPoint(data[j].X, data[j].Y, 1, data[j].Id));
+			scatters.Points.Add(new ScatterPoint(data[j].Start, data[j].Stop, 1, data[j].Id));
 		}
 
 		model.Series.Add(scatters);

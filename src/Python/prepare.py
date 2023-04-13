@@ -173,11 +173,12 @@ def split(data):
 
 if __name__ == "__main__":
     path = r'C:\\Projects\\MMU\\Ifosic\\src\\Python'
-    height=512
-    width=64
-    i,l = torch.load(f"{path}\\dataset_{height}_{width}_all.pth")
-    i0,l0 = torch.load(f"{path}\\dataset_{height}_{width}_new.pth")
-    torch.save((torch.cat([i, i0.unsqueeze(1)]), torch.cat([l,l0])), f"{path}\\dataset_{height}_{width}_allnew.pth")
+    height=256
+    width=32
+    prepare2d(f"{path}\dataset_256_32.pth", height, width)
+    # i,l = torch.load(f"{path}\\dataset_{height}_{width}_all.pth")
+    # i0,l0 = torch.load(f"{path}\\dataset_{height}_{width}_new.pth")
+    # torch.save((torch.cat([i, i0.unsqueeze(1)]), torch.cat([l,l0])), f"{path}\\dataset_{height}_{width}_allnew.pth")
 
     # i0, _ = prepareItem2d(4, height, width)
     # i1, _ = prepareItem2d(5, height, width)
@@ -187,7 +188,6 @@ if __name__ == "__main__":
     # make_grids(f"{path}\dataset_{height}_{width}.pth")
     # i0,l0 = torch.load(f"{path}\\dataset_{height}_{width}_0.pth")
     # i1,l1 = torch.load(f"{path}\\dataset_{height}_{width}_1.pth")
-    print(i.shape, i0.shape)
     # torch.save((torch.cat([i, i0, i1]), torch.cat([l, l0, l1])), f"{path}\\dataset_{height}_{width}_all.pth")
     # i,l = torch.load(f"{path}\\dataset_all.pth")
     # i4,l4 = torch.load(f"{path}\\dataset4.pth")
