@@ -103,24 +103,46 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 	var Reference = "Pressure";
 	var refValues = new Dictionary<double, int>();
     var refMax = double.MinValue;
-    if (fdd.References.TryGetValue(Reference, out var references))
+	List<double> referenceValues = new();
+	if (fdd.References.TryGetValue(Reference, out var references))
 	{
 		foreach (var (d, v) in references)
 		{
             refMax = Math.Max(refMax, v);
-            if (!refValues.ContainsKey(v))
+			if (referenceValues.Count == 0)
+			{
+				referenceValues.Add(v);
+				continue;
+			}
+			if (referenceValues[^1] != v)
+				referenceValues.Add(v);
+			if (!refValues.ContainsKey(v))
 				refValues.Add(v, 0);
 			refValues[v]++;
 		}
 	}
 
 	var Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
-	var AveragePoints = Signal.GetAveragePoint(averages.Values.ToArray(), times);
+	var averageValues = averages.Values.ToArray();
+	var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times);
+	List<double[]> CrossPlotPoints = new();
+	List<double[]> GuidedPoints = new();
+	for (int i = 0; i < timeGroups.Count; i++)
+	{
+		var v = i < referenceValues.Count ? referenceValues[i] : -1000;
+		for (int j = timeGroups[i].Start; j < timeGroups[i].Stop; j++)
+		{
+			if (v != -1000)
+				CrossPlotPoints.Add(new double[] { v, averageValues[j] });
+			GuidedPoints.Add(new double[] { times[j], averagePoints[i][1] });
+		}
+	}
+
 	var refDate = references[0].Date;
     var averageIndex = 0;
-    for (int i = 0; i < AveragePoints.Count; i++)
+    for (int i = 0; i < averagePoints.Count; i++)
     {
-        var second = AveragePoints[i][0];
+        var second = averagePoints[i][0];
         var aDate = unix.AddMilliseconds(second);
         if (refDate > aDate)
             continue;
@@ -137,10 +159,10 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
     for (int i = 0, j = refStart; j < refArray.Count; i++, j++)
     {
 		var avgIdx = j + averageIndex;
-		if (avgIdx > AveragePoints.Count - 1)
+		if (avgIdx > averagePoints.Count - 1)
 			continue;
         refPoints.Add(refArray[j]);
-        avgPoints.Add(AveragePoints[avgIdx][1]);
+        avgPoints.Add(averagePoints[avgIdx][1]);
         ReferencePoints.Add(new double[] { refPoints[i], avgPoints[i] });
     }
 
@@ -157,7 +179,8 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
         RegressionPoints.Add(new double[] { refPoints[i], refPoints[i] * B + A });
     }
 
-	return Results.Ok(new { candidates, Averages, AveragePoints, ReferencePoints, Slope = B, RegressionPoints });
+	return Results.Ok(new { candidates, Averages, averagePoints, ReferencePoints, 
+		Slope = B, RegressionPoints, CrossPlotPoints, GuidedPoints });
 });
 
 app.UseExceptional();

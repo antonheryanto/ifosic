@@ -30,6 +30,8 @@ public class IndexModel : PageModel
 	public List<double[]> AveragePoints { get; set; } = new();
 	public List<double[]> ReferencePoints { get; set; } = new();
 	public List<double[]> RegressionPoints { get; set; } = new();
+	public List<double[]> CrossPlotPoints { get; set; } = new();
+	public List<double[]> GuidedPoints { get; set; } = new();
 	public (double A, double B) Regression { get; set; } = new();
 	public string Reference { get; set; } = "Pressure";
 	public string Unit { get; set; } = "MPa";
@@ -92,10 +94,19 @@ public class IndexModel : PageModel
         var refDate = references[0].Date;
         var timeDiff = refDate >= Data.MeasurementStart[0] ? new TimeSpan()
                 : (Data.MeasurementStart[0] - refDate) ?? new TimeSpan();
+		List<double> referenceValues = new();
         foreach (var (d, v) in references)
         {
 			refMax = Math.Max(refMax, v);
             References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
+			if (referenceValues.Count == 0)
+			{
+				referenceValues.Add(v);
+				continue;
+			}
+			if (referenceValues[^1] != v)
+				referenceValues.Add(v);
+
             if (!refValues.ContainsKey(v))
                 refValues.Add(v, 0);
             refValues[v]++;
@@ -104,7 +115,21 @@ public class IndexModel : PageModel
         if (refValues.Count == 0)
             return Page();
 
-        AveragePoints = Signal.GetAveragePoint(averages.Values.ToArray(), times);
+		var averageValues = averages.Values.ToArray();
+		var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times);
+
+		for (int i = 0; i < timeGroups.Count; i++)
+		{
+			var v = i < referenceValues.Count ? referenceValues[i] : -1000;
+			for (int j = timeGroups[i].Start; j < timeGroups[i].Stop; j++)
+			{
+				if (v != -1000)
+					CrossPlotPoints.Add(new double[] { v, averageValues[j] });
+				GuidedPoints.Add(new double[] { times[j], averagePoints[i][1] });
+			}
+		}
+
+		AveragePoints = averagePoints;
         var averageIndex = 0;
         for (int i = 0; i < AveragePoints.Count; i++)
 		{
@@ -115,7 +140,8 @@ public class IndexModel : PageModel
 			averageIndex = i;
 			break;
 		}
-        var refArray = refValues.Keys.ToList();
+
+		var refArray = refValues.Keys.ToList();
 		var refMaxId = refArray.IndexOf(refMax);
 		var refStart = refMaxId < refArray.Count / 2 ? refMaxId : 0; 
         var avgPoints = new List<double>();
@@ -128,7 +154,7 @@ public class IndexModel : PageModel
             refPoints.Add(refArray[j]);
             avgPoints.Add(AveragePoints[avgIdx][1]);
             ReferencePoints.Add(new double[] { refPoints[i], avgPoints[i] });
-        }		
+		}		
         if (refPoints.Count < 2)
         {
 			for (int i = refPoints.Count; i < 3; i++)

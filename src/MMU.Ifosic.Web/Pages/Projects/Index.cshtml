@@ -65,6 +65,7 @@
 			</div>
 		</div>
 		<div class="card-body">
+			<div id="plot4a"></div>
 			<div id="plot4"></div>
 			<div id="plot5"></div>
 		</div>
@@ -235,44 +236,35 @@
 		var averagePoints = @(Json.Serialize(Model.AveragePoints));
 		var regressionPoints = @(Json.Serialize(Model.RegressionPoints));
 		var regression = @(Json.Serialize(Model.Regression));
+		var crossPlotPoints = @(Json.Serialize(Model.CrossPlotPoints));
+		var guidedPoints = @(Json.Serialize(Model.GuidedPoints));
 	</script>
 	<script>
-		function fiberPlot(freqDist, freqAverage, freqPoints, refPoints, slope, lines)
-		{
-			let minY = 0;
+		function averagePlot(freqDist, freqAverage, freqPoints, guidedPoints) {
 			let maxY = 0;
-			for (let i = 0; i < freqAverage.length;i++) {
+			for (let i = 0; i < freqAverage.length; i++) {
 				if (maxY < freqAverage[i][1])
 					maxY = freqAverage[i][1];
-				if (minY > freqAverage[i][1])
-					minY = freqAverage[i][1];
 			}
 
-			let minY2 = 0;
-			let maxY2 = 0;
-			for (let i = 0; i < references.length; i++) {
-				if (maxY2 < references[i][1])
-					maxY2 = references[i][1];
-				if (minY2 > references[i][1])
-					minY2 = references[i][1];
-			}
-			console.log(maxY2, minY2)
-
-			Highcharts.chart('plot4', {
+			Highcharts.chart('plot4a', {
 				chart: { zoomType: 'xy' },
 				title: { text: 'Averaged Frequency Shift' },
 				legend: { enabled: true },
-				
-				yAxis: [{
-					min: -1,
-					max: maxY,
-					title: { text: 'Frequency Shift (GHz)' },
-				},{
-					opposite: true,
-					min: -1,
-					max: 32,
-					title: { text: '@(Model.Reference) (@(Model.Unit))' },
-				}],
+
+				yAxis: [
+					{
+						min: -1,
+						max: maxY,
+						title: { text: 'Frequency Shift (GHz)' },
+					}, 
+					//{
+					//	opposite: true,
+					//	min: -1,
+					//	max: 32,
+					//	title: { text: '@(Model.Reference) (@(Model.Unit))' },
+					//}
+				],
 				xAxis: {
 					type: 'datetime',
 					title: { text: 'Time (hours)' },
@@ -293,15 +285,15 @@
 						data: freqAverage,
 						color: 'rgba(0,148,255,0.4)',
 					},
-					{
-						name: '@(Model.Reference)',
-						yAxis: 1,					
-						type: 'spline',
-						data: references,
-						dashStyle: 'dash',
-						color: 'black',
-						marker: { enabled: false },
-					},
+					//{
+					//	name: '@(Model.Reference)',
+					//	yAxis: 1,
+					//	type: 'spline',
+					//	data: references,
+					//	dashStyle: 'dash',
+					//	color: 'black',
+					//	marker: { enabled: false },
+					//},
 					{
 						name: 'Points',
 						yAxis: 0,
@@ -309,9 +301,21 @@
 						data: freqPoints,
 						color: 'red',
 					},
+					{
+						name: '@(Model.Reference)',
+						yAxis: 0,
+						type: 'spline',
+						data: guidedPoints,
+						dashStyle: 'dash',
+						color: 'magenta',
+						marker: { enabled: false },
+					},
 				]
 			});
-
+		}
+	</script>
+	<script>
+		function regressionPlot(refPoints, slope, lines, crossPlotPoints) {
 			Highcharts.chart('plot5', {
 				title: {
 					text: 'Fiber Coefficient'
@@ -343,8 +347,15 @@
 					}]
 				}],
 				series: [{
+					data: crossPlotPoints,
+					type: 'scatter',
+					name: 'Observations',
+					marker: {
+						radius: 4
+					}
+				}, {
 					type: 'line',
-					name: 'Regression Line',					
+					name: 'Regression Line',
 					data: lines,
 					marker: {
 						enabled: false
@@ -357,7 +368,7 @@
 					enableMouseTracking: false
 				}, {
 					type: 'scatter',
-					name: 'Observations',
+					name: 'Average',
 					data: refPoints,
 					marker: {
 						radius: 4
@@ -366,15 +377,18 @@
 			});
 		}
 
+
 		function getFiber(id) {
 			console.log(`generate fiber ${id}`);
 			var url = '@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}/fiber/")' + id;
 			Highcharts.getJSON(url, fdd => {
-				fiberPlot(fdd.candidates, fdd.averages, fdd.averagePoints, fdd.referencePoints, fdd.slope, fdd.regressionPoints);
+				averagePlot(fdd.candidates, fdd.averages, fdd.averagePoints, fdd.guidedPoints)
+				regressionPlot(fdd.referencePoints, fdd.slope, fdd.regressionPoints, fdd.crossPlotPoints);
 			});
 		}
 
-		fiberPlot(candidates, averages, averagePoints, referencePoints, regression.item2, regressionPoints);
+		averagePlot(candidates, averages, averagePoints, guidedPoints)
+		regressionPlot(referencePoints, regression.item2, regressionPoints, crossPlotPoints);
 	</script>
 
 	<script>

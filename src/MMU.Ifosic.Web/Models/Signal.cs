@@ -210,8 +210,6 @@ public class Signal
         }
 
 		// find the first and last 
-		int f = 0;
-		bool sf = false;
 		// list candidates
 		int start = 0;
 		int stop = pred.Length - 1;
@@ -310,7 +308,7 @@ public class Signal
 		return (candidates.Select(s => s.Index).ToList(), distances);
 	}
 
-	public static List<double[]> GetAveragePoint(double[] averages, double[]? x = null)
+	public static (List<double[]> Averages, List<Group> Groups) GetAveragePoint(double[] averages, double[]? x = null)
 	{
 		var conv = Convolution(averages);
 		var convDist = new double[conv.Length];
@@ -335,25 +333,29 @@ public class Signal
 
 			if (start && Math.Abs(delta) > treshold && delta < 0)
 			{
-				timeGroups[timeGroups.Count - 1].Y = i;
+				timeGroups[^1].Stop = i;
 				groupId++;
 				timeGroups.Add(new(i, 0, groupId));
 				start = false;
 			}
 		}
 
+		if (timeGroups[^1].Stop == 0)
+			timeGroups.RemoveAt(timeGroups.Count - 1);
+
 		var averagePoint = new List<double[]>();
+		var borderGap = 10;
 		foreach (var group in timeGroups)
 		{
 			var sum = 0d;
-			for (int i = group.X; i < group.Y; i++)
+			for (int i = group.Start + borderGap; i < group.Stop - borderGap; i++)
 			{
 				sum += averages[i];
 			}
-			var pX = (group.X + (group.Y - group.X) / 2);			
-			averagePoint.Add(new[] { x is null ? pX : x[pX], sum / (group.Y - group.X) });
+			var pX = (group.Start + (group.Stop - group.Start) / 2);			
+			averagePoint.Add(new[] { x is null ? pX : x[pX], sum / (group.Stop - group.Start - borderGap * 2) });
 		}
-		return averagePoint;
+		return (averagePoint, timeGroups);
 	}
 
 

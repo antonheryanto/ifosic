@@ -15,16 +15,16 @@ public class Group
 {
 	public Group(int x = 0, int y = 0, int id = -1)
 	{
-		X = x;
-		Y = y;
+		Start = x;
+		Stop = y;
         Id = id;
 	}
 
-	public int X { get; set; }
-	public int Y { get; set; }
+	public int Start { get; set; }
+	public int Stop { get; set; }
 	public int Id { get; set; } = -1;
 
-	public override string ToString() => $"{X},{Y},{Id}";
+	public override string ToString() => $"{Start},{Stop},{Id}";
 }
 
 public class Measurement
