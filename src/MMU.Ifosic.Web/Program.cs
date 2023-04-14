@@ -180,8 +180,10 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
         RegressionPoints.Add(new double[] { refPoints[i], refPoints[i] * B + A });
     }
 
-	return Results.Ok(new { candidates, Averages, averagePoints, ReferencePoints, 
-		Slope = B, RegressionPoints, CrossPlotPoints, GuidedPoints });
+	return Results.Ok(new { 
+		//candidates, Averages, averagePoints, GuidedPoints,
+		ReferencePoints,Slope = B, RegressionPoints, CrossPlotPoints 
+	});
 });
 
 app.UseExceptional();

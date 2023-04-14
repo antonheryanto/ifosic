@@ -56,6 +56,7 @@
 				<h5 class="mr-auto card-title d-none d-lg-block"><strong>FIBER CHARACTERISATION</strong></h5>
 				@*<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load</button>*@
 				<div class="ml-1 align-self-end">
+					@*<button onclick="renderHeatMap()" class="ml-1 align-self-end btn btn-sm btn-outline-primary">Load Guided Plot</button>*@
 					<select class="form-control" onchange="getFiber(this.value)">
 					@for (int i = 1; i < Model.Item.NumberOfFiber + 1; i++) {
 						<option value="@(i)">Fiber @(i)</option>
@@ -382,12 +383,12 @@
 			console.log(`generate fiber ${id}`);
 			var url = '@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}/fiber/")' + id;
 			Highcharts.getJSON(url, fdd => {
-				averagePlot(fdd.candidates, fdd.averages, fdd.averagePoints, fdd.guidedPoints)
+				//averagePlot(fdd.candidates, fdd.averages, fdd.averagePoints, fdd.guidedPoints)
 				regressionPlot(fdd.referencePoints, fdd.slope, fdd.regressionPoints, fdd.crossPlotPoints);
 			});
 		}
 
-		averagePlot(candidates, averages, averagePoints, guidedPoints)
+		//averagePlot(candidates, averages, averagePoints, guidedPoints)
 		regressionPlot(referencePoints, regression.item2, regressionPoints, crossPlotPoints);
 	</script>
 
