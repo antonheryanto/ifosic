@@ -116,12 +116,13 @@ public class IndexModel : PageModel
             return Page();
 
 		var averageValues = averages.Values.ToArray();
-		var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times);
+		var borderGap = 10;
+		var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times, borderGap);
 
 		for (int i = 0; i < timeGroups.Count; i++)
 		{
 			var v = i < referenceValues.Count ? referenceValues[i] : -1000;
-			for (int j = timeGroups[i].Start; j < timeGroups[i].Stop; j++)
+			for (int j = timeGroups[i].Start + borderGap; j < timeGroups[i].Stop - borderGap; j++)
 			{
 				if (v != -1000)
 					CrossPlotPoints.Add(new double[] { v, averageValues[j] });

@@ -315,7 +315,7 @@ public class Signal
 		return (candidates.Select(s => s.Index).ToList(), distances);
 	}
 
-	public static (List<double[]> Averages, List<Group> Groups) GetAveragePoint(double[] averages, double[]? x = null)
+	public static (List<double[]> Averages, List<Group> Groups) GetAveragePoint(double[] averages, double[]? x = null, int borderGap = 10)
 	{
 		var conv = Convolution(averages);
 		var convDist = new double[conv.Length];
@@ -351,7 +351,6 @@ public class Signal
 			timeGroups.RemoveAt(timeGroups.Count - 1);
 
 		var averagePoint = new List<double[]>();
-		var borderGap = 10;
 		foreach (var group in timeGroups)
 		{
 			var sum = 0d;
