@@ -124,13 +124,14 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
 
 	var Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
 	var averageValues = averages.Values.ToArray();
-	var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times);
+	var borderGap = 15;
+	var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times, borderGap);
 	List<double[]> CrossPlotPoints = new();
 	List<double[]> GuidedPoints = new();
 	for (int i = 0; i < timeGroups.Count; i++)
 	{
 		var v = i < referenceValues.Count ? referenceValues[i] : -1000;
-		for (int j = timeGroups[i].Start; j < timeGroups[i].Stop; j++)
+		for (int j = timeGroups[i].Start + borderGap; j < timeGroups[i].Stop - borderGap; j++)
 		{
 			if (v != -1000)
 				CrossPlotPoints.Add(new double[] { v, averageValues[j] });
@@ -181,7 +182,7 @@ app.MapGet("/api/project/{id}/fiber/{fiberId}", (int id, int fiberId) =>
     }
 
 	return Results.Ok(new { 
-		//candidates, Averages, averagePoints, GuidedPoints,
+		candidates, Averages, averagePoints, GuidedPoints,
 		ReferencePoints,Slope = B, RegressionPoints, CrossPlotPoints 
 	});
 });

@@ -116,7 +116,7 @@ public class IndexModel : PageModel
             return Page();
 
 		var averageValues = averages.Values.ToArray();
-		var borderGap = 10;
+		var borderGap = 20;
 		var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times, borderGap);
 
 		for (int i = 0; i < timeGroups.Count; i++)
