@@ -229,15 +229,15 @@
 		plot2.series[0].data[locationId].select(true, false);
 	</script>
 	<script>
-		var references = @(Json.Serialize(Model.References));
-		var referencePoints = @(Json.Serialize(Model.ReferencePoints));
-		var candidates = @(Json.Serialize(Model.Candidates));
-		var averages = @(Json.Serialize(Model.Averages));
-		var averagePoints = @(Json.Serialize(Model.AveragePoints));
-		var regressionPoints = @(Json.Serialize(Model.RegressionPoints));
-		var regression = @(Json.Serialize(Model.Regression));
-		var crossPlotPoints = @(Json.Serialize(Model.CrossPlotPoints));
-		var guidedPoints = @(Json.Serialize(Model.GuidedPoints));
+		var references = @(Json.Serialize(Model.Characterisation.References));
+		var referencePoints = @(Json.Serialize(Model.Characterisation.ReferencePoints));
+		var candidates = @(Json.Serialize(Model.Characterisation.Candidates));
+		var averages = @(Json.Serialize(Model.Characterisation.Averages));
+		var averagePoints = @(Json.Serialize(Model.Characterisation.AveragePoints));
+		var regressionPoints = @(Json.Serialize(Model.Characterisation.RegressionPoints));
+		var slope = @(Json.Serialize(Model.Characterisation.Slope));
+		var crossPlotPoints = @(Json.Serialize(Model.Characterisation.CrossPlotPoints));
+		var guidedPoints = @(Json.Serialize(Model.Characterisation.GuidedPoints));
 	</script>
 	<script>
 		function averagePlot(freqDist, freqAverage, freqPoints, guidedPoints) {
@@ -395,7 +395,7 @@
 			});
 		}
 
-		regressionPlot(referencePoints, regression.item2, regressionPoints, crossPlotPoints);
+		regressionPlot(referencePoints, slope, regressionPoints, crossPlotPoints);
 	</script>
 
 	<script>

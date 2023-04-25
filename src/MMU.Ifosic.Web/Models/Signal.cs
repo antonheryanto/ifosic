@@ -3,6 +3,7 @@ using MathNet.Numerics.IntegralTransforms;
 using MathNet.Numerics.LinearAlgebra;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using System.Security.Cryptography.Xml;
 
 namespace MMU.Ifosic.Models;
 
@@ -62,6 +63,146 @@ public class NumberToGrid
 		}
 
 		return default;
+	}
+}
+
+public class Characterisation
+{
+	private static readonly DateTime unix = new (1970, 1, 1);
+
+	public List<double[]> Averages { get; set; } = new();
+	public List<double[]> AveragePoints { get; set; } = new();
+	public List<double[]> Candidates { get; set; } = new();
+	public List<double[]> CrossPlotPoints { get; set; } = new();
+	public List<double[]> GuidedPoints { get; set; } = new();
+	public List<double[]> References { get; set; } = new();
+	public List<double[]> ReferencePoints { get; set; } = new();
+	public List<double[]> RegressionPoints { get; set; } = new();
+    public double Slope { get; set; }
+    public double Intercept { get; set; }
+
+    public Characterisation(FrequencyShiftDistance? fdd = null, int fiberId = 0, string measurement = "Pressure", int borderGap = 20)
+	{
+		if (fdd is null)
+			return;
+		var times = new double[fdd.Traces.Count];
+		for (int j = 0; j < fdd.Traces.Count; j++)
+		{
+			times[j] = fdd.MeasurementStart[j]?.Subtract(unix).TotalMilliseconds ?? 0;
+		}
+		var usesCategory = fdd.Categories.Where(w => w > 0).Count() > fdd.Categories.Count * 0.05;
+		for (int i = fdd.BoundaryIndexes[fiberId - 1]; i < fdd.BoundaryIndexes[fiberId]; i++)
+		{
+			// aggregate only good signal
+			if (usesCategory && fdd.Categories[i] != 1)
+				continue;
+
+			// get each time freq at that location
+			for (int j = 0; j < fdd.Traces.Count; j++)
+			{
+				Candidates.Add(new double[] { times[j], fdd.Traces[j][i] });
+			}
+		}
+
+		var groups = Candidates.GroupBy(x => x[0]).ToList();
+		var averages = new Dictionary<double, double>();
+		foreach (var group in groups)
+		{
+			var sum = 0d;
+			var n = 0;
+			foreach (var v in group)
+			{
+				sum += v[1];
+				n++;
+			}
+			averages[group.Key] = sum / n;
+		}
+
+		Averages = averages.Select(d => new double[] { d.Key, d.Value }).ToList();
+		var refValues = new Dictionary<double, int>();
+		if (!fdd.References.TryGetValue(measurement, out var references))
+			return;
+
+		var refMax = double.MinValue;
+		var refDate = references[0].Date;
+		var timeDiff = refDate >= fdd.MeasurementStart[0] ? new TimeSpan()
+				: (fdd.MeasurementStart[0] - refDate) ?? new TimeSpan();
+		List<double> referenceValues = new();
+		foreach (var (d, v) in references)
+		{
+			refMax = Math.Max(refMax, v);
+			References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
+			if (referenceValues.Count == 0)
+			{
+				referenceValues.Add(v);
+				continue;
+			}
+			if (referenceValues[^1] != v)
+				referenceValues.Add(v);
+
+			if (!refValues.ContainsKey(v))
+				refValues.Add(v, 0);
+			refValues[v]++;
+		}
+
+		if (refValues.Count == 0)
+			return;
+
+		var averageValues = averages.Values.ToArray();
+		var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times, borderGap);
+
+		for (int i = 0; i < timeGroups.Count; i++)
+		{
+			var v = i < referenceValues.Count ? referenceValues[i] : -1000;
+			for (int j = timeGroups[i].Start + borderGap; j < timeGroups[i].Stop - borderGap; j++)
+			{
+				if (v != -1000)
+					CrossPlotPoints.Add(new double[] { v, averageValues[j] });
+				GuidedPoints.Add(new double[] { times[j], averagePoints[i][1] });
+			}
+		}
+
+		AveragePoints = averagePoints;
+		var averageIndex = 0;
+		for (int i = 0; i < AveragePoints.Count; i++)
+		{
+			var second = AveragePoints[i][0];
+			var aDate = unix.AddMilliseconds(second);
+			if (refDate > aDate)
+				continue;
+			averageIndex = i;
+			break;
+		}
+
+		var refArray = refValues.Keys.ToList();
+		var refMaxId = refArray.IndexOf(refMax);
+		var refStart = refMaxId < refArray.Count / 2 ? refMaxId : 0;
+		var avgPoints = new List<double>();
+		var refPoints = new List<double>();
+
+		for (int i = 0, j = refStart; j < refArray.Count; i++, j++)
+		{
+			var avgIdx = j + averageIndex;
+			if (avgIdx > AveragePoints.Count - 1)
+				continue;
+			refPoints.Add(refArray[j]);
+			avgPoints.Add(AveragePoints[avgIdx][1]);
+			ReferencePoints.Add(new double[] { refPoints[i], avgPoints[i] });
+		}
+		if (refPoints.Count < 2)
+		{
+			for (int i = refPoints.Count; i < 3; i++)
+			{
+				refPoints.Insert(0, 0);
+				avgPoints.Insert(0, 0);
+			}
+		}
+		//var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
+		(Intercept, Slope) = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refPoints.ToArray(), avgPoints.ToArray());
+		for (int i = 0; i < refPoints.Count; i++)
+		{
+			RegressionPoints.Add(new double[] { refPoints[i], refPoints[i] * Slope + Intercept });
+		}
 	}
 }
 
@@ -384,9 +525,9 @@ public class Signal
 		{
 			inputC[i] = (float)input[i];
 		}
-		Vector<Complex32> kernelV = Vector<Complex32>.Build.Dense(kernel);
+		var kernelV = Vector<Complex32>.Build.Dense(kernel);
 		Fourier.Forward(inputC, FourierOptions.Matlab);
-		Vector<Complex32> inputV = Vector<Complex32>.Build.Dense(inputC);
+		var inputV = Vector<Complex32>.Build.Dense(inputC);
 		var pwm = kernelV.PointwiseMultiply(inputV);
 		Fourier.Inverse(pwm.AsArray(), FourierOptions.Matlab);
 		var cx = pwm;//.Conjugate();
