@@ -58,6 +58,7 @@ public class EditModel : PageModel
                 return Page();
             item.Name = Item.Name;
             item.Description = Item.Description;
+            item.Measurement = Item.Measurement ?? "Pressure";
             if (Item.NumberOfFiber > item.Fibers?.Count) {
                 item.Fibers ??= new();
                 for (int i = 0; i < Item.NumberOfFiber - item.Fibers.Count; i++)

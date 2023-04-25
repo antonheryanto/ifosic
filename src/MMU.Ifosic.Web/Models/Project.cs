@@ -10,6 +10,7 @@ public class Project
     public string Description { get; set; } = "";
     [NotMapped]
     public int NumberOfFiber { get; set; } = 1;
+    public string Measurement { get; set; } = "Pressure";
     public List<Fiber>? Fibers { get; set; }
     
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
@@ -21,10 +22,18 @@ public class Project
 
     public string Layout => Layouts.TryGetValue(LayoutId, out var layout) ? layout : Layouts[1];
     [NotMapped]
-    public readonly Dictionary<int, string> Layouts = new()
+    public static readonly Dictionary<int, string> Layouts = new()
     {
         {1, "Serial" },
         {2, "Parallel Connect to Optical Switch" },
         {3, "Parallel Connect to Interrogator Unit (IO)"},
 	};
+
+    [NotMapped]
+    public static readonly Dictionary<int, string> Measurements = new()
+    {
+        {1, "Pressure" },
+        {2, "Temperature" },
+        {3, "Strain"},
+    };
 }

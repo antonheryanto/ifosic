@@ -147,7 +147,7 @@ public partial class FrequencyShiftDistance
         References[name] = rows;
     }
 
-    public static FrequencyShiftDistance Load(string fileName)
+    public static FrequencyShiftDistance? Load(string fileName)
     {
         var ext = Path.GetExtension(fileName);
         if (ext == ".bin")
@@ -230,6 +230,8 @@ public partial class FrequencyShiftDistance
 
     public static FrequencyShiftDistance? LoadBin(string fileName)
     {
+        if (!File.Exists(fileName))
+            return null;
         var bin = File.ReadAllBytes(fileName);
         using var decompressor = new BrotliDecompressor();
         var decompressedBuffer = decompressor.Decompress(bin);

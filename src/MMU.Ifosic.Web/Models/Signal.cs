@@ -83,7 +83,7 @@ public class Characterisation
 
     public Characterisation(FrequencyShiftDistance? fdd = null, int fiberId = 0, string measurement = "Pressure", int borderGap = 20)
 	{
-		if (fdd is null)
+		if (fdd is null || fdd.Traces.Count == 0)
 			return;
 		var times = new double[fdd.Traces.Count];
 		for (int j = 0; j < fdd.Traces.Count; j++)

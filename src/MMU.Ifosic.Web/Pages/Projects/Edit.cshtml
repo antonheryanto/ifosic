@@ -1,7 +1,9 @@
 ﻿@page "{id?}"
 @model EditModel
 @{
-	ViewData["Title"] = "Manage Project";
+    ViewData["Title"] = "Manage Project";
+    var layouts = Project.Layouts.Select(s => new SelectListItem { Value = s.Key.ToString(), Text = s.Value }).ToList();
+    var measurements = Project.Measurements.Select(s => new SelectListItem { Value = s.Value, Text = s.Value }).ToList();
 }
 
 <div class="container">
@@ -39,11 +41,27 @@
                             <input type="text" class="form-control" asp-for="Item.NumberOfFiber">
                         </div>
 
+                        <label asp-for="Item.LayoutId">Fibers Layout</label>
+                        <span asp-validation-for="Item.LayoutId" class="text-danger"></span>
+                        <div class="mb-3">
+                            <select class="form-control" asp-for="Item.LayoutId" asp-items="layouts">
+                                <option value="">Please Select</option>
+                            </select>
+                        </div>
+
+                        <label asp-for="Item.Measurement">Type of Measurement</label>
+                        <span asp-validation-for="Item.Measurement" class="text-danger"></span>
+                        <div class="mb-3">
+                            <select class="form-control" asp-for="Item.Measurement" asp-items="measurements">
+                                <option value="">Please Select</option>
+                            </select>
+                        </div>
+
                         <label asp-for="Upload">FDD Data</label>
                         <span asp-validation-for="Upload" class="text-danger"></span>
                         <div class="mb-3">
                             <input asp-for="Upload" type="file" class="form-control">
-                            <span class="form-text">Please update zip file</span>
+                            <span class="form-text">Please upload zip file</span>
                         </div>
 
                         <label asp-for="Item.Description">Description</label>

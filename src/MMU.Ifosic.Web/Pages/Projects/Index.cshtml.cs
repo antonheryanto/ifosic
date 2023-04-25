@@ -38,9 +38,9 @@ public class IndexModel : PageModel
             .FirstOrDefaultAsync(f => f.Id == id) ?? new();
         Item.NumberOfFiber = Item.Fibers?.Count ?? Item.NumberOfFiber;
         // load data
-		Data = FrequencyShiftDistance.Load(Path.Combine(_path, $"{id}.bin"));
-
-		for (int i = 0; i < Data.Traces.Count; i++)
+		Data = FrequencyShiftDistance.Load(Path.Combine(_path, $"{id}.bin")) ?? new();
+		
+        for (int i = 0; i < Data.Traces.Count; i++)
             Lines.Add(Data.Traces[i][LocationId]);
         
         for (var i = 0; i < Data.Distance.Count; i++)

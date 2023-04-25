@@ -19,9 +19,12 @@
 		@if (!string.IsNullOrEmpty(@Model.Item.Description)) {
 			<p>@Model.Item.Description</p>
 		}
+			<strong>Type of Measurement:</strong> @Model.Item.Measurement<br />
 			<strong>Number of Fibers:</strong> @Model.Item.Fibers?.Count<br />
-			<strong>Distance:</strong> @Model.Data.Distance[^1] m<br />
-			<strong>Duration:</strong> @Model.Data.MeasurementStart[0] - @Model.Data.MeasurementEnd[^1]<br />
+		@if (Model.Data.Distance.Count > 0) {
+			<strong>Distance:</strong> @Model.Data?.Distance[^1] <text>m</text><br />
+			<strong>Duration:</strong> @(Model.Data?.MeasurementStart[0] - @Model.Data?.MeasurementEnd[^1])<br />
+		}
 		</div>
 	</div>
 
@@ -84,7 +87,7 @@
 	<script src="https://code.highcharts.com/modules/boost.js"></script>
 	<script>
 		var distances = @Json.Serialize(Model.Data.Distance);
-		var freq = @Json.Serialize(Model.Data.Traces[50]);
+		var freq = @Json.Serialize(Model.Data.Traces.Count == 0 ? Array.Empty<double>() : Model.Data.Traces[50]);
 		var times = @Json.Serialize(Model.Lines);
 		var boundaries = @Json.Serialize(Model.Data.Boundaries);
 		var boundaryIndexes = @Json.Serialize(Model.Data.Boundaries);
