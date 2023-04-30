@@ -6,6 +6,8 @@ uploads
 data
 Migrations
 appsettings.*.json
+projects
+
 # Python
 *.pth
 *.onnx
