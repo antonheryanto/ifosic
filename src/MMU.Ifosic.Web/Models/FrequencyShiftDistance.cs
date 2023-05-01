@@ -4,10 +4,9 @@ using MessagePack;
 using MessagePack.Resolvers;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
-using Org.BouncyCastle.Utilities.Collections;
-using System.Collections.Generic;
-using System.Data;
 using System.IO.Compression;
+using System.Text;
+using System.Xml.Linq;
 
 namespace MMU.Ifosic.Models;
 
@@ -228,6 +227,46 @@ public partial class FrequencyShiftDistance
                 GetReferenceExcel(entry.Open());
             }
         }
+    }
+
+    private string ToText(int i)
+    {
+        var b = new StringBuilder();
+		foreach (var (k, v) in Info)
+		{
+			b.AppendLine($"{k.PadRight(24)} {v}");
+		}
+        for (int j = Info.Count; j < 103; j++)
+        {
+			b.AppendLine();
+		}
+		b.Append("No.".PadRight(16));
+        b.Append("Distance(m)".PadRight(26));
+        b.AppendLine("Frequency Diff, GHz ");
+		for (int j = 0; j < Traces[i].Length; j++)
+        {
+            b.Append(j.ToString().PadRight(16));
+            b.Append(Distance[j].ToString("0.000").PadRight(26));
+            b.AppendLine($"{Traces[i][j]:0.000000}");
+        }
+        return b.ToString();
+    }
+
+    public bool ToZip(string fileName, string prefix = "Test02__FD")
+    {
+        using var zip = ZipFile.Open(fileName, ZipArchiveMode.Update);
+        var dir = "Set01_RawData_FreqShift-Distance_fdd/";
+		zip.CreateEntry(dir, CompressionLevel.Optimal);
+		for (int i = 0; i < Traces.Count; i++)
+        {
+            var name = $"{dir}{prefix}_{MeasurementStart[i]:yyyyMMdd-HHddss.ffffff}.fdd";
+			var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
+            using var entryStream = entry.Open();
+		    using var writer = new StreamWriter(entryStream);
+            var info = ToText(i);
+            writer.WriteLine(info);
+		}
+		return true;
     }
 
     public bool Save(string fileName)
