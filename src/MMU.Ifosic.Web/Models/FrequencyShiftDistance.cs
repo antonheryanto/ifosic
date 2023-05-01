@@ -92,12 +92,12 @@ public partial class FrequencyShiftDistance
 
     private void GetReferenceExcel(Stream stream)
     {
-        using XSSFWorkbook xssWorkbook = new XSSFWorkbook(stream);
+        using XSSFWorkbook xssWorkbook = new(stream);
         var sheet = xssWorkbook.GetSheetAt(0);
         IRow headerRow = sheet.GetRow(sheet.FirstRowNum); // start from row 1
         // get the name and unit of reference data
         var fullname = (headerRow.GetCell(headerRow.FirstCellNum + 1)?.StringCellValue ?? "").Split("(");
-        var name = fullname[0]?.Trim();
+        var name = fullname[0]?.Trim() ?? "Pressure";
         var unit = fullname.Length > 0 ? fullname[1].Trim(')') : "";
         var rows = new List<(DateTime Date, double Value)>();
         for (int i = (sheet.FirstRowNum + 1); i <= sheet.LastRowNum; i++)
@@ -147,7 +147,17 @@ public partial class FrequencyShiftDistance
         References[name] = rows;
     }
 
-    public static FrequencyShiftDistance? Load(string fileName)
+	public static FrequencyShiftDistance? LoadBin(string fileName)
+	{
+		if (!File.Exists(fileName))
+			return null;
+		var bin = File.ReadAllBytes(fileName);
+		using var decompressor = new BrotliDecompressor();
+		var decompressedBuffer = decompressor.Decompress(bin);
+		return MemoryPackSerializer.Deserialize<FrequencyShiftDistance>(decompressedBuffer);
+	}
+
+	public static FrequencyShiftDistance? Load(string fileName)
     {
         var ext = Path.GetExtension(fileName);
         if (ext == ".bin")
@@ -226,16 +236,6 @@ public partial class FrequencyShiftDistance
         MemoryPackSerializer.Serialize(compressor, this);
         File.WriteAllBytes(fileName, compressor.ToArray());
         return true;
-    }
-
-    public static FrequencyShiftDistance? LoadBin(string fileName)
-    {
-        if (!File.Exists(fileName))
-            return null;
-        var bin = File.ReadAllBytes(fileName);
-        using var decompressor = new BrotliDecompressor();
-        var decompressedBuffer = decompressor.Decompress(bin);
-        return MemoryPackSerializer.Deserialize<FrequencyShiftDistance>(decompressedBuffer);
     }
 
     (Dictionary<string, string> info, List<double> distances, List<double> frequencies) Extract(Stream stream)
