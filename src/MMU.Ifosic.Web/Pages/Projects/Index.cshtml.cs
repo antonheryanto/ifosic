@@ -22,7 +22,7 @@ public class IndexModel : PageModel
     }
     public Project Item { get; set; } = new();
     public FrequencyShiftDistance Data { get; set; } = new();
-    public List<double> Lines { get; set; } = new();
+    public List<double[]> Lines { get; set; } = new();
 	public List<double[]> FreqDistance { get; set; } = new();
     public Characterisation Characterisation = new();
 	public string Reference { get; set; } = "Pressure";
@@ -30,7 +30,7 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)] public int LocationId { get; set; } = 700;
 	[BindProperty(SupportsGet = true)] public int Time { get; set; } = 100;
 
-    public async Task<IActionResult> OnGetAsync(int id = 0, int fiberId=1)
+    public async Task<IActionResult> OnGetAsync(int id = 0, int fiberId = 1)
     {
         if (id < 1)
             return Redirect("~/");
@@ -39,12 +39,19 @@ public class IndexModel : PageModel
         Item.NumberOfFiber = Item.Fibers?.Count ?? Item.NumberOfFiber;
         // load data
 		Data = FrequencyShiftDistance.Load(Path.Combine(_path, $"{id}.bin")) ?? new();
-		
+
         for (int i = 0; i < Data.Traces.Count; i++)
-            Lines.Add(Data.Traces[i][LocationId]);
-        
+        {
+            if (Data.TimeBoundaries?.Count > 0 && Data.TimeBoundaries[i] != fiberId - 1)
+                continue;
+            Lines.Add(new[] { Data.MeasurementStart[i]?.Subtract(Characterisation.UnixTime).TotalMilliseconds ?? 0,
+                Data.Traces[i][LocationId] });
+        }
+
         for (var i = 0; i < Data.Distance.Count; i++)
-			FreqDistance.Add(new double[] { Data.Distance[i], Data.Traces[Time][i] });
+        {
+            FreqDistance.Add(new[] { Data.Distance[i], Data.Traces[Time][i] });
+        }
 
 		Characterisation = new Characterisation(Data, fiberId, Reference);
         return Page();

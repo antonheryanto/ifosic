@@ -6,7 +6,6 @@ using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.IO.Compression;
 using System.Text;
-using System.Xml.Linq;
 
 namespace MMU.Ifosic.Models;
 
@@ -47,8 +46,9 @@ public partial class FrequencyShiftDistance
     public List<DateTime?> MeasurementStart { get; set; } = new();
     public List<DateTime?> MeasurementEnd { get; set; } = new();
     public List<int> Categories { get; set; } = new();
+	public List<int> TimeBoundaries { get; set; } = new();
 
-    public void GetBoundary(string fileName)
+	public void GetBoundary(string fileName)
     {
 		using var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         GetBoundary(stream);
@@ -114,11 +114,10 @@ public partial class FrequencyShiftDistance
         References[name] = rows;
     }
 
-    private void GetReferenceCsv(string fileName)
+    private void GetReferenceCsv(string fileName, string name = "Reference")
     {
         using var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var reader = new StreamReader(stream);
-        string name = "Reference";
         var rows = new List<(DateTime Date, double Value)>();
 		bool headerParse = false;
         int i = 0;
@@ -209,6 +208,7 @@ public partial class FrequencyShiftDistance
                 var (i, d, f) = Extract(entry.Open());
                 MeasurementStart.Add(DateTime.TryParse(i["Measurement Start"], out var ms) ? ms : null);
                 MeasurementEnd.Add(DateTime.TryParse(i["Measurement End"], out var me) ? me : null);
+                TimeBoundaries.Add(int.TryParse(i["Optical SW Port Number"], out var port) ? port - 1 : 0);
                 if (Distance.Count == 0)
                     Distance.AddRange(d);
                 if (Info.Count == 0)
@@ -229,12 +229,20 @@ public partial class FrequencyShiftDistance
         }
     }
 
-    private string ToText(int i)
+    private const string DATE_FORMAT = "yyyy/MM/dd HH:mm:ss.ffffff";
+    private string ToText(double[] trace, int port = 1, DateTime? ms = null, DateTime? me = null)
     {
         var b = new StringBuilder();
 		foreach (var (k, v) in Info)
 		{
-			b.AppendLine($"{k.PadRight(24)} {v}");
+            var vn = v;
+            if (k == "Optical SW Port Number")
+                vn = port.ToString();
+            if (ms is not null && k == "Measurement Start")
+                vn = ms?.ToString(DATE_FORMAT);
+			if (me is not null && k == "Measurement End")
+				vn = me?.ToString(DATE_FORMAT);
+			b.AppendLine($"{k.PadRight(24)} {vn}");
 		}
         for (int j = Info.Count; j < 103; j++)
         {
@@ -243,27 +251,28 @@ public partial class FrequencyShiftDistance
 		b.Append("No.".PadRight(16));
         b.Append("Distance(m)".PadRight(26));
         b.AppendLine("Frequency Diff, GHz ");
-		for (int j = 0; j < Traces[i].Length; j++)
+		for (int j = 0; j < trace.Length; j++)
         {
             b.Append(j.ToString().PadRight(16));
             b.Append(Distance[j].ToString("0.000").PadRight(26));
-            b.AppendLine($"{Traces[i][j]:0.000000}");
+            b.AppendLine($"{trace[j]:0.000000}");
         }
         return b.ToString();
     }
 
-    public bool ToZip(string fileName, string prefix = "Test02__FD")
+    public bool ToZip(string fileName, IList<double[]>? traces = null, IList<int>? timeIndex = null, string prefix = "Test02__FD")
     {
-        using var zip = ZipFile.Open(fileName, ZipArchiveMode.Update);
+        traces ??= Traces;
+        using var zip = ZipFile.Open(fileName, ZipArchiveMode.Create);
         var dir = "Set01_RawData_FreqShift-Distance_fdd/";
 		zip.CreateEntry(dir, CompressionLevel.Optimal);
-		for (int i = 0; i < Traces.Count; i++)
+		for (int i = 0; i < traces.Count; i++)
         {
-            var name = $"{dir}{prefix}_{MeasurementStart[i]:yyyyMMdd-HHddss.ffffff}.fdd";
+            var name = $"{dir}{prefix}_{MeasurementStart[i]:yyyyMMdd-HHmmss.ffffff}.fdd";
 			var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
             using var entryStream = entry.Open();
 		    using var writer = new StreamWriter(entryStream);
-            var info = ToText(i);
+            var info = ToText(traces[i], timeIndex is null ? 1 : timeIndex[i] + 1, MeasurementStart[i], MeasurementEnd[i]);
             writer.WriteLine(info);
 		}
 		return true;

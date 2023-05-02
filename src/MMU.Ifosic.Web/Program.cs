@@ -36,11 +36,18 @@ var path = cfg.GetValue<string>("ProjectPath") ?? Path.Combine(Environment.Curre
 app.MapGet("/error/{path?}/{subPath?}", ExceptionalMiddleware.HandleRequestAsync);
 app.MapGet("/api/project/{id}", (int id) => {
     var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
-    var boundaries = new double[] { fdd.Boundaries[0] - 3, fdd.Boundaries[^1] + 5 };
-    var indexes = fdd.ToBoundariesIndex(boundaries);
-    var data = new List<double[]>();
-    var start = indexes[0];
-    var stop = indexes[1];
+	if (fdd is null)
+		return Results.Ok();
+	var start = 0;
+	var stop = fdd.Distance.Count;
+	if (fdd.Boundaries.Count > 0)
+	{
+		var boundaries = new double[] { fdd.Boundaries[0] - 3, fdd.Boundaries[^1] + 5 };
+		var indexes = fdd.ToBoundariesIndex(boundaries);
+		start = indexes[0];
+		stop = indexes[1];
+	}
+	var data = new List<double[]>();
 	for (int i = 0; i < fdd.Traces.Count; i++)
 		for (int j = start; j < stop; j++)
 			data.Add(new double[] { fdd.Distance[j], i, fdd.Traces[i][j] });
@@ -48,10 +55,18 @@ app.MapGet("/api/project/{id}", (int id) => {
 });
 app.MapGet("/api/project/{id}/time/{location}", (int id, int location) =>
 {
+	var fiberId = 1;
 	var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
-	var freq = new double[fdd.Traces.Count];
+	var freq = new List<double[]>();
+	if (fdd is null)
+		return Results.Ok(Array.Empty<double>);
 	for (int i = 0; i < fdd.Traces.Count; i++)
-		freq[i] = fdd.Traces[i][location];
+	{
+		if (fdd.TimeBoundaries?.Count > 0 && fdd.TimeBoundaries[i] != fiberId - 1)
+			continue;
+		freq.Add(new[] { fdd.MeasurementStart[i]?.Subtract(Characterisation.UnixTime).TotalMilliseconds ?? 0,
+			fdd.Traces[i][location] });
+	}
 	return Results.Ok(freq);
 });
 

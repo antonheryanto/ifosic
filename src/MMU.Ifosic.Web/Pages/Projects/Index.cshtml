@@ -21,9 +21,10 @@
 		}
 			<strong>Type of Measurement:</strong> @Model.Item.Measurement<br />
 			<strong>Number of Fibers:</strong> @Model.Item.Fibers?.Count<br />
+			<strong>Fibers Layout:</strong> @Model.Item.Layout<br />
 		@if (Model.Data.Distance.Count > 0) {
-			<strong>Distance:</strong> @Model.Data?.Distance[^1] <text>m</text><br />
-			<strong>Duration:</strong> @(Model.Data?.MeasurementStart[0] - @Model.Data?.MeasurementEnd[^1])<br />
+			<strong>Distance:</strong> @Model.Data?.Distance[^1] <text> m</text><br />
+			<strong>Duration:</strong> @(Model.Data?.MeasurementEnd[^1] - @Model.Data?.MeasurementStart[0])<br />
 		}
 		</div>
 	</div>
@@ -32,6 +33,15 @@
 		<div class="card-header">
 			<div class="d-flex align-items-center">
 				<h5 class="mr-auto card-title d-none d-lg-block"><strong>FREQUENCY SHIFT PLOTS</strong></h5>
+			@if (Model.Item.LayoutId != 1) {
+				<div class="ml-1 align-self-end">
+					<select class="form-control" onchange="getFiber(this.value)">
+					@for (int i = 1; i < Model.Item.NumberOfFiber + 1; i++) {
+						<option value="@(i)">Fiber @(i)</option>
+					}
+					</select>
+				</div>
+			}
 			</div>
 		</div>
 		<div class="card-body">
@@ -58,6 +68,7 @@
 			<div class="d-flex align-items-center">
 				<h5 class="mr-auto card-title d-none d-lg-block"><strong>FIBER CHARACTERISATION</strong></h5>
 				<button onclick="averagePlot2()" class="ml-1 align-self-end btn btn btn-outline-primary">Load Time Plot</button>
+			@if (Model.Item.LayoutId == 1) {
 				<div class="ml-1 align-self-end">
 					<select class="form-control" onchange="getFiber(this.value)">
 					@for (int i = 1; i < Model.Item.NumberOfFiber + 1; i++) {
@@ -65,6 +76,7 @@
 					}
 					</select>
 				</div>
+			}
 			</div>
 		</div>
 		<div class="card-body">
@@ -86,33 +98,18 @@
 	<script src="https://code.highcharts.com/modules/boost-canvas.js"></script>
 	<script src="https://code.highcharts.com/modules/boost.js"></script>
 	<script>
-		var distances = @Json.Serialize(Model.Data.Distance);
-		var freq = @Json.Serialize(Model.Data.Traces.Count == 0 ? Array.Empty<double>() : Model.Data.Traces[50]);
-		var times = @Json.Serialize(Model.Lines);
-		var boundaries = @Json.Serialize(Model.Data.Boundaries);
-		var boundaryIndexes = @Json.Serialize(Model.Data.Boundaries);
-		var rawDates = @Json.Serialize(Model.Data.MeasurementStart);
+		var distances = @Json.Serialize(Model.Data?.Distance);
+		//var freq = @Json.Serialize(Model.Data?.Traces.Count == 0 ? Array.Empty<double>() : Model.Data?.Traces[50]);
+		var freqTimes = @Json.Serialize(Model.Lines);
 		var freqDistance = @Json.Serialize(Model.FreqDistance);
-	</script>
-	<script>
 		var locationId = @Model.LocationId;
 		var time = @Model.Time;
-		var colors = ['rgba(68,3,169, 0.3)', 'rgba(43,165,18, 0.3)', 'rgba(50,90,224, 0.3)', 'rgba(13,233,75, 0.3)', 'rgba(109,249,16, 0.3)'];
-		var boundaryBands = [];
-		for (var i = 1; i < boundaries.length; i++) {
-			boundaryBands.push({ color: colors[i - 1], from: boundaries[i - 1], to: boundaries[i], label: { text: `F${i}` } });
-		}
-
 		var dates = []
-		for (var i = 0; i < rawDates.length; i++) {
-			dates.push(Date.parse(rawDates[i]));
+		for (var i = 0; i < freqTimes.length; i++) {
+			dates.push(freqTimes[i][0]);
 		}
-
-		var freqTimes = [];
-		for (var i = 0; i < times.length; i++) {
-			freqTimes.push([dates[i], times[i]]);
-		}
-
+	</script>
+	<script>
 		var yAxis = { 
 			min: -5,
 			max: 25,
@@ -129,6 +126,11 @@
 				title: { text: 'Time (hours)' },
 				type: 'datetime'
 			},
+			tooltip: {
+				headerFormat: '<b>{series.name}</b><br>',
+				//pointFormat: '{point.y:.2f} GHz at {point.x}'
+				pointFormatter: function() { return `${this.y} GHz at ${new Date(this.x)}` }
+			},
 			plotOptions: {
 				series: {
 					allowPointSelect: true,
@@ -143,7 +145,7 @@
 					cursor: 'pointer',
 					point: {
 						events: {
-							click: function () {
+							click: function () {								
 								var index = dates.indexOf(this.x);
 								var url = `@(url)/location/${index}`;
 								Highcharts.getJSON(url, data => {
@@ -160,7 +162,21 @@
 				data: freqTimes,
 				name: 'Frequency Shift'
 			}]
-		});		
+		});
+
+
+		var boundaries = @Json.Serialize(Model.Data?.Boundaries);
+		var colors = [
+			'rgba(68,3,169, 0.3)',
+			'rgba(43,165,18, 0.3)',
+			'rgba(50,90,224, 0.3)',
+			'rgba(13,233,75, 0.3)',
+			'rgba(109,249,16, 0.3)'
+		];
+		var boundaryBands = [];
+		for (var i = 1; i < boundaries.length; i++) {
+			boundaryBands.push({ color: colors[i - 1], from: boundaries[i - 1], to: boundaries[i], label: { text: `F${i}` } });
+		}
 
 		const plot2 = Highcharts.chart('plot2', {
 			chart: {				
@@ -171,13 +187,13 @@
 			yAxis,
 			xAxis: { 
 				title: { text: 'Distance (m)' },
-				plotBands: boundaryBands,
-				min: boundaries[0] - 3,
-				max: boundaries[boundaries.length - 1] + 5,
+				//plotBands: boundaryBands,
+				//min: boundaries[0] - 3,
+				//max: boundaries[boundaries.length - 1] + 5,
 			},
 			tooltip: {
 				headerFormat: '<b>{series.name}</b><br>',
-				pointFormat: '{point.y:.2f} GHz at {point.x:.2f}m'
+				pointFormat: '{point.y:.2f} GHz at {point.x:.2f} m'
 			},
 			plotOptions: {
 				series: {
@@ -198,14 +214,11 @@
 					point: {
 						events: {
 							click: function () {
+
 								var index = distances.indexOf(this.x);
 								var url = `@(url)/time/${index}`;
 								Highcharts.getJSON(url, data => {
-									var freqData = [];
-									for (var i = 0; i < data.length; i++) {
-										freqData.push([dates[i], data[i]]);
-									}
-									plot1.series[0].setData(freqData);
+									plot1.series[0].setData(data);
 								});
 							}
 						}
@@ -214,12 +227,12 @@
 				allowPointSelect: true
 			},
 			series: [{
-				zoneAxis: 'x',
-				zones: [
-					{ value: boundaries[0], color: '#eeeeee' },
-					{ value: boundaries[boundaries.length - 1], color: 'black' },
-					{ value: 100, color: '#eeeeee' },
-				],
+				//zoneAxis: 'x',
+				//zones: [
+				//	{ value: boundaries[0], color: '#eeeeee' },
+				//	{ value: boundaries[boundaries.length - 1], color: 'black' },
+				//	{ value: 100, color: '#eeeeee' },
+				//],
 				type: 'line',
 				data: freqDistance,
 				//color: 'black',
@@ -228,8 +241,18 @@
 			}]		
 		});
 
+
 		plot1.series[0].data[time].select(true, false);
 		plot2.series[0].data[locationId].select(true, false);
+
+		//plot2.xAxis[0].plotBands = boundaryBands;
+		//plot2.series[0].zoneAxis = 'x';
+		//plot2.series[0].zones = [
+		//	{ value: boundaries[0], color: '#eeeeee' },
+		//	{ value: boundaries[boundaries.length - 1], color: 'black' },
+		//	{ value: 100, color: '#eeeeee' },
+		//];
+
 	</script>
 	<script>
 		var references = @(Json.Serialize(Model.Characterisation.References));

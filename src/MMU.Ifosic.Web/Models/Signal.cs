@@ -68,7 +68,7 @@ public class NumberToGrid
 
 public class Characterisation
 {
-	private static readonly DateTime unix = new (1970, 1, 1);
+	public static readonly DateTime UnixTime = new (1970, 1, 1);
 
 	public List<double[]> Averages { get; set; } = new();
 	public List<double[]> AveragePoints { get; set; } = new();
@@ -88,8 +88,10 @@ public class Characterisation
 		var times = new double[fdd.Traces.Count];
 		for (int j = 0; j < fdd.Traces.Count; j++)
 		{
-			times[j] = fdd.MeasurementStart[j]?.Subtract(unix).TotalMilliseconds ?? 0;
+			times[j] = fdd.MeasurementStart[j]?.Subtract(UnixTime).TotalMilliseconds ?? 0;
 		}
+		if (fdd.BoundaryIndexes.Count == 0)
+			return;
 		var usesCategory = fdd.Categories.Where(w => w > 0).Count() > fdd.Categories.Count * 0.05;
 		for (int i = fdd.BoundaryIndexes[fiberId - 1]; i < fdd.BoundaryIndexes[fiberId]; i++)
 		{
@@ -131,7 +133,7 @@ public class Characterisation
 		foreach (var (d, v) in references)
 		{
 			refMax = Math.Max(refMax, v);
-			References.Add(new double[] { d.Add(timeDiff).Subtract(unix).TotalMilliseconds, v });
+			References.Add(new double[] { d.Add(timeDiff).Subtract(UnixTime).TotalMilliseconds, v });
 			if (referenceValues.Count == 0)
 			{
 				referenceValues.Add(v);
@@ -167,7 +169,7 @@ public class Characterisation
 		for (int i = 0; i < AveragePoints.Count; i++)
 		{
 			var second = AveragePoints[i][0];
-			var aDate = unix.AddMilliseconds(second);
+			var aDate = UnixTime.AddMilliseconds(second);
 			if (refDate > aDate)
 				continue;
 			averageIndex = i;
