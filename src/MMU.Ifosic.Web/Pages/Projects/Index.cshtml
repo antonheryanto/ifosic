@@ -149,7 +149,7 @@
 						events: {
 							click: function () {								
 								time = dates.indexOf(this.x);
-								var url = `@(url)/location/${locationId}?fiberId=${fiberId}`;
+								var url = `@(url)/location/${time}?fiberId=${fiberId}`;
 								Highcharts.getJSON(url, data => {
 									plot2.series[0].setData(data);
 									plot2.series[0].data[locationId].select(true, false);
