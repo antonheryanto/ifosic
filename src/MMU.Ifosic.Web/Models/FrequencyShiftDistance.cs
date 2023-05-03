@@ -2,10 +2,12 @@
 using MemoryPack.Compression;
 using MessagePack;
 using MessagePack.Resolvers;
+using NPOI.POIFS.FileSystem;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.IO.Compression;
 using System.Text;
+using static NPOI.HSSF.Util.HSSFColor;
 
 namespace MMU.Ifosic.Models;
 
@@ -208,7 +210,7 @@ public partial class FrequencyShiftDistance
                 var (i, d, f) = Extract(entry.Open());
                 MeasurementStart.Add(DateTime.TryParse(i["Measurement Start"], out var ms) ? ms : null);
                 MeasurementEnd.Add(DateTime.TryParse(i["Measurement End"], out var me) ? me : null);
-                TimeBoundaries.Add(int.TryParse(i["Optical SW Port Number"], out var port) ? port - 1 : 0);
+                TimeBoundaries.Add(int.TryParse(i["Optical SW Port Number"], out var port) ? port : 1);
                 if (Distance.Count == 0)
                     Distance.AddRange(d);
                 if (Info.Count == 0)
@@ -218,7 +220,7 @@ public partial class FrequencyShiftDistance
                 }
                 Traces.Add(f.ToArray());
             }
-            else if (entry.Name.EndsWith("_Results.txt"))
+            else if (entry.Name.EndsWith("Results.txt"))
             {
                 GetBoundary(entry.Open());
             }
@@ -260,11 +262,12 @@ public partial class FrequencyShiftDistance
         return b.ToString();
     }
 
-    public bool ToZip(string fileName, IList<double[]>? traces = null, IList<int>? timeIndex = null, string prefix = "Test02__FD")
+    public bool ToZip(string fileName, IList<double[]>? traces = null, IList<int>? timeIndex = null,
+        IList<double>? boundaries = null, string prefix = "Test02__FD")
     {
         traces ??= Traces;
         using var zip = ZipFile.Open(fileName, ZipArchiveMode.Create);
-        var dir = "Set01_RawData_FreqShift-Distance_fdd/";
+        var dir = "RawData_FreqShift-Distance_fdd/";
 		zip.CreateEntry(dir, CompressionLevel.Optimal);
 		for (int i = 0; i < traces.Count; i++)
         {
@@ -272,9 +275,15 @@ public partial class FrequencyShiftDistance
 			var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
             using var entryStream = entry.Open();
 		    using var writer = new StreamWriter(entryStream);
-            var info = ToText(traces[i], timeIndex is null ? 1 : timeIndex[i] + 1, MeasurementStart[i], MeasurementEnd[i]);
+            var info = ToText(traces[i], timeIndex is null ? 1 : timeIndex[i], MeasurementStart[i], MeasurementEnd[i]);
             writer.WriteLine(info);
 		}
+        if (boundaries is null)
+            return true;
+        var result = zip.CreateEntry("Results.txt", CompressionLevel.Optimal);
+		using var resultStream = result.Open();
+		using var resultWriter = new StreamWriter(resultStream);
+		resultWriter.WriteLine($"Boundaries: {string.Join(',', boundaries)}");
 		return true;
     }
 

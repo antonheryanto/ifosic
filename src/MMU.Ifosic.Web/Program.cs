@@ -53,16 +53,16 @@ app.MapGet("/api/project/{id}", (int id) => {
 			data.Add(new double[] { fdd.Distance[j], i, fdd.Traces[i][j] });
     return Results.Ok(new { start, stop, data });
 });
-app.MapGet("/api/project/{id}/time/{location}", (int id, int location) =>
+app.MapGet("/api/project/{id}/time/{location}", (int id, int location, int? fiberId) =>
 {
-	var fiberId = 1;
+	var fiberIndex = fiberId ?? 1;
 	var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
 	var freq = new List<double[]>();
 	if (fdd is null)
 		return Results.Ok(Array.Empty<double>);
 	for (int i = 0; i < fdd.Traces.Count; i++)
 	{
-		if (fdd.TimeBoundaries?.Count > 0 && fdd.TimeBoundaries[i] != fiberId - 1)
+		if (fdd.TimeBoundaries?.Count > 0 && fdd.TimeBoundaries[i] != fiberIndex)
 			continue;
 		freq.Add(new[] { fdd.MeasurementStart[i]?.Subtract(Characterisation.UnixTime).TotalMilliseconds ?? 0,
 			fdd.Traces[i][location] });
@@ -73,6 +73,8 @@ app.MapGet("/api/project/{id}/time/{location}", (int id, int location) =>
 app.MapGet("/api/project/{id}/location/{time}", (int id, int time) =>
 {
 	var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
+	if (fdd is null)
+		return Results.Ok(Array.Empty<double>);
 	var freq = new double[fdd.Distance.Count][];
 	for (var i = 0; i < freq.Length; i++)
 		freq[i] = new double[] { fdd.Distance[i], fdd.Traces[time][i] };

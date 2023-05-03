@@ -35,7 +35,7 @@
 				<h5 class="mr-auto card-title d-none d-lg-block"><strong>FREQUENCY SHIFT PLOTS</strong></h5>
 			@if (Model.Item.LayoutId != 1) {
 				<div class="ml-1 align-self-end">
-					<select class="form-control" onchange="getFiber(this.value)">
+					<select class="form-control" onchange="setFiber(this.value)" asp-for="FiberId">
 					@for (int i = 1; i < Model.Item.NumberOfFiber + 1; i++) {
 						<option value="@(i)">Fiber @(i)</option>
 					}
@@ -70,7 +70,7 @@
 				<button onclick="averagePlot2()" class="ml-1 align-self-end btn btn btn-outline-primary">Load Time Plot</button>
 			@if (Model.Item.LayoutId == 1) {
 				<div class="ml-1 align-self-end">
-					<select class="form-control" onchange="getFiber(this.value)">
+					<select class="form-control" onchange="getFiber(this.value)" asp-for="FiberId">
 					@for (int i = 1; i < Model.Item.NumberOfFiber + 1; i++) {
 						<option value="@(i)">Fiber @(i)</option>
 					}
@@ -99,15 +99,17 @@
 	<script src="https://code.highcharts.com/modules/boost.js"></script>
 	<script>
 		var distances = @Json.Serialize(Model.Data?.Distance);
-		//var freq = @Json.Serialize(Model.Data?.Traces.Count == 0 ? Array.Empty<double>() : Model.Data?.Traces[50]);
 		var freqTimes = @Json.Serialize(Model.Lines);
 		var freqDistance = @Json.Serialize(Model.FreqDistance);
 		var locationId = @Model.LocationId;
 		var time = @Model.Time;
-		var dates = []
-		for (var i = 0; i < freqTimes.length; i++) {
-			dates.push(freqTimes[i][0]);
+		var dates = @Json.Serialize(Model.Dates);
+
+		function setFiber(id) {
+			location.href = `${location.pathname}?fiberId=${id}`
+			console.log(id, location.href);
 		}
+
 	</script>
 	<script>
 		var yAxis = { 
@@ -119,7 +121,6 @@
 		const plot1 = Highcharts.chart('plot1', {
 			chart: { type: 'scatter', zoomType: 'xy' },
 			title: { text: 'Frequency shift vs Time' },
-			//subtitle: { text: 'show fiber boundaries' },
 			legend: { enabled: false },
 			yAxis,
 			xAxis: {
@@ -128,7 +129,6 @@
 			},
 			tooltip: {
 				headerFormat: '<b>{series.name}</b><br>',
-				//pointFormat: '{point.y:.2f} GHz at {point.x}'
 				pointFormatter: function() { return `${this.y} GHz at ${new Date(this.x)}` }
 			},
 			plotOptions: {
@@ -147,10 +147,10 @@
 						events: {
 							click: function () {								
 								var index = dates.indexOf(this.x);
-								var url = `@(url)/location/${index}`;
+								var url = `@(url)/location/${index}?fiberId=@(Model.FiberId)`;
 								Highcharts.getJSON(url, data => {
 									plot2.series[0].setData(data);
-									plot2.series[0].data[locationId].select(true, false);
+									//plot2.series[0].data[locationId].select(true, false);
 								});
 							}
 						}
@@ -162,21 +162,7 @@
 				data: freqTimes,
 				name: 'Frequency Shift'
 			}]
-		});
-
-
-		var boundaries = @Json.Serialize(Model.Data?.Boundaries);
-		var colors = [
-			'rgba(68,3,169, 0.3)',
-			'rgba(43,165,18, 0.3)',
-			'rgba(50,90,224, 0.3)',
-			'rgba(13,233,75, 0.3)',
-			'rgba(109,249,16, 0.3)'
-		];
-		var boundaryBands = [];
-		for (var i = 1; i < boundaries.length; i++) {
-			boundaryBands.push({ color: colors[i - 1], from: boundaries[i - 1], to: boundaries[i], label: { text: `F${i}` } });
-		}
+		});		
 
 		const plot2 = Highcharts.chart('plot2', {
 			chart: {				
@@ -184,13 +170,7 @@
 			},
 			title: { text: 'Frequency shift vs Distance' },
 			legend: { enabled: false },
-			yAxis,
-			xAxis: { 
-				title: { text: 'Distance (m)' },
-				//plotBands: boundaryBands,
-				//min: boundaries[0] - 3,
-				//max: boundaries[boundaries.length - 1] + 5,
-			},
+			yAxis,			
 			tooltip: {
 				headerFormat: '<b>{series.name}</b><br>',
 				pointFormat: '{point.y:.2f} GHz at {point.x:.2f} m'
@@ -214,9 +194,8 @@
 					point: {
 						events: {
 							click: function () {
-
 								var index = distances.indexOf(this.x);
-								var url = `@(url)/time/${index}`;
+								var url = `@(url)/time/${index}?fiberId=@(Model.FiberId)`;
 								Highcharts.getJSON(url, data => {
 									plot1.series[0].setData(data);
 								});
@@ -226,32 +205,43 @@
 				},
 				allowPointSelect: true
 			},
-			series: [{
-				//zoneAxis: 'x',
-				//zones: [
-				//	{ value: boundaries[0], color: '#eeeeee' },
-				//	{ value: boundaries[boundaries.length - 1], color: 'black' },
-				//	{ value: 100, color: '#eeeeee' },
-				//],
-				type: 'line',
-				data: freqDistance,
-				//color: 'black',
-				//lineWidth: 0.5,
-				name: 'Frequency Shift'
-			}]		
+			series: []		
 		});
 
 
 		plot1.series[0].data[time].select(true, false);
+		var boundaries = @Json.Serialize(Model.Data?.Boundaries);
+		var colors = [
+			'rgba(68,3,169, 0.3)',
+			'rgba(43,165,18, 0.3)',
+			'rgba(50,90,224, 0.3)',
+			'rgba(13,233,75, 0.3)',
+			'rgba(109,249,16, 0.3)'
+		];		
+		zones = [];
+		xAxis = { title: { text: 'Distance (m)' } };
+		if (boundaries && boundaries.length > 0) {
+			zones = [
+				{ value: boundaries[0], color: '#eeeeee' },
+				{ value: boundaries[boundaries.length - 1], color: 'black' },
+				{ value: 100, color: '#eeeeee' },
+			];
+			for (var i = 1; i < boundaries.length; i++) {
+				plot2.xAxis[0].addPlotBand({ color: colors[i - 1], from: boundaries[i - 1], to: boundaries[i], label: { text: `F${i}` } });
+			}
+			xAxis.min = boundaries[0] - 3;
+			xAxis.max = boundaries[boundaries.length - 1] + 5;
+			plot2.xAxis[0].update(xAxis);
+		}
+		plot2.addSeries({
+			zoneAxis: 'x',
+			zones: zones,
+			type: 'line',
+			data: freqDistance,
+			name: 'Frequency Shift'
+		});
 		plot2.series[0].data[locationId].select(true, false);
 
-		//plot2.xAxis[0].plotBands = boundaryBands;
-		//plot2.series[0].zoneAxis = 'x';
-		//plot2.series[0].zones = [
-		//	{ value: boundaries[0], color: '#eeeeee' },
-		//	{ value: boundaries[boundaries.length - 1], color: 'black' },
-		//	{ value: 100, color: '#eeeeee' },
-		//];
 
 	</script>
 	<script>
