@@ -1,31 +1,35 @@
 ﻿using MMU.Ifosic;
 using MMU.Ifosic.Models;
+using NPOI.SS.Formula.Functions;
 using OxyPlot.WindowsForms;
 
 
 var root = $@"C:\Projects\MMU\";
 var project = Path.Combine(root, "projects");
 var srcPath = Path.Combine(root, "Ifosic\\src\\Python");
-var id = 7;
+var id = 2;
 var fiberId = 1;
 //var name = Path.Combine(root, $"Set0{id}.zip");
-var name = Path.Combine(root, $"Set01_Time_Parallel.zip");
+//var name = Path.Combine(root, $"Set01_Time_Serial.zip");
+//var name = Path.Combine(root, $"Set01_Time_Parallel.zip");
 //var name = Path.Combine(project, $"{id}.bin");
-var fdd = FrequencyShiftDistance.Load(name);
+//var fdd = FrequencyShiftDistance.Load(name);
 //FrequencyShiftDistance.ToMessagePack(img, Path.Combine(srcPath, $"Set0{id}.msgpack"));
-fdd.AddReference(@"C:\Projects\MMU\Set01\Set01_Pressure vs Time.xlsx");
-fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
+//fdd.AddReference(@"C:\Projects\MMU\Set01\Set01_Pressure vs Time.xlsx");
 //fdd.ToMessagePack($@"C:\Projects\MMU\ifosic\src\Python\Set0{id}.msgpack");
+//fdd.Save($@"C:\Projects\MMU\projects\{id}.bin");
 
-//Augment(Path.Combine(project, "1.bin"));
+Augmentation.Create(FrequencyShiftDistance.Load(Path.Combine(project, $"{id}.bin")), Path.Combine(root, $"Set{id}_"),
+	@$"C:\Projects\MMU\Set0{id}\Set0{id}_Pressure vs Time.xlsx");
 
 //var img = Signal.Resize(fdd.Traces);
 //var ng = new NumberToGrid(-20, 30, 64);
 //var ngC = ng.GetClass(27);
-var (cxt, dxt) = Signal.GetBoundary(fdd, Path.Combine(srcPath, "model_512_64.onnx"));
+//var (cxt, dxt) = Signal.GetBoundary(fdd, Path.Combine(srcPath, "model_512_64.onnx"));
 //var catD = fdd.Categories
 //		//.Where((s, i) => i > 600 && i < 1250)
 //		.Select(s => (double)s).ToList();
+Console.WriteLine("Completed");
 
 static void Plot(params PlotView[] plots)
 {
@@ -44,60 +48,6 @@ static void Plot(params PlotView[] plots)
 	var f = new Form() { Text = "Hello NativeAOT!", Width = 1024, Height = 1024 };
 	f.Controls.Add(t);
 	Application.Run(f);
-}
-
-// parallel fiber layout
-// time based switch, one iteration, multiple iteration
-// time to fiber switch info
-// boundary is distance to fiber switch
-
-static void Augment(string fileName)
-{
-	var fdd = FrequencyShiftDistance.Load(fileName);
-	if (fdd is null)
-		return;
-	var serialTimeIndex = new List<int>();
-	var parallelTimeIndex = new List<int>();
-	var mid = fdd.Traces.Count / 2;
-	for (int i = 0; i < fdd.Traces.Count; i++)
-	{
-		serialTimeIndex.Add(i < mid ? 1 : 2);
-		parallelTimeIndex.Add(i % 2 != 0 ? 2 : 1);
-	}
-	var fiberIndex = 2;
-	var boundaries = new List<double>();
-	for (int i = fiberIndex + 1; i < fiberIndex + 4; i++)
-	{
-		boundaries.Add(fdd.Boundaries[i]);
-	}
-	// generate parallel set using serial set 1, fiber 4, 5
-	// uses boundary as anchor, put fiber one to the selected fiber, append the reminder 
-
-	var serialTraces = new List<double[]>();
-	var parallelTraces = new List<double[]>();
-	for (int j = 0; j < serialTimeIndex.Count; j++)
-	{
-		serialTraces.Add(GenerateData(fdd, j, fiberIndex: fiberIndex + serialTimeIndex[j], startIndex: 1, endIndex: 5));
-		parallelTraces.Add(GenerateData(fdd, j, fiberIndex: fiberIndex + parallelTimeIndex[j], startIndex: 1, endIndex: 5));
-	}
-	fdd.ToZip("C:\\Projects\\MMU\\Set01_Time_Serial.zip", serialTraces, serialTimeIndex, boundaries);
-	fdd.ToZip("C:\\Projects\\MMU\\Set01_Time_Parallel.zip", parallelTraces, parallelTimeIndex, boundaries);
-}
-
-static double[] GenerateData(FrequencyShiftDistance fdd, int timeIndex, int fiberIndex, int startIndex, int endIndex)
-{
-	var trace = new List<double>();
-	for (int i = 0; i < (fdd.BoundaryIndexes[fiberIndex] - fdd.BoundaryIndexes[startIndex]); i++)
-		trace.Add(fdd.Traces[timeIndex][i]);
-	for (int i = 0; i < fdd.BoundaryIndexes[startIndex]; i++)
-		trace.Add(fdd.Traces[timeIndex][i]);
-	for (int i = fdd.BoundaryIndexes[fiberIndex]; i < fdd.BoundaryIndexes[fiberIndex + 1]; i++)
-		trace.Add(fdd.Traces[timeIndex][i]);
-	for (int i = fdd.BoundaryIndexes[endIndex]; i < fdd.Traces[timeIndex].Length; i++)
-		trace.Add(fdd.Traces[timeIndex][i]);
-	for (int i = (fdd.Traces.Count - (fdd.BoundaryIndexes[endIndex] - fdd.BoundaryIndexes[fiberIndex + 1])); i < fdd.Traces.Count; i++)
-		trace.Add(fdd.Traces[timeIndex][i]);
-	return trace.ToArray();
 }
 
 static double[] BoundaryTest(FrequencyShiftDistance? fdd)

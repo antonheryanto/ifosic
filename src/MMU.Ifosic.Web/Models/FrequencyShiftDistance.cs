@@ -262,32 +262,43 @@ public partial class FrequencyShiftDistance
         return b.ToString();
     }
 
-    public bool ToZip(string fileName, IList<double[]>? traces = null, IList<int>? timeIndex = null,
-        IList<double>? boundaries = null, string prefix = "Test02__FD")
-    {
-        traces ??= Traces;
-        using var zip = ZipFile.Open(fileName, ZipArchiveMode.Create);
-        var dir = "RawData_FreqShift-Distance_fdd/";
+    public bool ToZip(string fileName, string? refFile = null, IList<double[]>? traces = null, IList<int>? timeIndex = null,
+        IList<double>? boundaries = null)
+	{
+		traces ??= Traces;
+		using var zip = ZipFile.Open(fileName, ZipArchiveMode.Create);
+		var dir = "RawData_FreqShift-Distance_fdd/";
 		zip.CreateEntry(dir, CompressionLevel.Optimal);
 		for (int i = 0; i < traces.Count; i++)
-        {
-            var name = $"{dir}{prefix}_{MeasurementStart[i]:yyyyMMdd-HHmmss.ffffff}.fdd";
+		{
+			var name = $"{dir}FD_{MeasurementStart[i]:yyyyMMdd-HHmmss.ffffff}.fdd";
 			var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
-            using var entryStream = entry.Open();
-		    using var writer = new StreamWriter(entryStream);
-            var info = ToText(traces[i], timeIndex is null ? 1 : timeIndex[i], MeasurementStart[i], MeasurementEnd[i]);
-            writer.WriteLine(info);
+			using var entryStream = entry.Open();
+			using var writer = new StreamWriter(entryStream);
+			var info = ToText(traces[i], timeIndex is null ? 1 : timeIndex[i], MeasurementStart[i], MeasurementEnd[i]);
+			writer.WriteLine(info);
 		}
-        if (boundaries is null)
-            return true;
-        var result = zip.CreateEntry("Results.txt", CompressionLevel.Optimal);
-		using var resultStream = result.Open();
-		using var resultWriter = new StreamWriter(resultStream);
-		resultWriter.WriteLine($"Boundaries: {string.Join(',', boundaries)}");
-		return true;
-    }
 
-    public bool Save(string fileName)
+        boundaries ??= Boundaries;
+        if (boundaries is not null)
+        {
+            var result = zip.CreateEntry("Results.txt", CompressionLevel.Optimal);
+            using var resultStream = result.Open();
+            using var resultWriter = new StreamWriter(resultStream);
+            resultWriter.WriteLine($"Boundaries: {string.Join(',', boundaries)}");
+        }
+
+        if (refFile is not null)
+        {
+			var refEntry = zip.CreateEntry(Path.GetFileName(refFile), CompressionLevel.Optimal);
+            using var refEntryStream = refEntry.Open();
+			using var refStream = new FileStream(refFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			refStream.CopyTo(refEntryStream);
+		}
+		return true;
+	}
+
+	public bool Save(string fileName)
     {
         using var compressor = new BrotliCompressor();
         MemoryPackSerializer.Serialize(compressor, this);
