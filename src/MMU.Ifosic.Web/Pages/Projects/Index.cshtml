@@ -33,7 +33,7 @@
 		<div class="card-header">
 			<div class="d-flex align-items-center">
 				<h5 class="mr-auto card-title d-none d-lg-block"><strong>FREQUENCY SHIFT PLOTS</strong></h5>
-			@if (Model.Item.LayoutId != 1) {
+			@if (Model.Item.LayoutId != 0) {
 				<div class="ml-1 align-self-end">
 					<select class="form-control" onchange="setFiber(this.value)" asp-for="FiberId">
 					@for (int i = 1; i < Model.Item.NumberOfFiber + 1; i++) {
@@ -68,7 +68,7 @@
 			<div class="d-flex align-items-center">
 				<h5 class="mr-auto card-title d-none d-lg-block"><strong>FIBER CHARACTERISATION</strong></h5>
 				<button onclick="averagePlot2()" class="ml-1 align-self-end btn btn btn-outline-primary">Load Time Plot</button>
-			@if (Model.Item.LayoutId == 1) {
+			@if (Model.Item.LayoutId == 0) {
 				<div class="ml-1 align-self-end">
 					<select class="form-control" onchange="getFiber(this.value)" asp-for="FiberId">
 					@for (int i = 1; i < Model.Item.NumberOfFiber + 1; i++) {

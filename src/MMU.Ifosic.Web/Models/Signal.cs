@@ -187,14 +187,14 @@ public class Characterisation
 		var avgPoints = new List<double>();
 		var refPoints = new List<double>();
 
-		for (int i = 0, j = refStart; j < refArray.Count; i++, j++)
+		for (int j = refStart; j < refArray.Count; j++)
 		{
 			var avgIdx = j + averageIndex;
 			if (avgIdx > AveragePoints.Count - 1 || AveragePoints[avgIdx][1] < 0)
 				continue;
 			refPoints.Add(refArray[j]);
 			avgPoints.Add(AveragePoints[avgIdx][1]);
-			ReferencePoints.Add(new double[] { refPoints[i], avgPoints[i] });
+			ReferencePoints.Add(new double[] { refPoints[^1], avgPoints[^1] });
 		}
 		if (refPoints.Count < 2)
 		{
