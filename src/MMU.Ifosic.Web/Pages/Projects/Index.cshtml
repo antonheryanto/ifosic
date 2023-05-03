@@ -148,11 +148,11 @@
 					point: {
 						events: {
 							click: function () {								
-								var index = dates.indexOf(this.x);
-								var url = `@(url)/location/${index}?fiberId=@(Model.FiberId)`;
+								time = dates.indexOf(this.x);
+								var url = `@(url)/location/${locationId}?fiberId=${fiberId}`;
 								Highcharts.getJSON(url, data => {
 									plot2.series[0].setData(data);
-									//plot2.series[0].data[locationId].select(true, false);
+									plot2.series[0].data[locationId].select(true, false);
 								});
 							}
 						}
@@ -196,8 +196,8 @@
 					point: {
 						events: {
 							click: function () {
-								var index = distances.indexOf(this.x);
-								var url = `@(url)/time/${index}?fiberId=${fiberId}`;
+								locationId = distances.indexOf(this.x);
+								var url = `@(url)/time/${locationId}?fiberId=${fiberId}`;
 								Highcharts.getJSON(url, data => {
 									plot1.series[0].setData(data);
 								});
