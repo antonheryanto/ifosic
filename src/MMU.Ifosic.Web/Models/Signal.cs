@@ -81,13 +81,15 @@ public class Characterisation
     public double Slope { get; set; }
     public double Intercept { get; set; }
 
-    public Characterisation(FrequencyShiftDistance? fdd = null, int fiberId = 0, string measurement = "Pressure", int borderGap = 20)
+    public Characterisation(FrequencyShiftDistance? fdd = null, int fiberId = 0, string measurement = "Pressure", int borderGap = 0)
 	{
 		if (fdd is null || fdd.Traces.Count == 0)
 			return;
 		var times = new double[fdd.Traces.Count];
 		for (int j = 0; j < fdd.Traces.Count; j++)
 		{
+			if (fdd.TimeBoundaries?.Count > 0 && fdd.TimeBoundaries[j] != fiberId)
+				continue;
 			times[j] = fdd.MeasurementStart[j]?.Subtract(UnixTime).TotalMilliseconds ?? 0;
 		}
 		if (fdd.BoundaryIndexes.Count == 0)
@@ -102,6 +104,8 @@ public class Characterisation
 			// get each time freq at that location
 			for (int j = 0; j < fdd.Traces.Count; j++)
 			{
+				if (times[j] == 0)
+					continue;
 				Candidates.Add(new double[] { times[j], fdd.Traces[j][i] });
 			}
 		}
@@ -151,7 +155,8 @@ public class Characterisation
 			return;
 
 		var averageValues = averages.Values.ToArray();
-		var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, times, borderGap);
+		var averageTimes = times.Where(w => w != 0).ToArray();
+		var (averagePoints, timeGroups) = Signal.GetAveragePoint(averageValues, averageTimes, borderGap);
 
 		for (int i = 0; i < timeGroups.Count; i++)
 		{
@@ -160,7 +165,7 @@ public class Characterisation
 			{
 				if (v != -1000)
 					CrossPlotPoints.Add(new double[] { v, averageValues[j] });
-				GuidedPoints.Add(new double[] { times[j], averagePoints[i][1] });
+				GuidedPoints.Add(new double[] { averageTimes[j], averagePoints[i][1] });
 			}
 		}
 

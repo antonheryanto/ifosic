@@ -101,6 +101,8 @@
 		var distances = @Json.Serialize(Model.Data?.Distance);
 		var freqTimes = @Json.Serialize(Model.Lines);
 		var freqDistance = @Json.Serialize(Model.FreqDistance);
+		var layoutId = @Model.Item.LayoutId;
+		var fiberId = @Model.FiberId;
 		var locationId = @Model.LocationId;
 		var time = @Model.Time;
 		var dates = @Json.Serialize(Model.Dates);
@@ -195,7 +197,7 @@
 						events: {
 							click: function () {
 								var index = distances.indexOf(this.x);
-								var url = `@(url)/time/${index}?fiberId=@(Model.FiberId)`;
+								var url = `@(url)/time/${index}?fiberId=${fiberId}`;
 								Highcharts.getJSON(url, data => {
 									plot1.series[0].setData(data);
 								});
@@ -221,12 +223,16 @@
 		zones = [];
 		xAxis = { title: { text: 'Distance (m)' } };
 		if (boundaries && boundaries.length > 0) {
+			var bs = layoutId == 0 ? boundaries[0] : boundaries[fiberId-1];
+			var be = layoutId == 0 ? boundaries[boundaries.length - 1] : boundaries[fiberId];
 			zones = [
-				{ value: boundaries[0], color: '#eeeeee' },
-				{ value: boundaries[boundaries.length - 1], color: 'black' },
+				{ value: bs, color: '#eeeeee' },
+				{ value: be, color: 'black' },
 				{ value: 100, color: '#eeeeee' },
 			];
-			for (var i = 1; i < boundaries.length; i++) {
+			var pbs = layoutId == 0 ? 1 : fiberId;
+			var pbe = layoutId == 0 ? boundaries.length : fiberId + 1;
+			for (var i = pbs; i < pbe; i++) {
 				plot2.xAxis[0].addPlotBand({ color: colors[i - 1], from: boundaries[i - 1], to: boundaries[i], label: { text: `F${i}` } });
 			}
 			xAxis.min = boundaries[0] - 3;
@@ -368,14 +374,16 @@
 						text: `Fiber Coefficents = ${slope.toFixed(3)}`
 					}]
 				}],
-				series: [{
-					data: crossPlotPoints,
-					type: 'scatter',
-					name: 'Observations',
-					marker: {
-						radius: 4
-					}
-				}, {
+				series: [
+				//{
+				//	data: crossPlotPoints,
+				//	type: 'scatter',
+				//	name: 'Observations',
+				//	marker: {
+				//		radius: 4
+				//	}
+				//}, 
+				{
 					type: 'line',
 					name: 'Regression Line',
 					data: lines,
@@ -395,7 +403,8 @@
 					marker: {
 						radius: 4
 					}
-				}]
+				}
+				]
 			});
 		}
 
