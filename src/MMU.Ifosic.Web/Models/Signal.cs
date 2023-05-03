@@ -190,7 +190,7 @@ public class Characterisation
 		for (int i = 0, j = refStart; j < refArray.Count; i++, j++)
 		{
 			var avgIdx = j + averageIndex;
-			if (avgIdx > AveragePoints.Count - 1)
+			if (avgIdx > AveragePoints.Count - 1 || AveragePoints[avgIdx][1] < 0)
 				continue;
 			refPoints.Add(refArray[j]);
 			avgPoints.Add(AveragePoints[avgIdx][1]);
