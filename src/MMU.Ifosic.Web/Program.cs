@@ -34,7 +34,7 @@ var app = builder.Build();
 var path = cfg.GetValue<string>("ProjectPath") ?? Path.Combine(Environment.CurrentDirectory, "projects");
 // Error Page
 app.MapGet("/error/{path?}/{subPath?}", ExceptionalMiddleware.HandleRequestAsync);
-app.MapGet("/api/project/{id}", (int id) => {
+app.MapGet("/api/project/{id}", (int id, int? fiberId) => {
     var fdd = FrequencyShiftDistance.Load(Path.Combine(path, $"{id}.bin"));
 	if (fdd is null)
 		return Results.Ok();
@@ -47,10 +47,18 @@ app.MapGet("/api/project/{id}", (int id) => {
 		start = indexes[0];
 		stop = indexes[1];
 	}
+	var fiberIndex = fiberId ?? 1;
 	var data = new List<double[]>();
-	for (int i = 0; i < fdd.Traces.Count; i++)
+	for (int i = 0, k = 0; i < fdd.Traces.Count; i++)
+	{
+		if (fdd.TimeBoundaries?.Count > 0 && fdd.TimeBoundaries[i] != fiberIndex)
+			continue;
 		for (int j = start; j < stop; j++)
-			data.Add(new double[] { fdd.Distance[j], i, fdd.Traces[i][j] });
+		{
+			data.Add(new double[] { fdd.Distance[j], k, fdd.Traces[i][j] });
+		}
+		k++;
+	}
     return Results.Ok(new { start, stop, data });
 });
 app.MapGet("/api/project/{id}/time/{location}", (int id, int location, int? fiberId) =>

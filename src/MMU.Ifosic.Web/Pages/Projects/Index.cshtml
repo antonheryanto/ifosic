@@ -484,7 +484,7 @@
 		}
 
 		function renderHeatMap() {
-			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}")', fdd => {
+			Highcharts.getJSON('@($"//{this.Request.Host}{this.Request.PathBase}/api/project/{Model.Item.Id}?fiberId={Model.FiberId}")', fdd => {
 				const startTime = performance.now();
 				heatMap(fdd.data);
 				//heatmapChart.series[0].setData(fdd.data);
