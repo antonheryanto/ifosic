@@ -1,11 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
 using MMU.Ifosic.Models;
-using NPOI.POIFS.Crypt.Dsig;
-using Org.BouncyCastle.Utilities;
 using StackExchange.Exceptional;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;

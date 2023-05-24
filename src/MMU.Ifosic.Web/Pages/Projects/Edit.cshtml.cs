@@ -85,7 +85,7 @@ public class EditModel : PageModel
                 await Upload.CopyToAsync(fileStream);
             }
             var fdd = FrequencyShiftDistance.Load(file);
-            Signal.GetBoundary(fdd, Path.Combine(_path, "model.onnx"), Item.NumberOfFiber);
+            //Signal.GetBoundary(fdd, Path.Combine(_path, "model.onnx"), Item.NumberOfFiber);
             fdd.Save(Path.Combine(_path, $"{Item.Id}.bin"));
         }
 
