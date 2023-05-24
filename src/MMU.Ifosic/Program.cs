@@ -1,8 +1,37 @@
 ﻿using MMU.Ifosic;
 using MMU.Ifosic.Models;
-using NPOI.SS.Formula.Functions;
 using OxyPlot.WindowsForms;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
+IPAddress ipAddress = new(new byte[] { 127, 0, 0, 1 });
+IPEndPoint ipEndPoint = new(ipAddress, 3082);
+using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+await client.ConnectAsync(ipEndPoint);
+
+async Task<string> SendMessage(Socket client, string message)
+{
+	var authMessage = Encoding.UTF8.GetBytes(message);
+	_ = await client.SendAsync(authMessage, SocketFlags.None);
+	// Receive ack.
+	var buffer = new byte[1_024];
+	var received = await client.ReceiveAsync(buffer, SocketFlags.None);
+	var response = Encoding.UTF8.GetString(buffer, 0, received);
+	if (!response.Contains("COMPLD"))
+		return "FAIL";
+	var ress = response.Trim('\r', '\n', ';', ' ').Split("\r\n");
+	return ress.Length < 3 ? "" : ress[2].Trim(' ', '"');
+}
+
+var auth = await SendMessage(client, "ACT-USER::root:1::root;");
+var list = await SendMessage(client, "RTRV-PATCH:::123:;");
+var add = await SendMessage(client, "ENT-PATCH::1,9:123:;");
+var list2 = await SendMessage(client, "RTRV-PATCH:::123:;");
+client.Shutdown(SocketShutdown.Both);
+
+return;
 
 var root = $@"C:\Projects\MMU\";
 var project = Path.Combine(root, "projects");
