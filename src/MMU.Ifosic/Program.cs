@@ -27,7 +27,11 @@ async Task<string> SendMessage(Socket client, string message)
 
 var auth = await SendMessage(client, "ACT-USER::root:1::root;");
 var list = await SendMessage(client, "RTRV-PATCH:::123:;");
+var sw = new Stopwatch();
+sw.Start();
 var add = await SendMessage(client, "ENT-PATCH::1,9:123:;");
+sw.Stop();
+Debug.WriteLine($"Elapsed={sw.Elapsed}");
 var list2 = await SendMessage(client, "RTRV-PATCH:::123:;");
 client.Shutdown(SocketShutdown.Both);
 

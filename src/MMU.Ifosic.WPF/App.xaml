@@ -1,0 +1,35 @@
+﻿<Application x:Class="MMU.Ifosic.WPF.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:f="clr-namespace:TechApps;assembly=TechApps"
+             xmlns:fv="clr-namespace:TechApps.Views;assembly=TechApps"
+             xmlns:fvm="clr-namespace:TechApps.ViewModels;assembly=TechApps"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:m="clr-namespace:MMU.Ifosic.WPF"
+             xmlns:vm="clr-namespace:MMU.Ifosic.WPF.ViewModels"
+             xmlns:v="clr-namespace:MMU.Ifosic.WPF.Views"
+             StartupUri="Views\MainView.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <m:AppCommand x:Key="AppCommand" />
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Light" />
+                <ui:ControlsDictionary />
+                <ResourceDictionary>
+                    <DataTemplate DataType="{x:Type vm:PlotViewModel}">
+                        <v:PlotView />
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type fvm:FrontPageViewModel}">
+                        <fv:FrontPageView />
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type fvm:ProgressViewModel}">
+                        <fv:ProgressView />
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type f:AssetItem}">
+                        <fv:AssetView />
+                    </DataTemplate>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
