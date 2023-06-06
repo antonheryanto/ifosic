@@ -70,8 +70,8 @@
                         <TextBox Text="{Binding Switch.Duration}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
                     <DockPanel>
-                        <TextBlock>Repeatation:</TextBlock>
-                        <TextBox Text="{Binding Switch.Repeatation}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        <TextBlock>Repetition:</TextBlock>
+                        <TextBox Text="{Binding Switch.Repetition}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
                 </StackPanel>
             </GroupBox>

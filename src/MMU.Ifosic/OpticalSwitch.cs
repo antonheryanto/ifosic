@@ -1,15 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.VisualBasic.Logging;
-using NPOI.SS.Formula.Functions;
-using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
-using System.Collections.ObjectModel;
 
 namespace MMU.Ifosic;
 
@@ -17,55 +11,53 @@ public partial class OpticalSwitch : ObservableObject
 {
     [ObservableProperty] private string _address = "192.168.3.1";
     [ObservableProperty] private string _ports = "1,2,3,4";
-    [ObservableProperty] private int _repeatation = 1;
-    [ObservableProperty] private TimeSpan _duration = new TimeSpan(0, 0, 1);
+    [ObservableProperty] private int _repetition = 1;
+    [ObservableProperty] private int _port = 3082;
+    [ObservableProperty] private int _incomingPort = 9;
+    [ObservableProperty] private int _minPort = 1;
+    [ObservableProperty] private int _maxPort = 8;
+    [ObservableProperty] private TimeSpan _duration = new (0, 0, 1);
     [ObservableProperty] private ObservableCollection<string> _logs = new();
 
-    public IPAddress IpAddress { get; set; } = new(new byte[] { 192, 168, 3, 1 });
-    public int Port { get; set; } = 3082;
-    public int IncomingPort { get; set; } = 9;
-    public int MinPort { get; set; } = 1;
-    public int MaxPort { get; set; } = 8;
-    public List<int> OutgoingPorts { get; set;} = new () {  1, 2, 3 };
+    private const string AUTH = "ACT-USER::root:1::root;";
+    private const string PATCH_LIST = "RTRV-PATCH:::123:;";
+    private const string PATCH_EDIT = "ENT-PATCH::{0},{1}:123:;";
+    private const string PATCH_CLEAR = "DLT-PATCH::ALL:123:;";
 
-    const string AUTH = "ACT-USER::root:1::root;";
-    const string PATCH_LIST = "RTRV-PATCH:::123:;";
-    const string PATCH_EDIT = "ENT-PATCH::{0},{1}:123:;";
-    const string PATCH_CLEAR = "DLT-PATCH::ALL:123:;";
-
-    partial void OnAddressChanged(string value)
+    private static IPAddress ToIPAddress(string value)
     {
         var c = value.Split('.');
         if (c.Length < 4)
-            return;
+            return new(new byte[] { 127, 0, 0, 1 });
         var ip = new byte[c.Length];
         byte empty = 0;
         for (int i = 0; i < ip.Length; i++)
         {
             ip[i] = byte.TryParse(c[i], out var v) ? v : empty;
         }
-        IpAddress = new IPAddress(ip);
+        return new IPAddress(ip);
     }
 
-    partial void OnPortsChanged(string value)
+    private List<int> GetPorts()
     {
-        var c = value.Split(',');
+        var c = Ports.Split(',');
+        var o = new List<int>();
         if (c.Length == 0)
-            return;
-        OutgoingPorts = new();
-        for (int i = 0;i < c.Length;i++)
+            return o;        
+        for (int i = 0; i < c.Length; i++)
         {
             if (!int.TryParse(c[i], out var v))
                 continue;
             if (v < MinPort || v > MaxPort)
                 continue;
-            OutgoingPorts.Add(v);
+            o.Add(v);
         }
+        return o;
     }
 
-    IPEndPoint GetEndPoint () => new (IpAddress, Port);
+    private IPEndPoint GetEndPoint () => new (ToIPAddress(Address), Port);
 
-    string Connect(int i = 0) => string.Format(PATCH_EDIT, OutgoingPorts[i], IncomingPort);
+    private string Connect(int port = 0) => string.Format(PATCH_EDIT, port, IncomingPort);
 
     public async Task RunSerial()
     {
@@ -74,13 +66,14 @@ public partial class OpticalSwitch : ObservableObject
         await client.ConnectAsync(ipEndPoint);
         await SendMessage(client, AUTH);
         var sw = new Stopwatch();
-
-        for (int j = 0; j < Repeatation; j++)
+        var ports = GetPorts();
+        Logs.Add($"Process start at {DateTime.Now}");
+        for (int j = 0; j < Repetition; j++)
         {
-            for (int i = 0; i < OutgoingPorts.Count; i++)
+            for (int i = 0; i < ports.Count; i++)
             {
                 sw.Start();
-                var r = await SendMessage(client, Connect(i));
+                var r = await SendMessage(client, Connect(ports[i]));
                 if (r == "FAIL")
                     continue;
                 sw.Stop();
@@ -88,7 +81,7 @@ public partial class OpticalSwitch : ObservableObject
                 await Task.Delay(timeLeft);
             } 
         }
-       
+        Logs.Add($"Process end at {DateTime.Now}");
         client.Shutdown(SocketShutdown.Both);
     }
 
@@ -99,13 +92,13 @@ public partial class OpticalSwitch : ObservableObject
         await client.ConnectAsync(ipEndPoint);
         await SendMessage(client, AUTH);
         var sw = new Stopwatch();
-
-        for (int j = 0; j < Repeatation; j++)
+        var ports = GetPorts();
+        for (int j = 0; j < Repetition; j++)
         {
-            for (int i = 0; i < OutgoingPorts.Count; i++)
+            for (int i = 0; i < ports.Count; i++)
             {
                 sw.Start();
-                var r = await SendMessage(client, Connect(i));
+                var r = await SendMessage(client, Connect(ports[i]));
                 if (r == "FAIL")
                     continue;
                 sw.Stop();
