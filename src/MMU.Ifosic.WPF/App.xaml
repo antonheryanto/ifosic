@@ -12,10 +12,17 @@
     <Application.Resources>
         <ResourceDictionary>
             <m:AppCommand x:Key="AppCommand" />
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
                 <ResourceDictionary>
+                    <DataTemplate DataType="{x:Type vm:ProjectViewModel}">
+                        <v:ProjectView />
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:SettingViewModel}">
+                        <v:SettingView />
+                    </DataTemplate>
                     <DataTemplate DataType="{x:Type vm:PlotViewModel}">
                         <v:PlotView />
                     </DataTemplate>

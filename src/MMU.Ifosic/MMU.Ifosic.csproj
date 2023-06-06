@@ -17,6 +17,7 @@
 		<PackageReference Include="NPOI" Version="2.6.0" />
 		<PackageReference Include="OxyPlot.WindowsForms" Version="2.1.2" />
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -25,6 +26,12 @@
 		</Compile>
 		<Compile Include="..\MMU.Ifosic.Web\Models\Signal.cs">
 			<Link>Models\Signal.cs</Link>
+		</Compile>
+		<Compile Include="..\MMU.Ifosic.Web\Models\Project.cs">
+			<Link>Models\Project.cs</Link>
+		</Compile>
+		<Compile Include="..\MMU.Ifosic.Web\Models\Fiber.cs">
+			<Link>Models\Fiber.cs</Link>
 		</Compile>
 	</ItemGroup>
 </Project>

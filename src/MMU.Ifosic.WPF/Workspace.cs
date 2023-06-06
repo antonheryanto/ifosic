@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using MMU.Ifosic.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,10 +20,5 @@ public partial class Workspace : ObservableObject
     public bool HasProject => Project is not null;
 
     private Workspace() { }
-}
-
-public partial class Project
-{
-    public List<string> Items { get; set; } = new();
 }
 

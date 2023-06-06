@@ -42,8 +42,9 @@
                                        Command="{StaticResource AppCommand}" CommandParameter="ProjectClose"/>
                     </ui:NavigationStore.Items>
                     <ui:NavigationStore.Footer>
-                        <ui:NavigationItem Content="Settings" Icon="Settings24"
-                                       Command="{StaticResource AppCommand}" CommandParameter="Setting"/>
+                        <ui:NavigationItem Content="Settings" Icon="Settings24"                                           
+                                           Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Command="{StaticResource AppCommand}" CommandParameter="Setting"/>
                     </ui:NavigationStore.Footer>
                 </ui:NavigationStore>
                 <!--  We display our pages inside this element.  -->

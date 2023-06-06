@@ -40,8 +40,7 @@ public partial class MainViewModel : ObservableRecipient
         {
             case AppPage.ProjectNew:
                 Workspace.Instance.Project = new();
-                InitAssets();
-                vm = new PlotViewModel();
+                vm = new ProjectViewModel();
                 break;
             case AppPage.ProjectOpen:
                 ProjectOpen(data as string);
@@ -53,6 +52,9 @@ public partial class MainViewModel : ObservableRecipient
                 ProjectSave();
                 break;
             case AppPage.ProjectSaveAs:
+                break;
+            case AppPage.Setting:
+                vm = new SettingViewModel();
                 break;
             default:
                 vm = new FrontPageViewModel();
