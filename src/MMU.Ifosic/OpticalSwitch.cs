@@ -9,21 +9,24 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace MMU.Ifosic;
 
 public partial class OpticalSwitch : ObservableObject
 {
-    [ObservableProperty] private string _address = "192.168.1.1";
-    [ObservableProperty] private string _ports = "1,2,3";
+    [ObservableProperty] private string _address = "192.168.3.1";
+    [ObservableProperty] private string _ports = "1,2,3,4";
+    [ObservableProperty] private int _repeatation = 1;
+    [ObservableProperty] private TimeSpan _duration = new TimeSpan(0, 0, 1);
+    [ObservableProperty] private ObservableCollection<string> _logs = new();
 
-    public IPAddress IpAddress { get; set; } = new(new byte[] { 192, 168, 1, 1 });
+    public IPAddress IpAddress { get; set; } = new(new byte[] { 192, 168, 3, 1 });
     public int Port { get; set; } = 3082;
     public int IncomingPort { get; set; } = 9;
     public int MinPort { get; set; } = 1;
     public int MaxPort { get; set; } = 8;
     public List<int> OutgoingPorts { get; set;} = new () {  1, 2, 3 };
-    public List<string> Logs { get; set; } = new();
 
     const string AUTH = "ACT-USER::root:1::root;";
     const string PATCH_LIST = "RTRV-PATCH:::123:;";
@@ -62,9 +65,9 @@ public partial class OpticalSwitch : ObservableObject
 
     IPEndPoint GetEndPoint () => new (IpAddress, Port);
 
-    string Connect(int i = 0) => string.Format(PATCH_EDIT, IncomingPort, OutgoingPorts[i]);
+    string Connect(int i = 0) => string.Format(PATCH_EDIT, OutgoingPorts[i], IncomingPort);
 
-    public async Task RunSerial(TimeSpan duration, int count = 1)
+    public async Task RunSerial()
     {
         var ipEndPoint = GetEndPoint();
         using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -72,16 +75,16 @@ public partial class OpticalSwitch : ObservableObject
         await SendMessage(client, AUTH);
         var sw = new Stopwatch();
 
-        for (int j = 0; j < count; j++)
+        for (int j = 0; j < Repeatation; j++)
         {
             for (int i = 0; i < OutgoingPorts.Count; i++)
             {
                 sw.Start();
-                var r = await SendMessage(client, Connect());
+                var r = await SendMessage(client, Connect(i));
                 if (r == "FAIL")
                     continue;
                 sw.Stop();
-                var timeLeft = duration - sw.Elapsed * 2;
+                var timeLeft = Duration - sw.Elapsed * 3;
                 await Task.Delay(timeLeft);
             } 
         }
@@ -89,7 +92,7 @@ public partial class OpticalSwitch : ObservableObject
         client.Shutdown(SocketShutdown.Both);
     }
 
-    public async Task RunParallel(TimeSpan duration, int count = 1)
+    public async Task RunParallel()
     {
         var ipEndPoint = GetEndPoint();
         using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -97,16 +100,16 @@ public partial class OpticalSwitch : ObservableObject
         await SendMessage(client, AUTH);
         var sw = new Stopwatch();
 
-        for (int j = 0; j < count; j++)
+        for (int j = 0; j < Repeatation; j++)
         {
             for (int i = 0; i < OutgoingPorts.Count; i++)
             {
                 sw.Start();
-                var r = await SendMessage(client, Connect());
+                var r = await SendMessage(client, Connect(i));
                 if (r == "FAIL")
                     continue;
                 sw.Stop();
-                var timeLeft = duration - sw.Elapsed * 2;
+                var timeLeft = Duration - sw.Elapsed * 2;
                 await Task.Delay(timeLeft);
             }
         }
@@ -114,7 +117,7 @@ public partial class OpticalSwitch : ObservableObject
         client.Shutdown(SocketShutdown.Both);
     }
 
-    async Task Test()
+    public async Task Test()
     {
         IPEndPoint ipEndPoint = GetEndPoint();
         using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -126,7 +129,7 @@ public partial class OpticalSwitch : ObservableObject
         sw.Start();
         var add = await SendMessage(client, Connect());
         sw.Stop();
-        Debug.WriteLine($"Elapsed={sw.Elapsed}");
+        Logs.Add($"Elapsed={sw.Elapsed}");
         var list2 = await SendMessage(client, PATCH_LIST);
         client.Shutdown(SocketShutdown.Both);
     }

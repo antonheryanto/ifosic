@@ -14,8 +14,8 @@ public partial class ProjectViewModel : ViewModelBase
     [ObservableProperty] private OpticalSwitch _switch = new ();
 
     [RelayCommand]
-    private void Run()
+    private async Task Run()
     {
-
+        await Switch.RunSerial();
     }
 }

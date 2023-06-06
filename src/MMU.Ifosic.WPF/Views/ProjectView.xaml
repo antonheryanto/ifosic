@@ -42,7 +42,9 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <Grid Grid.Column="0" 
+        <ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Switch.Logs}">
+        </ListBox>
+        <StackPanel Grid.Column="0" 
               Grid.Row="1"
               Margin="5,5,5,5">
             <GroupBox Header="Optical Switch" Grid.Row="0">
@@ -63,8 +65,16 @@
                         <TextBlock>Fiber Ports:</TextBlock>
                         <TextBox Text="{Binding Switch.Ports}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
+                    <DockPanel>
+                        <TextBlock>Duration:</TextBlock>
+                        <TextBox Text="{Binding Switch.Duration}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                    </DockPanel>
+                    <DockPanel>
+                        <TextBlock>Repeatation:</TextBlock>
+                        <TextBox Text="{Binding Switch.Repeatation}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                    </DockPanel>
                 </StackPanel>
             </GroupBox>
-        </Grid>
+        </StackPanel>
     </Grid>
 </UserControl>
