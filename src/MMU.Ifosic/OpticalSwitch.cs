@@ -85,6 +85,10 @@ public partial class OpticalSwitch : ObservableObject
         client.Shutdown(SocketShutdown.Both);
     }
 
+    /// <summary>
+    /// parallel the frequency scanning process try to cover all with multiple running steps
+    /// </summary>
+    /// <returns></returns>
     public async Task RunParallel()
     {
         var ipEndPoint = GetEndPoint();
