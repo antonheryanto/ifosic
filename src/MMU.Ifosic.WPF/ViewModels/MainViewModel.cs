@@ -43,7 +43,9 @@ public partial class MainViewModel : ObservableRecipient
                 vm = new ProjectViewModel();
                 break;
             case AppPage.ProjectOpen:
-                ProjectOpen(data as string);
+                var session = new Neubrex.Session();
+                session.Calculate(4);
+                //ProjectOpen(data as string);
                 break;
             case AppPage.ProjectClose:
                 ProjectClose();
