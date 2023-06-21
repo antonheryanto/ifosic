@@ -15,12 +15,12 @@ public partial class SessionSequence : ObservableObject
     [ObservableProperty] private string _path = "";
     [ObservableProperty] private string _method = "TW";
     [ObservableProperty] private int _port = 1;
-    [ObservableProperty] private bool _isMeasure;
+    [ObservableProperty] private bool _isMeasure = true;
 }
 
 public partial class SessionRunner : ObservableObject
 {
-    [ObservableProperty] private string _address = "192.168.1.102";
+    [ObservableProperty] private string _address = "127.0.0.1";
     [ObservableProperty] private int _port = 8315;
     [ObservableProperty] private int _repeatCount = 1;
     [ObservableProperty] private TimeSpan _repeatInterval = new(0, 0, 0);
@@ -35,11 +35,14 @@ public partial class SessionRunner : ObservableObject
             {
                 if (!sequence.IsMeasure)
                     continue;
+                if (neubrescope.Measurement.IsMeasuring())
+                    neubrescope.Measurement.WaitForFinish();
                 neubrescope.Session.Open(sequence.Path);
-                var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
-                neubrescope.Session.Route.SetOpticalSwitchSettings(os);
-                neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
+                //var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
+                //neubrescope.Session.Route.SetOpticalSwitchSettings(os);
+                //neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
                 neubrescope.Measurement.ExecutionFinished += (s, e) => GetResult(neubrescope);
+                changePort(sequence.Port);
                 neubrescope.Measurement.StartRoute();
                 neubrescope.Measurement.WaitForFinish();
                 //neubrescope.Measurement.ExecutionStarted -= (s, e) => changePort(sequence.Port);

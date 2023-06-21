@@ -29,7 +29,7 @@ public partial class ProjectViewModel : ViewModelBase
 
         foreach (var port in ports)
         {
-            Runner.Sequences.Add(new SessionSequence { Port = port });
+            Runner.Sequences.Add(new SessionSequence { Port = port, Path = $@"E:\MMU_PRSB_20230614\MMU PRSB 20230614_F{port}" });
         }
     }
 
@@ -48,14 +48,14 @@ public partial class ProjectViewModel : ViewModelBase
     private async Task Run()
     {
         //await Switch.RunSerial();
-        Runner.Calculate(async (i) => await Switch.ToPortAsync(i));
-        // ProgressViewModel.Init(() =>
-        // {
-        //     Runner.Calculate(async (i) => await Switch.ToPortAsync(i));
-        // }, () =>
-        // {
-        //     System.Diagnostics.Debug.WriteLine("Finish");
-        // });
+        //Runner.Calculate(async (i) => await Switch.ToPortAsync(i));
+        ProgressViewModel.Init(() =>
+        {
+            Runner.Calculate((i) => Switch.ToPort(i));
+        }, () =>
+        {
+            System.Diagnostics.Debug.WriteLine("Finish");
+        });
     }
 
 

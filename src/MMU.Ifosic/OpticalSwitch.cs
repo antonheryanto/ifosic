@@ -9,7 +9,7 @@ namespace MMU.Ifosic;
 
 public partial class OpticalSwitch : ObservableObject
 {
-    [ObservableProperty] private string _address = "192.1681.100";
+    [ObservableProperty] private string _address = "192.168.1.100";
     [ObservableProperty] private string _ports = "1,2,3,4";
     [ObservableProperty] private int _repetition = 1;
     [ObservableProperty] private int _port = 3082;
@@ -182,14 +182,14 @@ public partial class OpticalSwitch : ObservableObject
 
     private async Task<string> SendMessageAsync(Socket client, string message)
     {
-        Logs.Add($"sending: {message}");
+        //Logs.Add($"sending: {message}");
         var authMessage = Encoding.UTF8.GetBytes(message);
         _ = await client.SendAsync(authMessage, SocketFlags.None);
         // Receive ack.
         var buffer = new byte[1_024];
         var received = await client.ReceiveAsync(buffer, SocketFlags.None);
         var response = Encoding.UTF8.GetString(buffer, 0, received);
-        Logs.Add($"receive: {response}");
+        //Logs.Add($"receive: {response}");
         if (!response.Contains("COMPLD"))
             return "FAIL";
         var ress = response.Trim('\r', '\n', ';', ' ').Split("\r\n");
