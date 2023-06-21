@@ -27,25 +27,26 @@ public partial class SessionRunner : ObservableObject
     [ObservableProperty] private ObservableCollection<SessionSequence> _sequences = new();
     [ObservableProperty] private string _basename = "PF";
 
-    public void Calculate(SessionSequence sequence)
+    public void Calculate(Action<int> changePort)
     {
+        var neubrescope = new NbxNeubrescope("MMU Ifosic", Address, Port);
         for (int i = 0; i < RepeatCount; i++) {
             foreach (var sequence in Sequences)
             {
                 if (!sequence.IsMeasure)
                     continue;
-                var neubrescope = new NbxNeubrescope("MMU Ifosic", Address, Port);
                 neubrescope.Session.Open(sequence.Path);
                 var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
                 neubrescope.Session.Route.SetOpticalSwitchSettings(os);
                 neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
                 neubrescope.Measurement.ExecutionFinished += (s, e) => GetResult(neubrescope);
                 neubrescope.Measurement.StartRoute();
-                neubrescope.Measurement.ExecutionStarted -= (s, e) => changePort(sequence.Port);
-                neubrescope.Measurement.ExecutionFinished -= (s, e) => GetResult(neubrescope);
-                neubrescope?.Dispose();
+                neubrescope.Measurement.WaitForFinish();
+                //neubrescope.Measurement.ExecutionStarted -= (s, e) => changePort(sequence.Port);
+                //neubrescope.Measurement.ExecutionFinished -= (s, e) => GetResult(neubrescope);
             }
         }
+        neubrescope?.Dispose();
     }
 
     void GetResult(NbxNeubrescope neubrescope)
