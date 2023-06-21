@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MMU.Ifosic.Neubrex;
 
@@ -19,26 +20,29 @@ public partial class SessionSequence : ObservableObject
 
 public partial class SessionRunner : ObservableObject
 {
-    [ObservableProperty] private string _address = "127.0.0.1";
+    [ObservableProperty] private string _address = "192.168.1.102";
     [ObservableProperty] private int _port = 8315;
     [ObservableProperty] private int _repeatCount = 1;
     [ObservableProperty] private TimeSpan _repeatInterval = new(0, 0, 0);
     [ObservableProperty] private ObservableCollection<SessionSequence> _sequences = new();
     [ObservableProperty] private string _basename = "PF";
 
-    public void Calculate(Action<int> changePort)
+    public void Calculate(SessionSequence sequence)
     {
-        foreach (var sequence in Sequences)
-        {
-            if (!sequence.IsMeasure)
-                continue;
-            var neubrescope = new NbxNeubrescope("MMU Ifosic", Address, Port);
-            var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
-            neubrescope.Session.Route.SetOpticalSwitchSettings(os);
-            neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
-            neubrescope.Measurement.ExecutionFinished += (s, e) => GetResult(neubrescope);
-            neubrescope.Measurement.StartRoute();
-        }
+        
+        if (!sequence.IsMeasure)
+            continue;
+        var neubrescope = new NbxNeubrescope("MMU Ifosic", Address, Port);
+        neubrescope.Session.Open(sequence.Path);
+        var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
+        neubrescope.Session.Route.SetOpticalSwitchSettings(os);
+        neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
+        neubrescope.Measurement.ExecutionFinished += (s, e) => GetResult(neubrescope);
+        neubrescope.Measurement.StartRoute();
+        neubrescope.Measurement.ExecutionStarted -= (s, e) => changePort(sequence.Port);
+        neubrescope.Measurement.ExecutionFinished -= (s, e) => GetResult(neubrescope);
+        neubrescope?.Dispose();
+           
     }
 
     void GetResult(NbxNeubrescope neubrescope)

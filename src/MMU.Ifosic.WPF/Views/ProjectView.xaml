@@ -33,7 +33,7 @@
                     <TextBlock Text="{Binding Path}" Margin="5,0,5,0" Width="300"/>
                     <Button Content="..." HorizontalAlignment="Right" 
                             CommandParameter="{Binding}"
-                            Command="{Binding DataContext.BrowseCommand, RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                            Command="{Binding DataContext.BrowseCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
                 </StackPanel>
                 <TextBlock Text="{Binding Method}" Grid.Column="2" Margin="0,0,2,0" />
                 <TextBox Text="{Binding Port}" Grid.Column="3" HorizontalAlignment="Right"/>

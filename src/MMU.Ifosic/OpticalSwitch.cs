@@ -9,7 +9,7 @@ namespace MMU.Ifosic;
 
 public partial class OpticalSwitch : ObservableObject
 {
-    [ObservableProperty] private string _address = "192.168.3.1";
+    [ObservableProperty] private string _address = "192.1681.100";
     [ObservableProperty] private string _ports = "1,2,3,4";
     [ObservableProperty] private int _repetition = 1;
     [ObservableProperty] private int _port = 3082;
@@ -40,20 +40,35 @@ public partial class OpticalSwitch : ObservableObject
 
     public void ToPort(int port)
     {
-        var sw = new Stopwatch();
-        sw.Start();
-        Logs.Add($"Process start at {DateTime.Now}");
+        // var sw = new Stopwatch();
+        // sw.Start();
+        // Logs.Add($"Process start at {DateTime.Now}");
         var ipEndPoint = GetEndPoint();
         using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         client.Connect(ipEndPoint);
         SendMessage(client, AUTH);
         var r = SendMessage(client, Connect(port));
         var status = r == "FAIL" ? r : "SUCCESS";
-        sw.Stop();        
-        Logs.Add($"Process {status} at {DateTime.Now}, duration: {sw.ElapsedMilliseconds}");
+        // sw.Stop();        
+        // Logs.Add($"Process {status} at {DateTime.Now}, duration: {sw.ElapsedMilliseconds}");
         client.Shutdown(SocketShutdown.Both);
     }
 
+    public async Task ToPortAsync(int port)
+    {
+        var sw = new Stopwatch();
+        sw.Start();
+        // Logs.Add($"Process start at {DateTime.Now}");
+        var ipEndPoint = GetEndPoint();
+        using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        await client.ConnectAsync(ipEndPoint);
+        await SendMessageAsync(client, AUTH);
+        var r = await SendMessageAsync(client, Connect(port));
+        var status = r == "FAIL" ? r : "SUCCESS";
+        sw.Stop();        
+        // Logs.Add($"Process {status} at {DateTime.Now}, duration: {sw.ElapsedMilliseconds}");
+        client.Shutdown(SocketShutdown.Both);
+    }
 
 
     public List<int> GetPorts()
@@ -151,14 +166,14 @@ public partial class OpticalSwitch : ObservableObject
 
     private string SendMessage(Socket client, string message)
     {
-        Logs.Add($"sending: {message}");
+        // Logs.Add($"sending: {message}");
         var authMessage = Encoding.UTF8.GetBytes(message);
         _ = client.Send(authMessage, SocketFlags.None);
         // Receive ack.
         var buffer = new byte[1_024];
         var received = client.Receive(buffer, SocketFlags.None);
         var response = Encoding.UTF8.GetString(buffer, 0, received);
-        Logs.Add($"receive: {response}");
+        // Logs.Add($"receive: {response}");
         if (!response.Contains("COMPLD"))
             return "FAIL";
         var ress = response.Trim('\r', '\n', ';', ' ').Split("\r\n");

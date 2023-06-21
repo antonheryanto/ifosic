@@ -48,12 +48,19 @@ public partial class ProjectViewModel : ViewModelBase
     private async Task Run()
     {
         //await Switch.RunSerial();
-        Runner.Calculate(Switch.ToPort);
+        Runner.Calculate(async (i) => await Switch.ToPortAsync(i));
+        // ProgressViewModel.Init(() =>
+        // {
+        //     Runner.Calculate(async (i) => await Switch.ToPortAsync(i));
+        // }, () =>
+        // {
+        //     System.Diagnostics.Debug.WriteLine("Finish");
+        // });
     }
 
 
     [RelayCommand]
-    private void Browse(SessionSequence sequence)
+    private void Browse(SessionSequence? sequence)
     {
         sequence.Path = WeakReferenceMessenger.Default.Send(new RequestMessage<string>()).Response;
     }
