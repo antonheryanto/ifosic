@@ -4,10 +4,12 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<TargetFramework>net7.0-windows</TargetFramework>
-		<OutputType>WinExe</OutputType>
-		<UseWindowsForms>true</UseWindowsForms>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="OxyPlotExtensions.cs" />
+	  <Compile Remove="Program.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="MathNet.Numerics" Version="5.0.0" />
@@ -15,7 +17,7 @@
 		<PackageReference Include="MessagePack" Version="2.5.108" />
 		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.15.1" />
 		<PackageReference Include="NPOI" Version="2.6.0" />
-		<PackageReference Include="OxyPlot.WindowsForms" Version="2.1.2" />
+		<!--<PackageReference Include="OxyPlot.WindowsForms" Version="2.1.2" />-->
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
 	</ItemGroup>

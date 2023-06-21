@@ -63,8 +63,8 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <ListView Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Runner.Sequences}" Margin="5 5 5 5"/>
-        <ListBox Grid.Column="1" Grid.Row="2" ItemsSource="{Binding Switch.Logs}" />
+        <ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Runner.Sequences}" Margin="5 5 5 5"/>
+        <ListBox Grid.Column="1" Grid.Row="2" ItemsSource="{Binding Switch.Logs}"  Margin="5 5 5 5"/>
 
 
         <StackPanel Grid.Column="0" 

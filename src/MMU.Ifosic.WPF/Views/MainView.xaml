@@ -18,8 +18,9 @@
     </ui:UiWindow.DataContext>
     <Grid Margin="0">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="40" />
         </Grid.RowDefinitions>
         <Border Grid.Row="1" BorderThickness="0 1 0 0" BorderBrush="LightGray">
             <Grid Grid.Row="1"
@@ -65,6 +66,8 @@
                 </Grid>
             </Grid>
 
+        </Border>
+        <Border Grid.Row="2" BorderThickness="0 1 1 0" BorderBrush="LightGray">
         </Border>
 
         <ui:TitleBar Title="{Binding Workspace.Name}"
