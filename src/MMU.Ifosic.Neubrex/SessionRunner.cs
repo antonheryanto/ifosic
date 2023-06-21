@@ -29,20 +29,23 @@ public partial class SessionRunner : ObservableObject
 
     public void Calculate(SessionSequence sequence)
     {
-        
-        if (!sequence.IsMeasure)
-            continue;
-        var neubrescope = new NbxNeubrescope("MMU Ifosic", Address, Port);
-        neubrescope.Session.Open(sequence.Path);
-        var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
-        neubrescope.Session.Route.SetOpticalSwitchSettings(os);
-        neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
-        neubrescope.Measurement.ExecutionFinished += (s, e) => GetResult(neubrescope);
-        neubrescope.Measurement.StartRoute();
-        neubrescope.Measurement.ExecutionStarted -= (s, e) => changePort(sequence.Port);
-        neubrescope.Measurement.ExecutionFinished -= (s, e) => GetResult(neubrescope);
-        neubrescope?.Dispose();
-           
+        for (int i = 0; i < RepeatCount; i++) {
+            foreach (var sequence in Sequences)
+            {
+                if (!sequence.IsMeasure)
+                    continue;
+                var neubrescope = new NbxNeubrescope("MMU Ifosic", Address, Port);
+                neubrescope.Session.Open(sequence.Path);
+                var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
+                neubrescope.Session.Route.SetOpticalSwitchSettings(os);
+                neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
+                neubrescope.Measurement.ExecutionFinished += (s, e) => GetResult(neubrescope);
+                neubrescope.Measurement.StartRoute();
+                neubrescope.Measurement.ExecutionStarted -= (s, e) => changePort(sequence.Port);
+                neubrescope.Measurement.ExecutionFinished -= (s, e) => GetResult(neubrescope);
+                neubrescope?.Dispose();
+            }
+        }
     }
 
     void GetResult(NbxNeubrescope neubrescope)
