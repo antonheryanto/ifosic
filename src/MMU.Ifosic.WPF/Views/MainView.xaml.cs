@@ -6,6 +6,8 @@ using System.Windows;
 using TechApps.Views;
 using TechApps;
 using Wpf.Ui.Controls;
+using CommunityToolkit.Mvvm.Messaging.Messages;
+using System.IO;
 
 namespace MMU.Ifosic.WPF.Views;
 
@@ -16,12 +18,27 @@ public partial class MainView : UiWindow
 {
     private readonly OpenFileDialog _dlgOpen = new();
     private readonly SaveFileDialog _dlgSave = new();
+    private readonly System.Windows.Forms.FolderBrowserDialog _dlgFolder = new()
+    {
+        Description = "Time to select a folder",
+        UseDescriptionForTitle = true,
+        SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)
+                    + Path.DirectorySeparatorChar,
+        ShowNewFolderButton = true
+    };
 
     public MainView()
     {
         InitializeComponent();
-        WeakReferenceMessenger.Default.Register<MainView, FileDialogMessage>(this, (r, m) => ShowFileDialog(m));
-        WeakReferenceMessenger.Default.Register<MainView, DialogMessage>(this, (r, m) => ShowDialog(m));
+        WeakReferenceMessenger.Default.Register<MainView, FileDialogMessage>(this, static (r, m) => r.ShowFileDialog(m));
+        WeakReferenceMessenger.Default.Register<MainView, RequestMessage<string>>(this, static (r, m) => r.ShowFolderDialog(m));
+        WeakReferenceMessenger.Default.Register<MainView, DialogMessage>(this, static (r, m) => r.ShowDialog(m));
+    }
+
+    private void ShowFolderDialog(RequestMessage<string> message)
+    {
+        var m = _dlgFolder.ShowDialog() != System.Windows.Forms.DialogResult.OK ? "" : _dlgFolder.SelectedPath;
+        message.Reply(m);
     }
 
     private void ShowFileDialog(FileDialogMessage message)

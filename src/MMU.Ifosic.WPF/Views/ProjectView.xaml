@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:local="clr-namespace:MMU.Ifosic.WPF.Views"
+             xmlns:mn="clr-namespace:MMU.Ifosic.Neubrex;assembly=MMU.Ifosic.Neubrex"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -13,12 +14,31 @@
         </Style>
         <Style BasedOn="{StaticResource {x:Type TextBox}}" 
                TargetType="TextBox" x:Key="TextBoxWidth">
-            <Setter Property="Width" Value="100" />
+            <Setter Property="Width" Value="140" />
         </Style>
         <Style TargetType="DockPanel">
             <Setter Property="LastChildFill" Value="False" />
             <Setter Property="Margin" Value="0,0,0,5" />
         </Style>
+        <DataTemplate DataType="{x:Type mn:SessionSequence}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="400"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100" />
+                </Grid.ColumnDefinitions>
+                <CheckBox IsChecked="{Binding IsMeasure}" Grid.Column="0" Margin="5,0,5,0" HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" Grid.Column="1">
+                    <TextBlock Text="{Binding Path}" Margin="5,0,5,0" Width="300"/>
+                    <Button Content="..." HorizontalAlignment="Right" 
+                            CommandParameter="{Binding}"
+                            Command="{Binding DataContext.BrowseCommand, RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                </StackPanel>
+                <TextBlock Text="{Binding Method}" Grid.Column="2" Margin="0,0,2,0" />
+                <TextBox Text="{Binding Port}" Grid.Column="3" HorizontalAlignment="Right"/>
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -26,7 +46,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="400"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -34,7 +54,7 @@
                 Grid.ColumnSpan="2"
                 BorderThickness="0 0 0 1">
             <Grid>
-                <TextBlock Margin="10" FontWeight="Bold">Data Acquisition</TextBlock>
+                <TextBlock Margin="10" FontWeight="Bold">Session Sequence Runner</TextBlock>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <ui:Button Content="Run" Command="{Binding RunCommand}"                               
                                Icon="Play16"
@@ -42,15 +62,30 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Switch.Logs}">
-        </ListBox>
+        <!--<ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Switch.Logs}" />-->
+        <ListView Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Runner.Sequences}" Margin="5 5 5 5"/>
+
         <StackPanel Grid.Column="0" 
               Grid.Row="1"
               Margin="5,5,5,5">
+
+            <GroupBox Header="Integrator Unit" Grid.Row="0">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock>Hostname:</TextBlock>
+                        <TextBox Text="{Binding Runner.Address}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                    </DockPanel>
+                    <DockPanel>
+                        <TextBlock>Port:</TextBlock>
+                        <TextBox Text="{Binding Runner.Port}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                    </DockPanel>
+                </StackPanel>
+            </GroupBox>
+            
             <GroupBox Header="Optical Switch" Grid.Row="0">
                 <StackPanel>
                     <DockPanel>
-                        <TextBlock>Address:</TextBlock>
+                        <TextBlock>Hostname:</TextBlock>
                         <TextBox Text="{Binding Switch.Address}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
                     <DockPanel>
@@ -65,14 +100,28 @@
                         <TextBlock>Fiber Ports:</TextBlock>
                         <TextBox Text="{Binding Switch.Ports}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
-                    <DockPanel>
+                    <!--<DockPanel>
                         <TextBlock>Duration:</TextBlock>
                         <TextBox Text="{Binding Switch.Duration}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
                     <DockPanel>
                         <TextBlock>Repetition:</TextBlock>
                         <TextBox Text="{Binding Switch.Repetition}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                    </DockPanel>-->
+                </StackPanel>
+            </GroupBox>
+            
+            <GroupBox Header="Session Sequence" Grid.Row="0">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock>Repeat Count:</TextBlock>
+                        <TextBox Text="{Binding Runner.RepeatCount}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
+                    <DockPanel>
+                        <TextBlock>Repeat Interval:</TextBlock>
+                        <TextBox Text="{Binding Runner.RepeatInterval}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                    </DockPanel>
+                    
                 </StackPanel>
             </GroupBox>
         </StackPanel>

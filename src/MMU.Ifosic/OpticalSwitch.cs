@@ -38,7 +38,25 @@ public partial class OpticalSwitch : ObservableObject
         return new IPAddress(ip);
     }
 
-    private List<int> GetPorts()
+    public void ToPort(int port)
+    {
+        var sw = new Stopwatch();
+        sw.Start();
+        Logs.Add($"Process start at {DateTime.Now}");
+        var ipEndPoint = GetEndPoint();
+        using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        client.Connect(ipEndPoint);
+        SendMessage(client, AUTH);
+        var r = SendMessage(client, Connect(port));
+        var status = r == "FAIL" ? r : "SUCCESS";
+        sw.Stop();        
+        Logs.Add($"Process {status} at {DateTime.Now}, duration: {sw.ElapsedMilliseconds}");
+        client.Shutdown(SocketShutdown.Both);
+    }
+
+
+
+    public List<int> GetPorts()
     {
         var c = Ports.Split(',');
         var o = new List<int>();
@@ -64,7 +82,7 @@ public partial class OpticalSwitch : ObservableObject
         var ipEndPoint = GetEndPoint();
         using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         await client.ConnectAsync(ipEndPoint);
-        await SendMessage(client, AUTH);
+        await SendMessageAsync(client, AUTH);
         var sw = new Stopwatch();
         var ports = GetPorts();
         Logs.Add($"Process start at {DateTime.Now}");
@@ -73,7 +91,7 @@ public partial class OpticalSwitch : ObservableObject
             for (int i = 0; i < ports.Count; i++)
             {
                 sw.Start();
-                var r = await SendMessage(client, Connect(ports[i]));
+                var r = await SendMessageAsync(client, Connect(ports[i]));
                 if (r == "FAIL")
                     continue;
                 sw.Stop();
@@ -94,7 +112,7 @@ public partial class OpticalSwitch : ObservableObject
         var ipEndPoint = GetEndPoint();
         using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         await client.ConnectAsync(ipEndPoint);
-        await SendMessage(client, AUTH);
+        await SendMessageAsync(client, AUTH);
         var sw = new Stopwatch();
         var ports = GetPorts();
         for (int j = 0; j < Repetition; j++)
@@ -102,7 +120,7 @@ public partial class OpticalSwitch : ObservableObject
             for (int i = 0; i < ports.Count; i++)
             {
                 sw.Start();
-                var r = await SendMessage(client, Connect(ports[i]));
+                var r = await SendMessageAsync(client, Connect(ports[i]));
                 if (r == "FAIL")
                     continue;
                 sw.Stop();
@@ -119,19 +137,35 @@ public partial class OpticalSwitch : ObservableObject
         IPEndPoint ipEndPoint = GetEndPoint();
         using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         await client.ConnectAsync(ipEndPoint);
-        var auth = await SendMessage(client, AUTH);
-        await SendMessage(client, PATCH_CLEAR);
-        var list = await SendMessage(client, PATCH_LIST);
+        var auth = await SendMessageAsync(client, AUTH);
+        await SendMessageAsync(client, PATCH_CLEAR);
+        var list = await SendMessageAsync(client, PATCH_LIST);
         var sw = new Stopwatch();
         sw.Start();
-        var add = await SendMessage(client, Connect());
+        var add = await SendMessageAsync(client, Connect());
         sw.Stop();
         Logs.Add($"Elapsed={sw.Elapsed}");
-        var list2 = await SendMessage(client, PATCH_LIST);
+        var list2 = await SendMessageAsync(client, PATCH_LIST);
         client.Shutdown(SocketShutdown.Both);
     }
 
-    private async Task<string> SendMessage(Socket client, string message)
+    private string SendMessage(Socket client, string message)
+    {
+        Logs.Add($"sending: {message}");
+        var authMessage = Encoding.UTF8.GetBytes(message);
+        _ = client.Send(authMessage, SocketFlags.None);
+        // Receive ack.
+        var buffer = new byte[1_024];
+        var received = client.Receive(buffer, SocketFlags.None);
+        var response = Encoding.UTF8.GetString(buffer, 0, received);
+        Logs.Add($"receive: {response}");
+        if (!response.Contains("COMPLD"))
+            return "FAIL";
+        var ress = response.Trim('\r', '\n', ';', ' ').Split("\r\n");
+        return ress.Length < 3 ? "" : ress[2].Trim(' ', '"');
+    }
+
+    private async Task<string> SendMessageAsync(Socket client, string message)
     {
         Logs.Add($"sending: {message}");
         var authMessage = Encoding.UTF8.GetBytes(message);

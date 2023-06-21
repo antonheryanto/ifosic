@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using NPOI.HPSF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -43,9 +44,10 @@ public partial class MainViewModel : ObservableRecipient
                 vm = new ProjectViewModel();
                 break;
             case AppPage.ProjectOpen:
-                var session = new Neubrex.Session();
-                session.Calculate(4);
+                //var session = new Neubrex.Session();
+                //session.Calculate(4);
                 //ProjectOpen(data as string);
+                var path = Messenger.Send(new RequestMessage<string>()).Response;
                 break;
             case AppPage.ProjectClose:
                 ProjectClose();
