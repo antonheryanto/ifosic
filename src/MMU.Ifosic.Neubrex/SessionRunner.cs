@@ -38,8 +38,8 @@ public partial class SessionRunner : ObservableObject
                 if (neubrescope.Measurement.IsMeasuring())
                     neubrescope.Measurement.WaitForFinish();
                 neubrescope.Session.Open(sequence.Path);
-                //var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
-                //neubrescope.Session.Route.SetOpticalSwitchSettings(os);
+                var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
+                neubrescope.Session.Route.SetOpticalSwitchSettings(os);
                 //neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
                 neubrescope.Measurement.ExecutionFinished += (s, e) => GetResult(neubrescope);
                 changePort(sequence.Port);

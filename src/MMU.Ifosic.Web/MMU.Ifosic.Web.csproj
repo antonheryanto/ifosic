@@ -23,4 +23,8 @@
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\MMU.Ifosic\MMU.Ifosic.csproj" />
+	</ItemGroup>
+
 </Project>

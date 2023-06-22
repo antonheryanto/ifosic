@@ -1,6 +1,4 @@
-﻿using MemoryPack;
-using MemoryPack.Compression;
-using MessagePack;
+﻿using MessagePack;
 using MessagePack.Resolvers;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS.UserModel;
@@ -35,7 +33,6 @@ public class Measurement
 }
 
 
-[MemoryPackable]
 public partial class FrequencyShiftDistance
 {
     public Dictionary<string, string> Info { get; set; } = new();
@@ -147,15 +144,7 @@ public partial class FrequencyShiftDistance
         References[name] = rows;
     }
 
-	public static FrequencyShiftDistance? LoadBin(string fileName)
-	{
-		if (!File.Exists(fileName))
-			return null;
-		var bin = File.ReadAllBytes(fileName);
-		using var decompressor = new BrotliDecompressor();
-		var decompressedBuffer = decompressor.Decompress(bin);
-		return MemoryPackSerializer.Deserialize<FrequencyShiftDistance>(decompressedBuffer);
-	}
+	public static FrequencyShiftDistance? LoadBin(string fileName) => FromMessagePack(fileName);
 
 	public static FrequencyShiftDistance? Load(string fileName)
     {
@@ -298,13 +287,7 @@ public partial class FrequencyShiftDistance
 		return true;
 	}
 
-	public bool Save(string fileName)
-    {
-        using var compressor = new BrotliCompressor();
-        MemoryPackSerializer.Serialize(compressor, this);
-        File.WriteAllBytes(fileName, compressor.ToArray());
-        return true;
-    }
+	public bool Save(string fileName) => ToMessagePack(this, fileName);
 
     (Dictionary<string, string> info, List<double> distances, List<double> frequencies) Extract(Stream stream)
     {
@@ -345,8 +328,8 @@ public partial class FrequencyShiftDistance
 		return MessagePackSerializer.Deserialize<FrequencyShiftDistance>(bin, _options);
 	}
 
-	static readonly MessagePackSerializerOptions _options = ContractlessStandardResolver.Options;
-	    //.WithCompression(MessagePackCompression.Lz4BlockArray);
+	static readonly MessagePackSerializerOptions _options = ContractlessStandardResolver.Options
+	    .WithCompression(MessagePackCompression.Lz4BlockArray);
 
     public bool ToMessagePack(string fileName) => ToMessagePack(this, fileName);
 

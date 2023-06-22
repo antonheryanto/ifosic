@@ -20,8 +20,7 @@ public partial class ProjectViewModel : ViewModelBase
     [ObservableProperty] private OpticalSwitch _switch = new ();
     [ObservableProperty] private SessionRunner _runner = new ();
 
-
-    void UpdateSequence()
+    private void UpdateSequence()
     {
         var ports = Switch.GetPorts();
         if (Runner.Sequences.Count > 0)
@@ -35,6 +34,12 @@ public partial class ProjectViewModel : ViewModelBase
 
     public ProjectViewModel()
     {
+        var p = Workspace.Instance.Project;
+        if (p is not null)
+        {
+            Switch = p.Switch;
+            Runner = p.Runner;
+        }
         UpdateSequence();
         Switch.PropertyChanged += (s, e) =>
         {
@@ -60,7 +65,7 @@ public partial class ProjectViewModel : ViewModelBase
 
 
     [RelayCommand]
-    private void Browse(SessionSequence? sequence)
+    private void Browse(SessionSequence sequence)
     {
         sequence.Path = WeakReferenceMessenger.Default.Send(new RequestMessage<string>()).Response;
     }

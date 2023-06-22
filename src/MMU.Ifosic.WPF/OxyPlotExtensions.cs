@@ -3,6 +3,10 @@ using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using OxyPlot.SkiaSharp.Wpf;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 //using OxyPlot.WindowsForms;
 
 namespace MMU.Ifosic;
@@ -47,7 +51,7 @@ public static class OxyPlotExtensions
 		});
 
 		view.Model = model;
-		view.Dock = DockStyle.Fill;
+		//view.Dock = DockStyle.Fill;
 		return view;
 	}
 
@@ -89,7 +93,7 @@ public static class OxyPlotExtensions
 		});
 
 		view.Model = model;
-		view.Dock = DockStyle.Fill;
+		//view.Dock = DockStyle.Fill;
 		return view;
 	}
 
@@ -132,7 +136,7 @@ public static class OxyPlotExtensions
 		});
 
         view.Model = model;
-		view.Dock = DockStyle.Fill;
+		//view.Dock = DockStyle.Fill;
         return view;
     }
 
@@ -213,7 +217,7 @@ public static class OxyPlotExtensions
         });
 
 		view.Model = model;
-		view.Dock = DockStyle.Fill;
+		//view.Dock = DockStyle.Fill;
         return view;
     }
 
@@ -258,7 +262,7 @@ public static class OxyPlotExtensions
         
         model.InvalidatePlot(true);
         view.Model = model;
-        view.Dock = DockStyle.Fill;
+        //view.Dock = DockStyle.Fill;
         return view;
     }
 
@@ -370,7 +374,7 @@ public static class OxyPlotExtensions
         }
         model.InvalidatePlot(true);
         view.Model =model;
-        view.Dock = DockStyle.Fill;
+        //view.Dock = DockStyle.Fill;
         return view;
     }
 }

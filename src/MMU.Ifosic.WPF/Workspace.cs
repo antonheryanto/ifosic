@@ -20,5 +20,10 @@ public partial class Workspace : ObservableObject
     public bool HasProject => Project is not null;
 
     private Workspace() { }
+
+    public static readonly string TYPES = string.Join("|", new Dictionary<string, string> {
+            {"DFOS Project File", ".dfos"},
+            {"All Files", "*"},
+        }.Select(s => $"{s.Key} (*.{s.Value})|*.{s.Value}"));
 }
 

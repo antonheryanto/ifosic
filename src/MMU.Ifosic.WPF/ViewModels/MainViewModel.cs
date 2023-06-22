@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using MMU.Ifosic.Models;
 using NPOI.HPSF;
 using System;
 using System.Collections.Generic;
@@ -44,10 +45,7 @@ public partial class MainViewModel : ObservableRecipient
                 vm = new ProjectViewModel();
                 break;
             case AppPage.ProjectOpen:
-                //var session = new Neubrex.Session();
-                //session.Calculate(4);
-                //ProjectOpen(data as string);
-                var path = Messenger.Send(new RequestMessage<string>()).Response;
+                ProjectOpen();
                 break;
             case AppPage.ProjectClose:
                 ProjectClose();
@@ -73,6 +71,7 @@ public partial class MainViewModel : ObservableRecipient
         var fileName = Messenger.Send(new FileDialogMessage { IsOpenDialog = false }).Response.FirstOrDefault();
         if (fileName is null)
             return;
+        Workspace.Instance.Project?.Save(fileName);
     }
 
     private void ProjectClose()
@@ -87,8 +86,9 @@ public partial class MainViewModel : ObservableRecipient
         fileName ??= Messenger.Send(new FileDialogMessage()).Response.FirstOrDefault();
         if (string.IsNullOrEmpty(fileName))
             return;
-        ProgressViewModel.Init(() => Debug.WriteLine("open project"));
+        ProgressViewModel.Init(() => Workspace.Instance.Project = Project.Load(fileName), () => Content = new ProjectViewModel());
     }
+
 
     void AddAsset(string key, AssetItem value)
     {

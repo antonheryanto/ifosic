@@ -38,6 +38,9 @@
                     <ui:NavigationStore.Items>
                         <ui:NavigationItem Icon="Home16" Content="Home" ToolTip="Front Page"                                       
                                        Command="{StaticResource AppCommand}" CommandParameter="Home"/>
+                        <ui:NavigationItem Content="Save" Icon="Save16" ToolTip="Save Project"
+                                       Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       Command="{StaticResource AppCommand}" CommandParameter="ProjectSave"/>
                         <ui:NavigationItem Content="Close" Icon="Door16" ToolTip="Close Project"
                                        Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                        Command="{StaticResource AppCommand}" CommandParameter="ProjectClose"/>
