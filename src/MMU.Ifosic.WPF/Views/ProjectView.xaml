@@ -63,7 +63,9 @@
             <Grid>
                 <TextBlock Margin="10" FontWeight="Bold">Session Sequence Runner</TextBlock>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ui:Button Content="Run" Command="{Binding RunCommand}"                               
+                    <ui:Button Content="Start" 
+                               IsEnabled="{Binding IsStopped}"
+                               Command="{Binding StartCommand}"                               
                                Icon="Play16"
                                Margin="0 0 10 0 "/>
                 </StackPanel>

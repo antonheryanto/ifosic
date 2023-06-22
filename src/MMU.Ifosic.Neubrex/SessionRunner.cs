@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MMU.Ifosic.Neubrex;
@@ -27,32 +28,53 @@ public partial class SessionRunner : ObservableObject
     [ObservableProperty] private ObservableCollection<SessionSequence> _sequences = new();
     [ObservableProperty] private string _basename = "PF";
 
-    public void Calculate(Action<int> changePort)
+    private NbxNeubrescope? neubrescope = null;
+
+    public void Start(SessionSequence sequence)
     {
-        var neubrescope = new NbxNeubrescope("MMU Ifosic", Address, Port);
-        for (int i = 0; i < RepeatCount; i++) {
-            foreach (var sequence in Sequences)
-            {
-                if (!sequence.IsMeasure)
-                    continue;
-                if (neubrescope.Measurement.IsMeasuring())
-                    neubrescope.Measurement.WaitForFinish();
-                neubrescope.Session.Open(sequence.Path);
-                var os = new NbxOpticalSwitchSettings { PortNumber = sequence.Port };
-                neubrescope.Session.Route.SetOpticalSwitchSettings(os);
-                //neubrescope.Measurement.ExecutionStarted += (s, e) => changePort(sequence.Port);
-                neubrescope.Measurement.ExecutionFinished += (s, e) => GetResult(neubrescope);
-                changePort(sequence.Port);
-                neubrescope.Measurement.StartRoute();
-                neubrescope.Measurement.WaitForFinish();
-                //neubrescope.Measurement.ExecutionStarted -= (s, e) => changePort(sequence.Port);
-                //neubrescope.Measurement.ExecutionFinished -= (s, e) => GetResult(neubrescope);
-            }
-        }
-        neubrescope?.Dispose();
+        if (!sequence.IsMeasure)
+            return;
+        neubrescope ??= Init();
+        if (neubrescope.Measurement.IsMeasuring())
+            neubrescope.Measurement.WaitForFinish();
+        neubrescope.Session.Open(sequence.Path);
+        neubrescope.Measurement.StartRoute();
+        neubrescope.Measurement.WaitForFinish();
     }
 
-    void GetResult(NbxNeubrescope neubrescope)
+    private NbxNeubrescope Init()
+    {
+        NbxNeubrescope neubrescope = new("MMU Ifosic", Address, Port);
+        neubrescope.Measurement.ExecutionFinished += Measurement_ExecutionFinished;
+        foreach (var sequence in Sequences)
+        {
+            neubrescope.Session.Open(sequence.Path);
+            var port = neubrescope.Session.Route.GetOpticalSwitchSettings().PortNumber;
+            if (port != sequence.Port)
+            {
+                neubrescope.Session.Route.SetOpticalSwitchSettings(new NbxOpticalSwitchSettings { PortNumber = sequence.Port });
+                neubrescope.Session.Save();
+            }
+        }
+        return neubrescope;
+    }
+
+    ~SessionRunner()
+    {
+        if (neubrescope is null)
+            return;
+        neubrescope.Measurement.ExecutionFinished -= Measurement_ExecutionFinished;
+        neubrescope.Dispose();
+    }
+
+
+    private void Measurement_ExecutionFinished(object sender, NbxExecutionFinishedEventArgs e)
+    {
+        if (neubrescope is not null)
+            GetResult(neubrescope);
+    }
+
+    private void GetResult(NbxNeubrescope neubrescope)
     {
         Debug.WriteLine("ExecutionFinished");
         // saving

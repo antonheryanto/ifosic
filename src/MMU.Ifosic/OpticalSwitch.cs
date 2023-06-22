@@ -38,20 +38,26 @@ public partial class OpticalSwitch : ObservableObject
         return new IPAddress(ip);
     }
 
-    public void ToPort(int port)
+    public bool ToPort(int port)
     {
-        // var sw = new Stopwatch();
-        // sw.Start();
-        // Logs.Add($"Process start at {DateTime.Now}");
+        var sw = new Stopwatch();
+        sw.Start();
+        Logs.Add($"{DateTime.Now}, Request Change port to {port}");
         var ipEndPoint = GetEndPoint();
         using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        client.Connect(ipEndPoint);
+        try {
+            client.Connect(ipEndPoint);
+        } catch (Exception ex) {
+            Logs.Add($"{DateTime.Now}, Connection Failed, {ex.Message}");
+            return false;
+        }
         SendMessage(client, AUTH);
         var r = SendMessage(client, Connect(port));
         var status = r == "FAIL" ? r : "SUCCESS";
         // sw.Stop();        
-        // Logs.Add($"Process {status} at {DateTime.Now}, duration: {sw.ElapsedMilliseconds}");
+        Logs.Add($"{DateTime.Now}, {status} port changed to {port}, duration: {sw.ElapsedMilliseconds} ms");
         client.Shutdown(SocketShutdown.Both);
+        return true;
     }
 
     public async Task ToPortAsync(int port)

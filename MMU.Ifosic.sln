@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MMU.Ifosic", "src\MMU.Ifosi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MMU.Ifosic.WPF", "src\MMU.Ifosic.WPF\MMU.Ifosic.WPF.csproj", "{5704EEB9-10D2-45FF-A131-07719702C931}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MMU.Ifosic.Neubrex", "src\MMU.Ifosic.Neubrex\MMU.Ifosic.Neubrex.csproj", "{C6447B13-05C4-43FC-8D98-D9A61AC227EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MMU.Ifosic.Neubrex", "src\MMU.Ifosic.Neubrex\MMU.Ifosic.Neubrex.csproj", "{C6447B13-05C4-43FC-8D98-D9A61AC227EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
