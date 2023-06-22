@@ -3,7 +3,7 @@ using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
-using OxyPlot.WindowsForms;
+//using OxyPlot.WindowsForms;
 
 namespace MMU.Ifosic;
 
@@ -374,3 +374,22 @@ public static class OxyPlotExtensions
         return view;
     }
 }
+
+//static void Plot(params PlotView[] plots)
+//{
+//	var t = new TableLayoutPanel
+//	{
+//		Location = new System.Drawing.Point(0, 0),
+//		Dock = DockStyle.Fill,
+//		RowCount = plots.Length,
+//	};
+//	var rowSize = 100F / t.RowCount;
+//	for (int i = 0; i < plots.Length; i++)
+//	{
+//		t.RowStyles.Add(new RowStyle(SizeType.Percent, rowSize));
+//		t.Controls.Add(plots[i]);
+//	}
+//	var f = new Form() { Text = "Hello NativeAOT!", Width = 1024, Height = 1024 };
+//	f.Controls.Add(t);
+//	Application.Run(f);
+//}
