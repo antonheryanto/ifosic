@@ -36,8 +36,14 @@
                 d:Frame="{Binding ElementName=MainFrame}"
                 SelectedPageIndex="0">
                     <ui:NavigationStore.Items>
-                        <ui:NavigationItem Icon="Home16" Content="Home" ToolTip="Front Page"                                       
-                                       Command="{StaticResource AppCommand}" CommandParameter="Home"/>
+                        <ui:NavigationItem Icon="Home16" Content="Home" ToolTip="Front Page"
+                                           Command="{StaticResource AppCommand}" CommandParameter="Home"/>
+                        <ui:NavigationItem Icon="Play16" Content="Run" ToolTip="Session Runner"
+                                       Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       Command="{StaticResource AppCommand}" CommandParameter="Measurement"/>
+                        <ui:NavigationItem Icon="ChartMultiple20" Content="Run" ToolTip="Calculate"
+                                           Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Command="{StaticResource AppCommand}" CommandParameter="Calculate"/>
                         <ui:NavigationItem Content="Save" Icon="Save16" ToolTip="Save Project"
                                        Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                        Command="{StaticResource AppCommand}" CommandParameter="ProjectSave"/>
@@ -45,11 +51,11 @@
                                        Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                        Command="{StaticResource AppCommand}" CommandParameter="ProjectClose"/>
                     </ui:NavigationStore.Items>
-                    <ui:NavigationStore.Footer>
+                    <!--<ui:NavigationStore.Footer>
                         <ui:NavigationItem Content="Settings" Icon="Settings24"                                           
                                            Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                            Command="{StaticResource AppCommand}" CommandParameter="Setting"/>
-                    </ui:NavigationStore.Footer>
+                    </ui:NavigationStore.Footer>-->
                 </ui:NavigationStore>
                 <!--  We display our pages inside this element.  -->
                 <Grid Grid.Column="1">

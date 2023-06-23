@@ -9,14 +9,14 @@ namespace MMU.Ifosic.WPF;
 
 public enum AppPage
 {
+    Measurement,
+    Calculate,
     ProjectNew,
     ProjectOpen,
     ProjectClose,
     ProjectSave,
     ProjectSaveAs,
-    Calculate,
     Home,
-    Seismic,
     Setting
 }
 

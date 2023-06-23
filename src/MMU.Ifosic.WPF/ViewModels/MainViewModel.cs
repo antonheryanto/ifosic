@@ -40,6 +40,12 @@ public partial class MainViewModel : ObservableRecipient
         ViewModelBase? vm = null;
         switch (page)
         {
+            case AppPage.Calculate:
+                vm = new PlotViewModel();
+                break;
+            case AppPage.Measurement:
+                vm = new ProjectViewModel();
+                break;
             case AppPage.ProjectNew:
                 Workspace.Instance.Project = new();
                 vm = new ProjectViewModel();

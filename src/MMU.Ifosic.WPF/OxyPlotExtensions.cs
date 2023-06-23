@@ -266,7 +266,7 @@ public static class OxyPlotExtensions
         return view;
     }
 
-    public static PlotView PlotHeatmap(this PlotView view, FrequencyShiftDistance fdd, IList<int>? indexes = null, int start = 0, int stop = 0, double max = 0, string titleXAxis = "Distance (m)", string titleYAxis = "Time(s)")
+    public static PlotModel PlotHeatmap(this FrequencyShiftDistance fdd, IList<int>? indexes = null, int start = 0, int stop = 0, double max = 0, string titleXAxis = "Distance (m)", string titleYAxis = "Time(s)")
     {
         if (stop == 0)
             stop = fdd.Distance.Count;
@@ -373,9 +373,7 @@ public static class OxyPlotExtensions
             }
         }
         model.InvalidatePlot(true);
-        view.Model =model;
-        //view.Dock = DockStyle.Fill;
-        return view;
+        return model;
     }
 }
 

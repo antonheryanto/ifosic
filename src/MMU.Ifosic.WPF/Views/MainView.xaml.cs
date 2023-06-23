@@ -20,7 +20,7 @@ public partial class MainView : UiWindow
     private readonly SaveFileDialog _dlgSave = new();
     private readonly System.Windows.Forms.FolderBrowserDialog _dlgFolder = new()
     {
-        Description = "Time to select a folder",
+        Description = "Select a folder",
         UseDescriptionForTitle = true,
         SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)
                     + Path.DirectorySeparatorChar,
