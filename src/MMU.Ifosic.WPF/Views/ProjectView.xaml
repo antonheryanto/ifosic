@@ -12,9 +12,12 @@
         <Style TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-        <Style BasedOn="{StaticResource {x:Type TextBox}}" 
-               TargetType="TextBox" x:Key="TextBoxWidth">
+        <Style BasedOn="{StaticResource {x:Type TextBox}}" TargetType="TextBox" x:Key="TextBoxWidth">
             <Setter Property="Width" Value="140" />
+        </Style>
+        <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock" x:Key="Status">
+            <Setter Property="FontSize" Value="32" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
         <Style TargetType="DockPanel">
             <Setter Property="LastChildFill" Value="False" />
@@ -53,8 +56,8 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="400"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition MinWidth="260" MaxWidth="360"/>
+            <ColumnDefinition Width="*" MinWidth="400"/>
         </Grid.ColumnDefinitions>
 
         <Border BorderBrush="LightGray"
@@ -101,7 +104,7 @@
               Grid.RowSpan="2"
               Margin="5,5,5,5">
 
-            <GroupBox Header="Integrator Unit" Grid.Row="0">
+            <GroupBox Header="Integrator Unit">
                 <StackPanel>
                     <DockPanel>
                         <TextBlock>Hostname:</TextBlock>
@@ -114,7 +117,7 @@
                 </StackPanel>
             </GroupBox>
             
-            <GroupBox Header="Optical Switch" Grid.Row="0">
+            <GroupBox Header="Optical Switch">
                 <StackPanel>
                     <DockPanel>
                         <TextBlock>Hostname:</TextBlock>
@@ -143,17 +146,31 @@
                 </StackPanel>
             </GroupBox>
             
-            <GroupBox Header="Session Sequence" Grid.Row="0">
+            <GroupBox Header="Session Settings">
                 <StackPanel>
                     <DockPanel>
                         <TextBlock>Repeat Count:</TextBlock>
                         <TextBox Text="{Binding Runner.RepeatCount}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
-                    <DockPanel>
+                    <!--<DockPanel>
                         <TextBlock>Repeat Interval:</TextBlock>
                         <TextBox Text="{Binding Runner.RepeatInterval}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                    </DockPanel>-->
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="Status">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock Text="Running:"/>
+                        <TextBlock Style="{StaticResource Status}" Text="{Binding Runner.RepeatCount}" DockPanel.Dock="Right"/>
+                        <TextBlock Style="{StaticResource Status}" Text=" / " DockPanel.Dock="Right"/>
+                        <TextBlock Style="{StaticResource Status}" Text="{Binding Count}" DockPanel.Dock="Right"/>
                     </DockPanel>
-                    
+                    <DockPanel>
+                        <TextBlock>Fiber Port:</TextBlock>
+                        <TextBlock Style="{StaticResource Status}" Text="{Binding Switch.OutgoingPort}" DockPanel.Dock="Right"/>
+                    </DockPanel>
                 </StackPanel>
             </GroupBox>
         </StackPanel>

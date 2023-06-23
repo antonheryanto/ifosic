@@ -14,6 +14,7 @@ public partial class OpticalSwitch : ObservableObject
     [ObservableProperty] private int _repetition = 1;
     [ObservableProperty] private int _port = 3082;
     [ObservableProperty] private int _incomingPort = 9;
+    [ObservableProperty] private int _outgoingPort = 0;
     [ObservableProperty] private int _minPort = 1;
     [ObservableProperty] private int _maxPort = 8;
     [ObservableProperty] private TimeSpan _duration = new (0, 0, 1);
@@ -53,8 +54,10 @@ public partial class OpticalSwitch : ObservableObject
         }
         SendMessage(client, AUTH);
         var r = SendMessage(client, Connect(port));
-        var status = r == "FAIL" ? r : "SUCCESS";
-        // sw.Stop();        
+        var status = r == "Fail" ? r : "Success";
+        if (status == "Success")
+            OutgoingPort = port;
+        sw.Stop();
         Logs.Add($"{DateTime.Now}, {status} port changed to {port}, duration: {sw.ElapsedMilliseconds} ms");
         client.Shutdown(SocketShutdown.Both);
         return true;

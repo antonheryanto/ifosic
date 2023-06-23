@@ -13,6 +13,7 @@ public partial class ProjectViewModel : ViewModelBase
     [ObservableProperty] private OpticalSwitch _switch = new ();
     [ObservableProperty] private SessionRunner _runner = new ();
     [ObservableProperty] private bool _isStopped = true;
+    [ObservableProperty] private int _count = 0;
     private CancellationTokenSource _token = new();
 
     private void UpdateSequence()
@@ -52,15 +53,17 @@ public partial class ProjectViewModel : ViewModelBase
     private void Start()
     {
         //await Switch.RunSerial();
-        //Runner.Start(Switch.ToPort);
         IsStopped = false;
         _token = new();
         for (int i = 0; i < Runner.RepeatCount; i++)
         {
+            Count++;
             if (_token.Token.IsCancellationRequested)
                 break;
             foreach (var sequence in Runner.Sequences)
             {
+                if (string.IsNullOrEmpty(sequence.Path))
+                    continue;
                 if (_token.Token.IsCancellationRequested || !Switch.ToPort(sequence.Port))
                     break;
                 ProgressViewModel.Init(() => Runner.Start(sequence), cancel: _token.Cancel);
