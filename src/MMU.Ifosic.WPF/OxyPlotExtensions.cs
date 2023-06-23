@@ -1,4 +1,5 @@
 ﻿using MMU.Ifosic.Models;
+using NPOI.SS.Formula.Functions;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
@@ -13,9 +14,9 @@ namespace MMU.Ifosic;
 
 public static class OxyPlotExtensions
 {
-	public static PlotView PlotScatter(this PlotView view, IList<Group> data, OxyColor? color = null)
+    public static PlotModel PlotScatter(this IList<Group> data, OxyColor? color = null)
 	{
-		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
+		var model = new PlotModel { Title = "Freq vs Time" };
 		color ??= OxyColors.Red;
 		var scatters = new ScatterSeries
 		{
@@ -33,8 +34,6 @@ public static class OxyPlotExtensions
 		}
 
 		model.Series.Add(scatters);
-		if (view.Model is not null)
-			return view;
 
 		model.Axes.Add(new LinearAxis
 		{
@@ -50,19 +49,18 @@ public static class OxyPlotExtensions
 			Position = AxisPosition.Left
 		});
 
-		view.Model = model;
-		//view.Dock = DockStyle.Fill;
-		return view;
+		return model;
 	}
 
-	public static PlotView PlotScatter(this PlotView view, IList<double[]> data, OxyColor? color = null)
+    public static PlotModel PlotScatter(this IList<double[]> data, IList<DateTime?>? x = null,
+        int index = 8, OxyColor? color = null)
 	{
-		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
-		color ??= OxyColors.Red;
+		var model = new PlotModel { Title = "Frequency shift vs Time" };
+        color ??= OxyColors.RoyalBlue;
 		var scatters = new ScatterSeries
 		{
-			MarkerType = MarkerType.Circle,
-			MarkerFill = OxyColors.White,
+            MarkerType = MarkerType.Circle,
+			MarkerFill = color.Value,
 			MarkerStroke = color.Value,
 			MarkerStrokeThickness = 1,
 			MarkerSize = 3,
@@ -70,31 +68,30 @@ public static class OxyPlotExtensions
 
 		// get freq on certain distanct for range of time
 		for (int j = 0; j < data.Count; j++)
-		{			
-			scatters.Points.Add(new ScatterPoint(data[j][0], data[j][1]));
+		{
+            var v = x is not null && x.Count == data.Count ? DateTimeAxis.ToDouble(x[j]) : j;
+            scatters.Points.Add(new ScatterPoint(v, data[j][index]));
 		}
 
 		model.Series.Add(scatters);
-		if (view.Model is not null)
-			return view;
-
-		model.Axes.Add(new LinearAxis
+		model.Axes.Add(new DateTimeAxis
 		{
 			Title = "Times",
-			Minimum = 0,
 			Position = AxisPosition.Bottom
 		});
 		model.Axes.Add(new LinearAxis
 		{
 			Title = "Freq",
-			Minimum = -5,
-			Maximum = 30,
-			Position = AxisPosition.Left
+            MajorStep = 10,
+            MinorStep = 2,
+            MajorGridlineStyle = LineStyle.Dot,
+            MajorGridlineColor = OxyColors.LightGray,
+            Minimum = -20,
+            Maximum = 20,
+            Position = AxisPosition.Left
 		});
 
-		view.Model = model;
-		//view.Dock = DockStyle.Fill;
-		return view;
+		return model;
 	}
 
 	public static PlotModel PlotScatter(this double[] y, int[]? x = null, OxyColor? color = null)
@@ -118,9 +115,6 @@ public static class OxyPlotExtensions
 		}
 
 		model.Series.Add(scatters);
-		if (view.Model is not null)
-            return view;
-
 		model.Axes.Add(new LinearAxis
 		{
 			Title = "Times",
@@ -135,9 +129,7 @@ public static class OxyPlotExtensions
 			Position = AxisPosition.Left
 		});
 
-        view.Model = model;
-		//view.Dock = DockStyle.Fill;
-        return view;
+        return model;
     }
 
     public static PlotView PlotBoundary(this PlotView view, IList<double> boundaries)
@@ -180,10 +172,10 @@ public static class OxyPlotExtensions
 		return view;
 	}
 
-	public static PlotView PlotLine(this PlotView view, IList<double> x, IList<double>? y = null, double max = 0, double min=-9999)
+	public static PlotModel PlotLine(this IList<double> x, IList<double>? y = null, double max = 0, double min=-9999)
     {
-        var model = view.Model ?? new PlotModel { Title = "Freq vs Distance" };        
-        var line = new LineSeries { };
+        var model = new PlotModel { Title = "Frequency shift vs Distance" };        
+        var line = new LineSeries { Color = OxyColors.Black };
         for (int i = 0; i < x.Count; i++)
         {
             if (y is null)
@@ -198,27 +190,28 @@ public static class OxyPlotExtensions
         if (min == -9999)
             min = -max;
 
-        if (view.Model is not null)
-            return view;
-
 		model.Axes.Add(new LinearAxis
         {
             Key = "x",
-            Title = "Distance (m)",            
+            Title = "Distance (m)",
+            Minimum = 15,
+            Maximum = 350,
             Position = AxisPosition.Bottom
         });
         model.Axes.Add(new LinearAxis
         {
             Key = "y",
             Title = "Frequency Shift",
+            MajorStep = 10,
+            MinorStep = 2,
+            MajorGridlineStyle = LineStyle.Dot,
+            MajorGridlineColor = OxyColors.LightGray,
             Minimum = min,
             Maximum = max,
             Position = AxisPosition.Left
         });
 
-		view.Model = model;
-		//view.Dock = DockStyle.Fill;
-        return view;
+        return model;
     }
 
     private static readonly OxyPalette _palette = OxyPalettes.Rainbow(500);
@@ -308,8 +301,8 @@ public static class OxyPlotExtensions
             AbsoluteMinimum = 0,
             AbsoluteMaximum = data.GetLength(0) - 1,
             Title = titleXAxis,
-            TicklineColor = OxyColors.White,
-            TextColor = OxyColors.White,
+            //TicklineColor = OxyColors.White,
+            //TextColor = OxyColors.White,
             Position = AxisPosition.Bottom
         });
         model.Axes.Add(new LinearAxis
@@ -335,13 +328,13 @@ public static class OxyPlotExtensions
             RenderAsImage = false,
             Position = AxisPosition.Right
         });
-        model.Axes.Add(new LinearAxis
-        {
-            Key = "axis_bottom",
-            Minimum = 0,
-            Maximum = data.GetLength(0) * xScale,
-            Position = AxisPosition.Bottom,
-        });
+        //model.Axes.Add(new LinearAxis
+        //{
+        //    Key = "axis_bottom",
+        //    Minimum = 0,
+        //    Maximum = data.GetLength(0) * xScale,
+        //    Position = AxisPosition.Bottom,
+        //});
         //model.Axes.Add(new DateTimeAxis
         //{
         //    Key = "axis_left",

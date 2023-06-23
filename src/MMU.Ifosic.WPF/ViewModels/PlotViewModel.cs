@@ -16,6 +16,7 @@ public partial class PlotViewModel : ViewModelBase
 {
     [ObservableProperty] PlotModel _model = new();
     [ObservableProperty] PlotModel _model2 = new();
+    [ObservableProperty] PlotModel _model3 = new();
     [ObservableProperty] int _index;
     [ObservableProperty] private ObservableCollection<string> _indexes = new();
 
@@ -24,13 +25,14 @@ public partial class PlotViewModel : ViewModelBase
 
     public PlotViewModel()
     {
-        if (Project.Runner.Sequences.Count == 0 || Project.Items.Count == Project.Runner.Sequences.Count)
-            return;
-        foreach (var sequence in Project.Runner.Sequences)
+        if (Project.Runner.Sequences.Count > 0 && Project.Items.Count != Project.Runner.Sequences.Count)
         {
-            var fdd = FrequencyShiftDistance.LoadFolder(sequence.Path);
-            if (fdd is not null)
-                Project.Items.Add(fdd);
+            foreach (var sequence in Project.Runner.Sequences)
+            {
+                var fdd = FrequencyShiftDistance.LoadFolder(sequence.Path);
+                if (fdd is not null)
+                    Project.Items.Add(fdd);
+            }
         }
         if (Project.Items.Count > 0)
             Item = Project.Items[Index];
@@ -77,5 +79,7 @@ public partial class PlotViewModel : ViewModelBase
         if (Item is null)
             return;
         Model = Item.PlotHeatmap(max: 20);
+        Model2 = Item.Traces[25].PlotLine(max: 20);
+        Model3 = Item.Traces.PlotScatter(Item.MeasurementStart, index: 83);
     }
 }

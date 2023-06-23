@@ -172,6 +172,7 @@ public partial class FrequencyShiftDistance
             using var stream = new FileStream(file.FullName,
                 FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var (i, d, f) = o.Extract(stream);
+            o.MeasurementStart.Add(DateTime.TryParse(i["Measurement Start"], out var ms) ? ms : null);
             if (o.Distance.Count == 0)
                 o.Distance.AddRange(d);
             if (o.Info.Count == 0)

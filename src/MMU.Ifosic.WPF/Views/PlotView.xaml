@@ -36,9 +36,13 @@
                 </StackPanel>
             </Grid>
         </Border>
+        <oxy:PlotView Model="{Binding Model3}" 
+                      Grid.Row="1"
+                      Grid.Column="0"
+                      Background="Transparent"/>
         <oxy:PlotView Model="{Binding Model2}" 
                       Grid.Row="1"
-                      Grid.ColumnSpan="2"
+                      Grid.Column="1"
                       Background="Transparent"/>
         <oxy:PlotView Model="{Binding Model}" 
                       Grid.Row="2"

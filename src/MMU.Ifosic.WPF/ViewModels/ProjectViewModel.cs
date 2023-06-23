@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TechApps.ViewModels;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace MMU.Ifosic.WPF.ViewModels;
 
@@ -81,12 +82,13 @@ public partial class ProjectViewModel : ViewModelBase
             {
                 if (_token.Token.IsCancellationRequested)
                     break;
-                if (string.IsNullOrEmpty(sequence.Path) || !Switch.ToPort(sequence.Port))
-                    continue;
-                ProgressViewModel.Init(() => Runner.Start(sequence), cancel: _token.Cancel);
-                //Switch.OutgoingPort = sequence.Port;
-                //ProgressViewModel.Init(() => Task.Delay(100).Wait(),
-                //    () => Switch.Logs.Add($"{DateTime.Now}, Running {Count} {sequence.Port}"), cancel: _token.Cancel);
+                //if (string.IsNullOrEmpty(sequence.Path) || !Switch.ToPort(sequence.Port))
+                //    continue;
+                //ProgressViewModel.Init(() => Runner.Start(sequence), cancel: _token.Cancel);
+                Switch.Logs.Add($"{DateTime.Now}, Request Change port to {sequence.Port}");
+                Switch.OutgoingPort = sequence.Port;
+                ProgressViewModel.Init(() => Task.Delay(100).Wait(),
+                    () => Switch.Logs.Add($"{DateTime.Now}, Success port changed to {sequence.Port}, duration: 650 ms"), cancel: _token.Cancel);
             }
         }
         IsStopped = true;

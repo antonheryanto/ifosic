@@ -203,10 +203,10 @@
                             <TextBlock Text="Number Of Fibers:"/>
                             <TextBox Text="{Binding Project.NumberOfFiber}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                         </DockPanel>
-                        <DockPanel>
+                        <!--<DockPanel>
                             <TextBlock Text="Type of Measurement:"/>
                             <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Measurements}" SelectedItem="{Binding Project.Measurement}" Style="{StaticResource ComboBoxWidth}"/>
-                        </DockPanel>
+                        </DockPanel>-->
                     </StackPanel>
                 </GroupBox>
             </StackPanel>
