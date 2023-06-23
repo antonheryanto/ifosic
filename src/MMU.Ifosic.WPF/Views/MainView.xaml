@@ -39,7 +39,7 @@
                         <ui:NavigationItem Icon="Play16" Content="Run" ToolTip="Session Runner"
                                        Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                        Command="{StaticResource AppCommand}" CommandParameter="Measurement"/>
-                        <ui:NavigationItem Icon="ChartMultiple20" Content="Run" ToolTip="Calculate"
+                        <ui:NavigationItem Icon="ChartMultiple20" Content="Plot" ToolTip="Calculate"
                                            Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                            Command="{StaticResource AppCommand}" CommandParameter="Calculate"/>
                         <ui:NavigationItem Content="Save" Icon="Save16" ToolTip="Save Project"
