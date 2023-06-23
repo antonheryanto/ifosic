@@ -6,6 +6,7 @@ using MMU.Ifosic.Models;
 using MMU.Ifosic.Neubrex;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading;
@@ -57,7 +58,8 @@ public partial class ProjectViewModel : ViewModelBase
         {
             Runner.Sequences.Add(new SessionSequence { Port = port,
 #if DEBUG
-                Path = $@"E:\MMU_PRSB_20230614\MMU PRSB 20230614_F{port}"
+                //Path = $@"E:\MMU_PRSB_20230614\MMU PRSB 20230614_F{port}"
+                Path = $@"C:\Projects\MMU\Ifosic\data\MMU_PRSB_20230623\F{port}"
 #endif
             });
         }
@@ -77,13 +79,14 @@ public partial class ProjectViewModel : ViewModelBase
                 break;
             foreach (var sequence in Runner.Sequences)
             {
-                if (string.IsNullOrEmpty(sequence.Path))
+                if (_token.Token.IsCancellationRequested)
+                    break;
+                if (string.IsNullOrEmpty(sequence.Path) || !Switch.ToPort(sequence.Port))
                     continue;
-                //if (_token.Token.IsCancellationRequested || !Switch.ToPort(sequence.Port))
-                //    break;
-                //ProgressViewModel.Init(() => Runner.Start(sequence), cancel: _token.Cancel);
-                Switch.OutgoingPort = sequence.Port;
-                ProgressViewModel.Init(() => Task.Delay(100).Wait(),() => Switch.Logs.Add($"{DateTime.Now}, Running {Count} {sequence.Port}"), cancel: _token.Cancel);
+                ProgressViewModel.Init(() => Runner.Start(sequence), cancel: _token.Cancel);
+                //Switch.OutgoingPort = sequence.Port;
+                //ProgressViewModel.Init(() => Task.Delay(100).Wait(),
+                //    () => Switch.Logs.Add($"{DateTime.Now}, Running {Count} {sequence.Port}"), cancel: _token.Cancel);
             }
         }
         IsStopped = true;

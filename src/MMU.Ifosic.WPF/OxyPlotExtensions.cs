@@ -97,9 +97,9 @@ public static class OxyPlotExtensions
 		return view;
 	}
 
-	public static PlotView PlotScatter(this PlotView view, double[] y, int[]? x = null, OxyColor? color = null)
+	public static PlotModel PlotScatter(this double[] y, int[]? x = null, OxyColor? color = null)
     {
-		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
+		var model = new PlotModel { Title = "Freq vs Time" };
 		color ??= OxyColors.Red;
 		var scatters = new ScatterSeries
 		{
@@ -268,9 +268,11 @@ public static class OxyPlotExtensions
 
     public static PlotModel PlotHeatmap(this FrequencyShiftDistance fdd, IList<int>? indexes = null, int start = 0, int stop = 0, double max = 0, string titleXAxis = "Distance (m)", string titleYAxis = "Time(s)")
     {
+        var model = new PlotModel { Title = "Heatmap" };
+        if (fdd.Distance.Count == 0)
+            return model;
         if (stop == 0)
             stop = fdd.Distance.Count;
-        var model = new PlotModel { Title = "Heatmap" };
 		var data = new double[stop-start, fdd.Traces.Count];
         var minValue = double.MaxValue;
         var maxValue = double.MinValue;

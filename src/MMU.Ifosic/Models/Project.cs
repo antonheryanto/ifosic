@@ -11,22 +11,18 @@ public partial class Project : ObservableObject
     public int Id { get; set; }
     [ObservableProperty] private string _name = "Untitled";
     [ObservableProperty] private string _description = "";
+    [ObservableProperty] private int _layoutId;
     [NotMapped]
     [ObservableProperty] private int _numberOfFiber = 1;
     [ObservableProperty] private string _measurement = "Pressure";
     public List<Fiber>? Fibers { get; set; }
-    
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedDate { get; set; } = DateTime.UtcNow;
     public int CreatedById { get; set; }
     public int UpdatedById { get; set; }
-
-    [NotMapped]
-    public OpticalSwitch Switch { get; set; } = new();
-    [NotMapped]
-    public SessionRunner Runner { get; set; } = new();
-
-    [ObservableProperty] private int _layoutId;
+    [NotMapped] public OpticalSwitch Switch { get; set; } = new();
+    [NotMapped] public SessionRunner Runner { get; set; } = new();
+    [NotMapped] public List<FrequencyShiftDistance> Items { get; set; } = new();
 
     public string Layout => Layouts.TryGetValue(LayoutId, out var layout) ? layout : Layouts[1];
     [NotMapped]

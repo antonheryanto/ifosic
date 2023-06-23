@@ -1,5 +1,6 @@
 ﻿using MessagePack;
 using MessagePack.Resolvers;
+using NPOI.POIFS.FileSystem;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.IO.Compression;
@@ -33,6 +34,7 @@ public class Measurement
 
 public partial class FrequencyShiftDistance
 {
+    public string Name { get; set; } = "";
     public Dictionary<string, string> Info { get; set; } = new();
     public List<double> Distance { get; set; } = new();    
     public List<double> Boundaries { get; set; } = new();
@@ -149,7 +151,7 @@ public partial class FrequencyShiftDistance
         var ext = Path.GetExtension(fileName);
         if (ext == ".bin")
             return LoadBin(fileName);
-        var o = new FrequencyShiftDistance();
+        var o = new FrequencyShiftDistance {  Name = Path.GetFileName(fileName) };
         if (ext != ".zip")
             return o;
         o.ExtractFromZip(fileName);
@@ -157,7 +159,33 @@ public partial class FrequencyShiftDistance
         return o;
     }
 
-	public int ToBoundariesIndex(double boundary)
+    public static FrequencyShiftDistance? LoadFolder(string path)
+    {
+        var di = new DirectoryInfo(path);
+        if (!di.Exists)
+            return null;
+        var o = new FrequencyShiftDistance { Name = di.Name };
+        foreach (var file in di.GetFiles("*.fdd", SearchOption.AllDirectories))
+        {
+            if (file.Name.StartsWith("Baseline", StringComparison.OrdinalIgnoreCase))
+                continue;
+            using var stream = new FileStream(file.FullName,
+                FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var (i, d, f) = o.Extract(stream);
+            if (o.Distance.Count == 0)
+                o.Distance.AddRange(d);
+            if (o.Info.Count == 0)
+            {
+                foreach (var (k, v) in i)
+                    o.Info.Add(k, v);
+            }
+            o.Traces.Add(f.ToArray());
+        }
+
+        return o;
+    }
+
+    public int ToBoundariesIndex(double boundary)
 	{
 		for (int i = 0; i < Distance.Count; i++)
 		{
