@@ -21,6 +21,7 @@ public partial class MainViewModel : ObservableRecipient
     [ObservableProperty] private ViewModelBase _content = _home;
     [ObservableProperty] private AssetItem _assets = new();
     public Workspace Workspace => Workspace.Instance;
+    public string Name => App.NAME;
 
     public MainViewModel()
     {

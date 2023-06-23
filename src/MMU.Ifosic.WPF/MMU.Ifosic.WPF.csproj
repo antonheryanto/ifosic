@@ -6,6 +6,7 @@
 		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
+		<ApplicationIcon>Assets\petronas.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -22,5 +23,11 @@
 	  <Resource Include="Assets\*.png" />
 	  <Resource Include="Assets\*.ico" />
   </ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Assets\petronas.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
 
 </Project>

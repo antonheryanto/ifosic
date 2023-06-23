@@ -2,17 +2,18 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using MessagePack;
 using MessagePack.Resolvers;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MMU.Ifosic.Models;
 
-public partial class Project
+public partial class Project : ObservableObject
 {
     public int Id { get; set; }
-    public string Name { get; set; } = "Untitled";
-    public string Description { get; set; } = "";
+    [ObservableProperty] private string _name = "Untitled";
+    [ObservableProperty] private string _description = "";
     [NotMapped]
-    public int NumberOfFiber { get; set; } = 1;
-    public string Measurement { get; set; } = "Pressure";
+    [ObservableProperty] private int _numberOfFiber = 1;
+    [ObservableProperty] private string _measurement = "Pressure";
     public List<Fiber>? Fibers { get; set; }
     
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
@@ -25,15 +26,15 @@ public partial class Project
     [NotMapped]
     public SessionRunner Runner { get; set; } = new();
 
-    public int LayoutId { get; set; }
+    [ObservableProperty] private int _layoutId;
 
     public string Layout => Layouts.TryGetValue(LayoutId, out var layout) ? layout : Layouts[1];
     [NotMapped]
     public static readonly Dictionary<int, string> Layouts = new()
     {
         {1, "Serial" },
-        {2, "Parallel Connect to Optical Switch" },
-        {3, "Parallel Connect to Interrogator Unit (IO)"},
+        {2, "Parallel" },
+        {3, "Parallel 2"},
 	};
 
     [NotMapped]

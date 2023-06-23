@@ -288,10 +288,12 @@ public static class OxyPlotExtensions
         }
 
         max = max == 0 ? Math.Max(Math.Abs(minValue), Math.Abs(maxValue)) : max;
+        var xScale = fdd.Distance[^1] / fdd.Distance.Count;
 
         model.Axes.Add(new LinearColorAxis
         {
             Key = "linear",
+            Title = "Ghz",
             Minimum = -max,
             Maximum = max,
             Palette = _palette,
@@ -304,6 +306,8 @@ public static class OxyPlotExtensions
             AbsoluteMinimum = 0,
             AbsoluteMaximum = data.GetLength(0) - 1,
             Title = titleXAxis,
+            TicklineColor = OxyColors.White,
+            TextColor = OxyColors.White,
             Position = AxisPosition.Bottom
         });
         model.Axes.Add(new LinearAxis
@@ -312,8 +316,10 @@ public static class OxyPlotExtensions
             AbsoluteMinimum = 0,
             AbsoluteMaximum = data.GetLength(1) - 1,
             Title = titleYAxis,
-            StartPosition = 1,
-            EndPosition = 0,
+            //StartPosition = 1,
+            //EndPosition = 0,
+            //TicklineColor = OxyColors.White,
+            //TextColor = OxyColors.White,
             Position = AxisPosition.Left
         });
         //// for display only
@@ -327,14 +333,14 @@ public static class OxyPlotExtensions
             RenderAsImage = false,
             Position = AxisPosition.Right
         });
-        //model.Axes.Add(new LinearAxis
-        //{
-        //    Key = "axis_bottom",
-        //    Minimum = 0,
-        //    Maximum = data.GetLength(0) * xScale,
-        //    Position = AxisPosition.Bottom,
-        //});
-        //model.Axes.Add(new LinearAxis
+        model.Axes.Add(new LinearAxis
+        {
+            Key = "axis_bottom",
+            Minimum = 0,
+            Maximum = data.GetLength(0) * xScale,
+            Position = AxisPosition.Bottom,
+        });
+        //model.Axes.Add(new DateTimeAxis
         //{
         //    Key = "axis_left",
         //    Minimum = 0,
