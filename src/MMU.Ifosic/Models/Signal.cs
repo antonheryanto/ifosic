@@ -81,7 +81,7 @@ public class Characterisation
     public double Slope { get; set; }
     public double Intercept { get; set; }
 
-    public Characterisation(FrequencyShiftDistance? fdd = null, int fiberId = 0, string measurement = "Pressure", int borderGap = 0)
+    public Characterisation(FrequencyShiftDistance? fdd = null, int fiberId = 1, string measurement = "Pressure", int borderGap = 0)
 	{
 		if (fdd is null || fdd.Traces.Count == 0)
 			return;
@@ -190,15 +190,15 @@ public class Characterisation
 		for (int j = refStart; j < refArray.Count; j++)
 		{
 			var avgIdx = j + averageIndex;
-			if (avgIdx > AveragePoints.Count - 1 || AveragePoints[avgIdx][1] < 0)
-				continue;
+			//if (avgIdx > AveragePoints.Count - 1 || AveragePoints[avgIdx][1] < 0)
+			//	continue;
 			refPoints.Add(refArray[j]);
 			avgPoints.Add(AveragePoints[avgIdx][1]);
 			ReferencePoints.Add(new double[] { refPoints[^1], avgPoints[^1] });
 		}
 		if (refPoints.Count < 2)
 		{
-			for (int i = refPoints.Count; i < 3; i++)
+			for (int i = refPoints.Count; i < 3 - refPoints.Count; i++)
 			{
 				refPoints.Insert(0, 0);
 				avgPoints.Insert(0, 0);

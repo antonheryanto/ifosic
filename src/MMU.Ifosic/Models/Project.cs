@@ -12,7 +12,7 @@ public partial class Project : ObservableObject
     [ObservableProperty] private string _name = "Untitled";
     [ObservableProperty] private string _description = "";
     [ObservableProperty] private int _layoutId;
-    [NotMapped]
+    [property: NotMapped]
     [ObservableProperty] private int _numberOfFiber = 1;
     [ObservableProperty] private string _measurement = "Pressure";
     public List<Fiber>? Fibers { get; set; }

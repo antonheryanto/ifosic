@@ -8,7 +8,6 @@ using OxyPlot.SkiaSharp.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-//using OxyPlot.WindowsForms;
 
 namespace MMU.Ifosic;
 
@@ -53,6 +52,7 @@ public static class OxyPlotExtensions
 	}
 
     public static PlotModel PlotScatter(this IList<double[]> data, IList<DateTime?>? x = null,
+        double min = -20, double max = 20,
         int index = 8, OxyColor? color = null)
 	{
 		var model = new PlotModel { Title = "Frequency shift vs Time" };
@@ -63,7 +63,7 @@ public static class OxyPlotExtensions
 			MarkerFill = color.Value,
 			MarkerStroke = color.Value,
 			MarkerStrokeThickness = 1,
-			MarkerSize = 3,
+			MarkerSize = 2.5,
 		};
 
 		// get freq on certain distanct for range of time
@@ -76,21 +76,27 @@ public static class OxyPlotExtensions
 		model.Series.Add(scatters);
 		model.Axes.Add(new DateTimeAxis
 		{
-			Title = "Times",
+            Key = "x",
+            Title = "Times",
 			Position = AxisPosition.Bottom
 		});
 		model.Axes.Add(new LinearAxis
 		{
-			Title = "Freq",
+            Key = "y",
+            Title = "Frequency Shift (GHz)",
             MajorStep = 10,
             MinorStep = 2,
             MajorGridlineStyle = LineStyle.Dot,
             MajorGridlineColor = OxyColors.LightGray,
-            Minimum = -20,
-            Maximum = 20,
+            Minimum = min,
+            Maximum = max,
             Position = AxisPosition.Left
 		});
-
+        model.Annotations.Add(new PointAnnotation {
+            Fill = OxyColors.Red,
+            X = scatters.Points[0].X,
+            Y = scatters.Points[0].Y,
+        });
 		return model;
 	}
 
@@ -172,36 +178,49 @@ public static class OxyPlotExtensions
 		return view;
 	}
 
-	public static PlotModel PlotLine(this IList<double> x, IList<double>? y = null, double max = 0, double min=-9999)
+	public static PlotModel PlotLine(this IList<double> y, IList<double>? x = null,
+        string title = "Frequency shift vs Distance", int start = 0, int stop = 0, double max = 0, double min=-9999)
     {
-        var model = new PlotModel { Title = "Frequency shift vs Distance" };        
-        var line = new LineSeries { Color = OxyColors.Black };
-        for (int i = 0; i < x.Count; i++)
-        {
-            if (y is null)
-				line.Points.Add(new DataPoint(i, x[i]));
-            else
-				line.Points.Add(new DataPoint(y[i], x[i]));
-		}
-        model.Series.Add(line);
-        
+        var model = new PlotModel { Title = title };        
+        var line = new LineSeries { 
+            XAxisKey = "x",
+            Color = OxyColors.Black 
+        };
+        if (stop == 0)
+            stop = y.Count;
         if (max == 0)
-            max = x.Select(Math.Abs).Max();
+            max = y.Select(Math.Abs).Max();
         if (min == -9999)
             min = -max;
-
-		model.Axes.Add(new LinearAxis
+        var less = y.Count - stop;
+        for (int i = start; i < y.Count - less; i++)
+        {
+            var v = x is not null && x.Count == y.Count ? x[i] : i;
+            line.Points.Add(new DataPoint(v, y[i]));            
+		}
+        var axisX = new LinearAxis
         {
             Key = "x",
             Title = "Distance (m)",
-            Minimum = 15,
-            Maximum = 350,
             Position = AxisPosition.Bottom
-        });
+        };
+        model.Axes.Add(axisX);
+        if (x is not null) {
+            axisX.TicklineColor = OxyColors.White;
+            axisX.TextColor = OxyColors.White;
+            model.Axes.Add(new LinearAxis
+            {
+                Key = "axis_bottom",
+                Minimum = x[start],
+                Maximum = x[stop],
+                Position = AxisPosition.Bottom,
+            });
+        }
+        model.Series.Add(line);
         model.Axes.Add(new LinearAxis
         {
             Key = "y",
-            Title = "Frequency Shift",
+            Title = "Frequency Shift (GHz)",
             MajorStep = 10,
             MinorStep = 2,
             MajorGridlineStyle = LineStyle.Dot,
@@ -210,7 +229,12 @@ public static class OxyPlotExtensions
             Maximum = max,
             Position = AxisPosition.Left
         });
-
+        model.Annotations.Add(new PointAnnotation
+        {
+            Fill = OxyColors.Red,
+            X = line.Points[0].X,
+            Y = line.Points[0].Y,
+        });
         return model;
     }
 
@@ -259,7 +283,9 @@ public static class OxyPlotExtensions
         return view;
     }
 
-    public static PlotModel PlotHeatmap(this FrequencyShiftDistance fdd, IList<int>? indexes = null, int start = 0, int stop = 0, double max = 0, string titleXAxis = "Distance (m)", string titleYAxis = "Time(s)")
+    public static PlotModel PlotHeatmap(this FrequencyShiftDistance fdd, IList<int>? indexes = null,
+        int start = 0, int stop = 0, double min = -9999, double max = 0,
+        string titleXAxis = "Distance (m)", string titleYAxis = "Time(s)")
     {
         var model = new PlotModel { Title = "Heatmap" };
         if (fdd.Distance.Count == 0)
@@ -283,13 +309,12 @@ public static class OxyPlotExtensions
         }
 
         max = max == 0 ? Math.Max(Math.Abs(minValue), Math.Abs(maxValue)) : max;
-        var xScale = fdd.Distance[^1] / fdd.Distance.Count;
-
+        min = min == -9999 ? -max : min;
         model.Axes.Add(new LinearColorAxis
         {
             Key = "linear",
             Title = "Ghz",
-            Minimum = -max,
+            Minimum = min,
             Maximum = max,
             Palette = _palette,
             RenderAsImage = true,
@@ -301,8 +326,8 @@ public static class OxyPlotExtensions
             AbsoluteMinimum = 0,
             AbsoluteMaximum = data.GetLength(0) - 1,
             Title = titleXAxis,
-            //TicklineColor = OxyColors.White,
-            //TextColor = OxyColors.White,
+            TicklineColor = OxyColors.White,
+            TextColor = OxyColors.White,
             Position = AxisPosition.Bottom
         });
         model.Axes.Add(new LinearAxis
@@ -321,33 +346,25 @@ public static class OxyPlotExtensions
         model.Axes.Add(new LinearColorAxis
         {
             Key = "reverse",
-            Minimum = -max,
+            Minimum = min,
             Maximum = max,
             //MajorStep = 10,
             Palette = OxyPalettes.Rainbow(512),
             RenderAsImage = false,
             Position = AxisPosition.Right
         });
-        //model.Axes.Add(new LinearAxis
-        //{
-        //    Key = "axis_bottom",
-        //    Minimum = 0,
-        //    Maximum = data.GetLength(0) * xScale,
-        //    Position = AxisPosition.Bottom,
-        //});
-        //model.Axes.Add(new DateTimeAxis
-        //{
-        //    Key = "axis_left",
-        //    Minimum = 0,
-        //    Maximum = data.GetLength(1) * yScale,
-        //    StartPosition = 1,
-        //    EndPosition = 0,
-        //    Position = AxisPosition.Left,
-        //});
+        model.Axes.Add(new LinearAxis
+        {
+            Key = "axis_bottom",
+            Minimum = fdd.Distance[start],
+            Maximum = fdd.Distance[stop],
+            Position = AxisPosition.Bottom,
+        });
+        
         model.Series.Add(new HeatMapSeries
         {
             XAxisKey = "x",
-            //YAxisKey = "y",
+            YAxisKey = "y",
             ColorAxisKey = "linear",
             X0 = 0,
             X1 = data.GetLength(0),

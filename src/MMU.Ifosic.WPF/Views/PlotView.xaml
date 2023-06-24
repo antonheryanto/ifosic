@@ -11,7 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="2*" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -36,17 +36,25 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <oxy:PlotView Model="{Binding Model3}" 
+        <oxy:PlotView Model="{Binding TimeModel}"
+                      Controller="{Binding TimeController}"
                       Grid.Row="1"
                       Grid.Column="0"
                       Background="Transparent"/>
-        <oxy:PlotView Model="{Binding Model2}" 
+        <oxy:PlotView Model="{Binding DistanceModel}" 
+                      Controller="{Binding DistanceController}"
                       Grid.Row="1"
                       Grid.Column="1"
                       Background="Transparent"/>
-        <oxy:PlotView Model="{Binding Model}" 
+        <oxy:PlotView Model="{Binding HeatmapModel}" 
+                      Controller="{Binding HeatmapController}"
                       Grid.Row="2"
-                      Grid.ColumnSpan="2"
+                      Grid.Column="0"
+                      Background="Transparent"/>
+        <oxy:PlotView Model="{Binding CoefficientModel}" 
+                      Controller="{Binding CoefficientController}"
+                      Grid.Row="2"
+                      Grid.Column="1"
                       Background="Transparent"/>
         
     </Grid>
