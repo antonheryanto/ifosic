@@ -16,7 +16,7 @@
 
 	<ItemGroup>
 		<Reference Include="Neubrex.Neubrescope.UserProgramming">
-			<HintPath>..\..\..\NeubrexUserProgrammingSamples\RunningMeasurement\Neubrex.Neubrescope.UserProgramming.dll</HintPath>
+			<HintPath>Neubrex.Neubrescope.UserProgramming.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
