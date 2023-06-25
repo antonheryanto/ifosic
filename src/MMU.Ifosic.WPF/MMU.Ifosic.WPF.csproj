@@ -5,15 +5,29 @@
 		<TargetFramework>net7.0-windows</TargetFramework>
 		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ApplicationIcon>Assets\petronas.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TechApps.WPF" Version="0.2.2" />
+		<PackageReference Include="TechApps.WPF" Version="0.2.3" />
 		<PackageReference Include="OxyPlot.SkiaSharp.Wpf" Version="2.1.2" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\MMU.Ifosic.Neubrex\MMU.Ifosic.Neubrex.csproj" />
 	  <ProjectReference Include="..\MMU.Ifosic\MMU.Ifosic.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Assets\*.png" />
+	  <Resource Include="Assets\*.ico" />
+  </ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Assets\petronas.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 </Project>

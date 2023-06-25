@@ -28,8 +28,8 @@ public class IndexModel : PageModel
     public Characterisation Characterisation = new();
 	public string Reference { get; set; } = "Pressure";
 	public string Unit { get; set; } = "MPa";
-    [BindProperty(SupportsGet = true)] public int LocationId { get; set; } = 700;
-	[BindProperty(SupportsGet = true)] public int Time { get; set; } = 100;
+    [BindProperty(SupportsGet = true)] public int LocationId { get; set; } = 0;//700;
+	[BindProperty(SupportsGet = true)] public int Time { get; set; } = 0;//100;
 	[BindProperty(SupportsGet = true)] public int FiberId { get; set; } = 1;
 
     public async Task<IActionResult> OnGetAsync(int id = 0)

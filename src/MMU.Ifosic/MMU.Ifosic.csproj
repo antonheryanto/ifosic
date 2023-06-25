@@ -4,34 +4,26 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<TargetFramework>net7.0-windows</TargetFramework>
-		<OutputType>WinExe</OutputType>
-		<UseWindowsForms>true</UseWindowsForms>
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="OxyPlotExtensions.cs" />
+	  <Compile Remove="Program.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-		<PackageReference Include="MemoryPack" Version="1.9.13" />
+		<!--<PackageReference Include="MemoryPack" Version="1.9.16" />-->
 		<PackageReference Include="MessagePack" Version="2.5.108" />
-		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.14.1" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.15.1" />
 		<PackageReference Include="NPOI" Version="2.6.0" />
-		<PackageReference Include="OxyPlot.WindowsForms" Version="2.1.2" />
+		<!--<PackageReference Include="OxyPlot.WindowsForms" Version="2.1.2" />-->
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\MMU.Ifosic.Web\Models\FrequencyShiftDistance.cs">
-			<Link>Models\FrequencyShiftDistance.cs</Link>
-		</Compile>
-		<Compile Include="..\MMU.Ifosic.Web\Models\Signal.cs">
-			<Link>Models\Signal.cs</Link>
-		</Compile>
-		<Compile Include="..\MMU.Ifosic.Web\Models\Project.cs">
-			<Link>Models\Project.cs</Link>
-		</Compile>
-		<Compile Include="..\MMU.Ifosic.Web\Models\Fiber.cs">
-			<Link>Models\Fiber.cs</Link>
-		</Compile>
+	  <ProjectReference Include="..\MMU.Ifosic.Neubrex\MMU.Ifosic.Neubrex.csproj" />
 	</ItemGroup>
+
 </Project>

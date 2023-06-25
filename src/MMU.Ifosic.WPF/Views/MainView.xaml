@@ -12,16 +12,18 @@
              Title="MainWindow"
              Height="800"
              Width="1200"
+             Icon="pack://application:,,,/Assets/petronas.ico"
              mc:Ignorable="d">
     <ui:UiWindow.DataContext>
         <vm:MainViewModel />
     </ui:UiWindow.DataContext>
     <Grid Margin="0">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="30" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
         </Grid.RowDefinitions>
-        <Border Grid.Row="1" BorderThickness="0 1 0 0" BorderBrush="LightGray">
+        <Border Grid.Row="1" BorderThickness="0 1 1 0" BorderBrush="LightGray">
             <Grid Grid.Row="1"
                   x:Name="RootMainGrid"
                   Margin="0">
@@ -30,22 +32,28 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <ui:NavigationStore
-                Grid.Column="0"
-                d:Frame="{Binding ElementName=MainFrame}"
-                SelectedPageIndex="0">
+                <ui:NavigationStore Grid.Column="0">
                     <ui:NavigationStore.Items>
-                        <ui:NavigationItem Icon="Home16" Content="Home" ToolTip="Front Page"                                       
-                                       Command="{StaticResource AppCommand}" CommandParameter="Home"/>
+                        <ui:NavigationItem Icon="Home16" Content="Home" ToolTip="Front Page"
+                                           Command="{StaticResource AppCommand}" CommandParameter="Home"/>
+                        <ui:NavigationItem Icon="Play16" Content="Run" ToolTip="Session Runner"
+                                       Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       Command="{StaticResource AppCommand}" CommandParameter="Measurement"/>
+                        <ui:NavigationItem Icon="ChartMultiple20" Content="Plot" ToolTip="Calculate"
+                                           Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Command="{StaticResource AppCommand}" CommandParameter="Calculate"/>
+                        <ui:NavigationItem Content="Save" Icon="Save16" ToolTip="Save Project"
+                                       Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       Command="{StaticResource AppCommand}" CommandParameter="ProjectSave"/>
                         <ui:NavigationItem Content="Close" Icon="Door16" ToolTip="Close Project"
                                        Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                        Command="{StaticResource AppCommand}" CommandParameter="ProjectClose"/>
                     </ui:NavigationStore.Items>
-                    <ui:NavigationStore.Footer>
+                    <!--<ui:NavigationStore.Footer>
                         <ui:NavigationItem Content="Settings" Icon="Settings24"                                           
                                            Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                            Command="{StaticResource AppCommand}" CommandParameter="Setting"/>
-                    </ui:NavigationStore.Footer>
+                    </ui:NavigationStore.Footer>-->
                 </ui:NavigationStore>
                 <!--  We display our pages inside this element.  -->
                 <Grid Grid.Column="1">
@@ -66,12 +74,14 @@
             </Grid>
 
         </Border>
+        <Border Grid.Row="2" BorderThickness="0 1 1 0" BorderBrush="LightGray">
+        </Border>
 
-        <ui:TitleBar Title="{Binding Workspace.Name}"
+        <ui:TitleBar Title="{Binding Name}"
                      Grid.Row="0"
                      ForceShutdown="False"                     
-                     Padding="5 0 0 0"
-                     d:Icon="pack://application:,,,/Assets/petronas.ico"
+                     Padding="12 0 0 0"
+                     Icon="pack://application:,,,/Assets/petronas.ico"
             MinimizeToTray="False"
             ShowHelp="False"
             ShowClose="True"

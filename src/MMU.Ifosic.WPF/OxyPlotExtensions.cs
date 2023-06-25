@@ -1,17 +1,21 @@
 ﻿using MMU.Ifosic.Models;
+using NPOI.SS.Formula.Functions;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
-using OxyPlot.WindowsForms;
+using OxyPlot.SkiaSharp.Wpf;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MMU.Ifosic;
 
 public static class OxyPlotExtensions
 {
-	public static PlotView PlotScatter(this PlotView view, IList<Group> data, OxyColor? color = null)
+    public static PlotModel PlotScatter(this IList<Group> data, OxyColor? color = null)
 	{
-		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
+		var model = new PlotModel { Title = "Freq vs Time" };
 		color ??= OxyColors.Red;
 		var scatters = new ScatterSeries
 		{
@@ -29,8 +33,6 @@ public static class OxyPlotExtensions
 		}
 
 		model.Series.Add(scatters);
-		if (view.Model is not null)
-			return view;
 
 		model.Axes.Add(new LinearAxis
 		{
@@ -46,56 +48,61 @@ public static class OxyPlotExtensions
 			Position = AxisPosition.Left
 		});
 
-		view.Model = model;
-		view.Dock = DockStyle.Fill;
-		return view;
+		return model;
 	}
 
-	public static PlotView PlotScatter(this PlotView view, IList<double[]> data, OxyColor? color = null)
+    public static PlotModel PlotScatter(this IList<double[]> data, IList<DateTime?>? x = null,
+        double min = -20, double max = 20,
+        int index = 8, OxyColor? color = null)
 	{
-		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
-		color ??= OxyColors.Red;
+		var model = new PlotModel { Title = "Frequency shift vs Time" };
+        color ??= OxyColors.RoyalBlue;
 		var scatters = new ScatterSeries
 		{
-			MarkerType = MarkerType.Circle,
-			MarkerFill = OxyColors.White,
+            MarkerType = MarkerType.Circle,
+			MarkerFill = color.Value,
 			MarkerStroke = color.Value,
 			MarkerStrokeThickness = 1,
-			MarkerSize = 3,
+			MarkerSize = 2.5,
 		};
 
 		// get freq on certain distanct for range of time
 		for (int j = 0; j < data.Count; j++)
-		{			
-			scatters.Points.Add(new ScatterPoint(data[j][0], data[j][1]));
+		{
+            var v = x is not null && x.Count == data.Count ? DateTimeAxis.ToDouble(x[j]) : j;
+            scatters.Points.Add(new ScatterPoint(v, data[j][index]));
 		}
 
 		model.Series.Add(scatters);
-		if (view.Model is not null)
-			return view;
-
-		model.Axes.Add(new LinearAxis
+		model.Axes.Add(new DateTimeAxis
 		{
-			Title = "Times",
-			Minimum = 0,
+            Key = "x",
+            Title = "Times",
 			Position = AxisPosition.Bottom
 		});
 		model.Axes.Add(new LinearAxis
 		{
-			Title = "Freq",
-			Minimum = -5,
-			Maximum = 30,
-			Position = AxisPosition.Left
+            Key = "y",
+            Title = "Frequency Shift (GHz)",
+            MajorStep = 10,
+            MinorStep = 2,
+            MajorGridlineStyle = LineStyle.Dot,
+            MajorGridlineColor = OxyColors.LightGray,
+            Minimum = min,
+            Maximum = max,
+            Position = AxisPosition.Left
 		});
-
-		view.Model = model;
-		view.Dock = DockStyle.Fill;
-		return view;
+        model.Annotations.Add(new PointAnnotation {
+            Fill = OxyColors.Red,
+            X = scatters.Points[0].X,
+            Y = scatters.Points[0].Y,
+        });
+		return model;
 	}
 
-	public static PlotView PlotScatter(this PlotView view, double[] y, int[]? x = null, OxyColor? color = null)
+	public static PlotModel PlotScatter(this double[] y, int[]? x = null, OxyColor? color = null)
     {
-		var model = view.Model ?? new PlotModel { Title = "Freq vs Time" };
+		var model = new PlotModel { Title = "Freq vs Time" };
 		color ??= OxyColors.Red;
 		var scatters = new ScatterSeries
 		{
@@ -114,9 +121,6 @@ public static class OxyPlotExtensions
 		}
 
 		model.Series.Add(scatters);
-		if (view.Model is not null)
-            return view;
-
 		model.Axes.Add(new LinearAxis
 		{
 			Title = "Times",
@@ -131,9 +135,7 @@ public static class OxyPlotExtensions
 			Position = AxisPosition.Left
 		});
 
-        view.Model = model;
-		view.Dock = DockStyle.Fill;
-        return view;
+        return model;
     }
 
     public static PlotView PlotBoundary(this PlotView view, IList<double> boundaries)
@@ -176,45 +178,64 @@ public static class OxyPlotExtensions
 		return view;
 	}
 
-	public static PlotView PlotLine(this PlotView view, IList<double> x, IList<double>? y = null, double max = 0, double min=-9999)
+	public static PlotModel PlotLine(this IList<double> y, IList<double>? x = null,
+        string title = "Frequency shift vs Distance", int start = 0, int stop = 0, double max = 0, double min=-9999)
     {
-        var model = view.Model ?? new PlotModel { Title = "Freq vs Distance" };        
-        var line = new LineSeries { };
-        for (int i = 0; i < x.Count; i++)
-        {
-            if (y is null)
-				line.Points.Add(new DataPoint(i, x[i]));
-            else
-				line.Points.Add(new DataPoint(y[i], x[i]));
-		}
-        model.Series.Add(line);
-        
+        var model = new PlotModel { Title = title };        
+        var line = new LineSeries { 
+            XAxisKey = "x",
+            Color = OxyColors.Black 
+        };
+        if (stop == 0)
+            stop = y.Count;
         if (max == 0)
-            max = x.Select(Math.Abs).Max();
+            max = y.Select(Math.Abs).Max();
         if (min == -9999)
             min = -max;
-
-        if (view.Model is not null)
-            return view;
-
-		model.Axes.Add(new LinearAxis
+        var less = y.Count - stop;
+        for (int i = start; i < y.Count - less; i++)
+        {
+            var v = x is not null && x.Count == y.Count ? x[i] : i;
+            line.Points.Add(new DataPoint(v, y[i]));            
+		}
+        var axisX = new LinearAxis
         {
             Key = "x",
-            Title = "Distance (m)",            
+            Title = "Distance (m)",
             Position = AxisPosition.Bottom
-        });
+        };
+        model.Axes.Add(axisX);
+        if (x is not null) {
+            axisX.TicklineColor = OxyColors.White;
+            axisX.TextColor = OxyColors.White;
+            model.Axes.Add(new LinearAxis
+            {
+                Key = "axis_bottom",
+                Minimum = x[start],
+                Maximum = x[stop],
+                Position = AxisPosition.Bottom,
+            });
+        }
+        model.Series.Add(line);
         model.Axes.Add(new LinearAxis
         {
             Key = "y",
-            Title = "Frequency Shift",
+            Title = "Frequency Shift (GHz)",
+            MajorStep = 10,
+            MinorStep = 2,
+            MajorGridlineStyle = LineStyle.Dot,
+            MajorGridlineColor = OxyColors.LightGray,
             Minimum = min,
             Maximum = max,
             Position = AxisPosition.Left
         });
-
-		view.Model = model;
-		view.Dock = DockStyle.Fill;
-        return view;
+        model.Annotations.Add(new PointAnnotation
+        {
+            Fill = OxyColors.Red,
+            X = line.Points[0].X,
+            Y = line.Points[0].Y,
+        });
+        return model;
     }
 
     private static readonly OxyPalette _palette = OxyPalettes.Rainbow(500);
@@ -258,15 +279,19 @@ public static class OxyPlotExtensions
         
         model.InvalidatePlot(true);
         view.Model = model;
-        view.Dock = DockStyle.Fill;
+        //view.Dock = DockStyle.Fill;
         return view;
     }
 
-    public static PlotView PlotHeatmap(this PlotView view, FrequencyShiftDistance fdd, IList<int>? indexes = null, int start = 0, int stop = 0, double max = 0, string titleXAxis = "Distance (m)", string titleYAxis = "Time(s)")
+    public static PlotModel PlotHeatmap(this FrequencyShiftDistance fdd, IList<int>? indexes = null,
+        int start = 0, int stop = 0, double min = -9999, double max = 0,
+        string titleXAxis = "Distance (m)", string titleYAxis = "Time(s)")
     {
+        var model = new PlotModel { Title = "Heatmap" };
+        if (fdd.Distance.Count == 0)
+            return model;
         if (stop == 0)
             stop = fdd.Distance.Count;
-        var model = new PlotModel { Title = "Heatmap" };
 		var data = new double[stop-start, fdd.Traces.Count];
         var minValue = double.MaxValue;
         var maxValue = double.MinValue;
@@ -284,11 +309,12 @@ public static class OxyPlotExtensions
         }
 
         max = max == 0 ? Math.Max(Math.Abs(minValue), Math.Abs(maxValue)) : max;
-
+        min = min == -9999 ? -max : min;
         model.Axes.Add(new LinearColorAxis
         {
             Key = "linear",
-            Minimum = -max,
+            Title = "Ghz",
+            Minimum = min,
             Maximum = max,
             Palette = _palette,
             RenderAsImage = true,
@@ -300,6 +326,8 @@ public static class OxyPlotExtensions
             AbsoluteMinimum = 0,
             AbsoluteMaximum = data.GetLength(0) - 1,
             Title = titleXAxis,
+            TicklineColor = OxyColors.White,
+            TextColor = OxyColors.White,
             Position = AxisPosition.Bottom
         });
         model.Axes.Add(new LinearAxis
@@ -308,41 +336,35 @@ public static class OxyPlotExtensions
             AbsoluteMinimum = 0,
             AbsoluteMaximum = data.GetLength(1) - 1,
             Title = titleYAxis,
-            StartPosition = 1,
-            EndPosition = 0,
+            //StartPosition = 1,
+            //EndPosition = 0,
+            //TicklineColor = OxyColors.White,
+            //TextColor = OxyColors.White,
             Position = AxisPosition.Left
         });
         //// for display only
         model.Axes.Add(new LinearColorAxis
         {
             Key = "reverse",
-            Minimum = -max,
+            Minimum = min,
             Maximum = max,
             //MajorStep = 10,
             Palette = OxyPalettes.Rainbow(512),
             RenderAsImage = false,
             Position = AxisPosition.Right
         });
-        //model.Axes.Add(new LinearAxis
-        //{
-        //    Key = "axis_bottom",
-        //    Minimum = 0,
-        //    Maximum = data.GetLength(0) * xScale,
-        //    Position = AxisPosition.Bottom,
-        //});
-        //model.Axes.Add(new LinearAxis
-        //{
-        //    Key = "axis_left",
-        //    Minimum = 0,
-        //    Maximum = data.GetLength(1) * yScale,
-        //    StartPosition = 1,
-        //    EndPosition = 0,
-        //    Position = AxisPosition.Left,
-        //});
+        model.Axes.Add(new LinearAxis
+        {
+            Key = "axis_bottom",
+            Minimum = fdd.Distance[start],
+            Maximum = fdd.Distance[stop],
+            Position = AxisPosition.Bottom,
+        });
+        
         model.Series.Add(new HeatMapSeries
         {
             XAxisKey = "x",
-            //YAxisKey = "y",
+            YAxisKey = "y",
             ColorAxisKey = "linear",
             X0 = 0,
             X1 = data.GetLength(0),
@@ -369,8 +391,25 @@ public static class OxyPlotExtensions
             }
         }
         model.InvalidatePlot(true);
-        view.Model =model;
-        view.Dock = DockStyle.Fill;
-        return view;
+        return model;
     }
 }
+
+//static void Plot(params PlotView[] plots)
+//{
+//	var t = new TableLayoutPanel
+//	{
+//		Location = new System.Drawing.Point(0, 0),
+//		Dock = DockStyle.Fill,
+//		RowCount = plots.Length,
+//	};
+//	var rowSize = 100F / t.RowCount;
+//	for (int i = 0; i < plots.Length; i++)
+//	{
+//		t.RowStyles.Add(new RowStyle(SizeType.Percent, rowSize));
+//		t.Controls.Add(plots[i]);
+//	}
+//	var f = new Form() { Text = "Hello NativeAOT!", Width = 1024, Height = 1024 };
+//	f.Controls.Add(t);
+//	Application.Run(f);
+//}

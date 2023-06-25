@@ -5,76 +5,211 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:local="clr-namespace:MMU.Ifosic.WPF.Views"
+             xmlns:mn="clr-namespace:MMU.Ifosic.Neubrex;assembly=MMU.Ifosic.Neubrex"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <Style TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-        <Style BasedOn="{StaticResource {x:Type TextBox}}" 
-               TargetType="TextBox" x:Key="TextBoxWidth">
-            <Setter Property="Width" Value="100" />
+        <Style BasedOn="{StaticResource {x:Type TextBox}}" TargetType="TextBox" x:Key="TextBoxWidth">
+            <Setter Property="Width" Value="140" />
+        </Style>
+        <Style BasedOn="{StaticResource {x:Type ComboBox}}" TargetType="ComboBox" x:Key="ComboBoxWidth">
+            <Setter Property="Width" Value="140" />
+        </Style>
+        <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock" x:Key="Status">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
         <Style TargetType="DockPanel">
             <Setter Property="LastChildFill" Value="False" />
             <Setter Property="Margin" Value="0,0,0,5" />
         </Style>
+        <DataTemplate DataType="{x:Type mn:SessionSequence}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="50" />
+                </Grid.ColumnDefinitions>
+                <CheckBox IsChecked="{Binding IsMeasure}" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Grid Grid.Column="1" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="50"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding Path}" />
+                    <ui:Button d:Content="..."
+                               Icon="FolderOpen20"
+                               Grid.Column="1"
+                               VerticalAlignment="Center"
+                               Margin="5 0 0 0"
+                               Padding="9"
+                               CommandParameter="{Binding}"
+                               Command="{Binding DataContext.BrowseCommand, RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                </Grid>
+                <TextBlock Text="{Binding Method}" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Port}" Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition MinWidth="260" MaxWidth="360"/>
+            <ColumnDefinition Width="*" MinWidth="400"/>
         </Grid.ColumnDefinitions>
 
         <Border BorderBrush="LightGray"
                 Grid.ColumnSpan="2"
                 BorderThickness="0 0 0 1">
             <Grid>
-                <TextBlock Margin="10" FontWeight="Bold">Data Acquisition</TextBlock>
+                <TextBlock Margin="10" FontWeight="Bold">Session Sequence Runner</TextBlock>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ui:Button Content="Run" Command="{Binding RunCommand}"                               
+                    <ui:Button Content="Start" 
+                               IsEnabled="{Binding IsStopped}"
+                               Command="{Binding StartCommand}"
                                Icon="Play16"
                                Margin="0 0 10 0 "/>
                 </StackPanel>
             </Grid>
         </Border>
-        <ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Switch.Logs}">
-        </ListBox>
-        <StackPanel Grid.Column="0" 
-              Grid.Row="1"
-              Margin="5,5,5,5">
-            <GroupBox Header="Optical Switch" Grid.Row="0">
-                <StackPanel>
-                    <DockPanel>
-                        <TextBlock>Address:</TextBlock>
-                        <TextBox Text="{Binding Switch.Address}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
-                    </DockPanel>
-                    <DockPanel>
-                        <TextBlock>Port:</TextBlock>
-                        <TextBox Text="{Binding Switch.Port}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
-                    </DockPanel>
-                    <DockPanel>
-                        <TextBlock>IU Port:</TextBlock>
-                        <TextBox Text="{Binding Switch.IncomingPort}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
-                    </DockPanel>
-                    <DockPanel>
-                        <TextBlock>Fiber Ports:</TextBlock>
-                        <TextBox Text="{Binding Switch.Ports}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
-                    </DockPanel>
-                    <DockPanel>
+
+        <GroupBox Header="Sessions"
+                  Grid.Column="1"
+                  Grid.Row="1"
+                  Margin="5,5,5,5">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="50" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Run" Grid.Column="0"  HorizontalAlignment="Center"/>
+            <TextBlock Text="Path" Grid.Column="1" HorizontalAlignment="Center"/>
+            <TextBlock Text="Method" Grid.Column="2"  HorizontalAlignment="Center"/>
+            <TextBlock Text="Port" Grid.Column="3"  HorizontalAlignment="Center"/>
+
+            <ListView ItemsSource="{Binding Runner.Sequences}"
+                      Grid.Row="1"
+                      Grid.ColumnSpan="4"
+                      d:Margin="5 5 5 5" />
+        </Grid>
+        </GroupBox>
+        <ListBox Grid.Column="1" Grid.Row="2" ItemsSource="{Binding Switch.Logs}"  Margin="5 5 5 5"/>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                      Margin="5,5,5,5"
+                      Grid.Column="0"
+                      Grid.Row="1"
+                      Grid.RowSpan="2">
+            <StackPanel>
+                <GroupBox Header="Integrator Unit">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock>Hostname:</TextBlock>
+                            <TextBox Text="{Binding Runner.Address}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock>Port:</TextBlock>
+                            <TextBox Text="{Binding Runner.Port}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Optical Switch">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock>Hostname:</TextBlock>
+                            <TextBox Text="{Binding Switch.Address}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock>Port:</TextBlock>
+                            <TextBox Text="{Binding Switch.Port}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock>IU Port:</TextBlock>
+                            <TextBox Text="{Binding Switch.IncomingPort}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock>Fiber Ports:</TextBlock>
+                            <TextBox Text="{Binding Switch.Ports}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <!--<DockPanel>
                         <TextBlock>Duration:</TextBlock>
                         <TextBox Text="{Binding Switch.Duration}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
                     </DockPanel>
                     <DockPanel>
                         <TextBlock>Repetition:</TextBlock>
                         <TextBox Text="{Binding Switch.Repetition}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
-                    </DockPanel>
-                </StackPanel>
-            </GroupBox>
-        </StackPanel>
+                    </DockPanel>-->
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Session Settings">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock>Repeat Count:</TextBlock>
+                            <TextBox Text="{Binding Runner.RepeatCount}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <!--<DockPanel>
+                        <TextBlock>Repeat Interval:</TextBlock>
+                        <TextBox Text="{Binding Runner.RepeatInterval}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                    </DockPanel>-->
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Status">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="Running:"/>
+                            <TextBlock Style="{StaticResource Status}" Text="{Binding Runner.RepeatCount}" DockPanel.Dock="Right"/>
+                            <TextBlock Style="{StaticResource Status}" Text=" / " DockPanel.Dock="Right"/>
+                            <TextBlock Style="{StaticResource Status}" Text="{Binding Count}" DockPanel.Dock="Right"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock>Fiber Port:</TextBlock>
+                            <TextBlock Style="{StaticResource Status}" Text="{Binding Switch.OutgoingPort}" DockPanel.Dock="Right"/>
+                        </DockPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Project Settings">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="Name:"/>
+                            <TextBox Text="{Binding Project.Name}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock Text="Description:"/>
+                            <TextBox Text="{Binding Project.Description}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock Text="Layout:"/>
+                            <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Layouts}" SelectedIndex="{Binding Project.LayoutId}" Style="{StaticResource ComboBoxWidth}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock Text="Number Of Fibers:"/>
+                            <TextBox Text="{Binding Project.NumberOfFiber}" DockPanel.Dock="Right" Style="{StaticResource TextBoxWidth}"/>
+                        </DockPanel>
+                        <!--<DockPanel>
+                            <TextBlock Text="Type of Measurement:"/>
+                            <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Measurements}" SelectedItem="{Binding Project.Measurement}" Style="{StaticResource ComboBoxWidth}"/>
+                        </DockPanel>-->
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

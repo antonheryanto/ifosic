@@ -1,13 +1,10 @@
-﻿using MemoryPack;
-using MemoryPack.Compression;
-using MessagePack;
+﻿using MessagePack;
 using MessagePack.Resolvers;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.IO.Compression;
 using System.Text;
-using static NPOI.HSSF.Util.HSSFColor;
 
 namespace MMU.Ifosic.Models;
 
@@ -35,9 +32,9 @@ public class Measurement
 }
 
 
-[MemoryPackable]
 public partial class FrequencyShiftDistance
 {
+    public string Name { get; set; } = "";
     public Dictionary<string, string> Info { get; set; } = new();
     public List<double> Distance { get; set; } = new();    
     public List<double> Boundaries { get; set; } = new();
@@ -147,22 +144,14 @@ public partial class FrequencyShiftDistance
         References[name] = rows;
     }
 
-	public static FrequencyShiftDistance? LoadBin(string fileName)
-	{
-		if (!File.Exists(fileName))
-			return null;
-		var bin = File.ReadAllBytes(fileName);
-		using var decompressor = new BrotliDecompressor();
-		var decompressedBuffer = decompressor.Decompress(bin);
-		return MemoryPackSerializer.Deserialize<FrequencyShiftDistance>(decompressedBuffer);
-	}
+	public static FrequencyShiftDistance? LoadBin(string fileName) => FromMessagePack(fileName);
 
 	public static FrequencyShiftDistance? Load(string fileName)
     {
         var ext = Path.GetExtension(fileName);
         if (ext == ".bin")
             return LoadBin(fileName);
-        var o = new FrequencyShiftDistance();
+        var o = new FrequencyShiftDistance {  Name = Path.GetFileName(fileName) };
         if (ext != ".zip")
             return o;
         o.ExtractFromZip(fileName);
@@ -170,7 +159,34 @@ public partial class FrequencyShiftDistance
         return o;
     }
 
-	public int ToBoundariesIndex(double boundary)
+    public static FrequencyShiftDistance? LoadFolder(string path)
+    {
+        var di = new DirectoryInfo(path);
+        if (!di.Exists)
+            return null;
+        var o = new FrequencyShiftDistance { Name = di.Name };
+        foreach (var file in di.GetFiles("*.fdd", SearchOption.AllDirectories))
+        {
+            if (file.Name.StartsWith("Baseline", StringComparison.OrdinalIgnoreCase))
+                continue;
+            using var stream = new FileStream(file.FullName,
+                FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var (i, d, f) = o.Extract(stream);
+            o.MeasurementStart.Add(DateTime.TryParse(i["Measurement Start"], out var ms) ? ms : null);
+            if (o.Distance.Count == 0)
+                o.Distance.AddRange(d);
+            if (o.Info.Count == 0)
+            {
+                foreach (var (k, v) in i)
+                    o.Info.Add(k, v);
+            }
+            o.Traces.Add(f.ToArray());
+        }
+
+        return o;
+    }
+
+    public int ToBoundariesIndex(double boundary)
 	{
 		for (int i = 0; i < Distance.Count; i++)
 		{
@@ -298,13 +314,7 @@ public partial class FrequencyShiftDistance
 		return true;
 	}
 
-	public bool Save(string fileName)
-    {
-        using var compressor = new BrotliCompressor();
-        MemoryPackSerializer.Serialize(compressor, this);
-        File.WriteAllBytes(fileName, compressor.ToArray());
-        return true;
-    }
+	public bool Save(string fileName) => ToMessagePack(this, fileName);
 
     (Dictionary<string, string> info, List<double> distances, List<double> frequencies) Extract(Stream stream)
     {
@@ -345,8 +355,8 @@ public partial class FrequencyShiftDistance
 		return MessagePackSerializer.Deserialize<FrequencyShiftDistance>(bin, _options);
 	}
 
-	static readonly MessagePackSerializerOptions _options = ContractlessStandardResolver.Options;
-	    //.WithCompression(MessagePackCompression.Lz4BlockArray);
+	static readonly MessagePackSerializerOptions _options = ContractlessStandardResolver.Options
+	    .WithCompression(MessagePackCompression.Lz4BlockArray);
 
     public bool ToMessagePack(string fileName) => ToMessagePack(this, fileName);
 

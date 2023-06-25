@@ -1,153 +1,278 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using MMU.Ifosic;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using MMU.Ifosic.Models;
+using NPOI.SS.Formula.Functions;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics.Metrics;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
+using System.Windows.Documents;
+using TechApps;
 using TechApps.ViewModels;
 
 namespace MMU.Ifosic.WPF.ViewModels;
 
 public partial class PlotViewModel : ViewModelBase
 {
-    [ObservableProperty] PlotModel _model = new();
+    [ObservableProperty] private PlotModel _timeModel = new();
+    [ObservableProperty] private PlotModel _distanceModel = new();
+    [ObservableProperty] private PlotModel _heatmapModel = new();
+    [ObservableProperty] private PlotModel _coefficientModel = new();
+    [ObservableProperty] private PlotController _timeController = new();
+    [ObservableProperty] private PlotController _distanceController = new();
+    [ObservableProperty] private PlotController _heatmapController = new();
+    [ObservableProperty] private PlotController _coefficientController = new();
+    [ObservableProperty] private ObservableCollection<string> _indexes = new();
+    [ObservableProperty] private int _index;
+    [ObservableProperty] private int _timeIndex = 25;
+    [ObservableProperty] private int _distanceIndex = 232;
+    [ObservableProperty] private int _distanceStart = 220;
+    [ObservableProperty] private int _distanceStop = 350;
+    [ObservableProperty] private double _min = -50;
+    [ObservableProperty] private double _max = 10;
+
+
+    public Project Project => Workspace.Instance.Project ?? new();
+    private FrequencyShiftDistance? Item;
 
     public PlotViewModel()
     {
-        // 653
-        // 913
-        var fdd = FrequencyShiftDistance.Load(@"C:\Projects\MMU\projects\1.bin");
-        var data = new double[fdd.Distance.Count, fdd.Traces.Count];
-        var min = double.MaxValue;
-        var max = double.MinValue;
-        for (int i = 0; i < data.GetLength(0); i++)
+        if (Project.Runner.Sequences.Count > 0 && Project.Items.Count != Project.Runner.Sequences.Count)
         {
-            for (int j = 0; j < data.GetLength(1); j++)
+            foreach (var sequence in Project.Runner.Sequences)
             {
-                var v = fdd.Traces[j][i];
-                data[i, j] = v;
-                //if (j < 653 || j > 913)
-                //    continue;
-                if (max < v)
-                    max = v;
-                if (min > v)
-                    min = v;
+                var fdd = FrequencyShiftDistance.LoadFolder(sequence.Path);
+                if (fdd is not null)
+                    Project.Items.Add(fdd);
             }
         }
-        var boundries = new double[] { 33.57, 35.21, 38.45, 41.74, 45.12, 46.82 };
-        var indexes = new int[boundries.Length];
-        for (int i = 0, j = 0; i < fdd.Distance.Count; i++)
+        if (Project.Items.Count > 0)
+            Item = Project.Items[Index];
+        TimeController.Unbind(PlotCommands.SnapTrack);
+        TimeController.BindMouseDown(OxyMouseButton.Left, new DelegatePlotCommand<OxyMouseDownEventArgs>((view, controller, args) =>
         {
-            if (j == indexes.Length)
-                break;
-            double v = boundries[j];
-            if (fdd.Distance[i] > v)
+            if (Item is null || Item.MeasurementStart.Count == 0)
+                return;
+            var p = GetPosition(view, controller, args);
+            var d = DateTimeAxis.ToDateTime(p.X);
+            TimeIndex = 0;
+            for (var i = 1; i < Item.MeasurementStart.Count; i++)
             {
-                indexes[j] = i;
-                j++;
+                if (Item.MeasurementStart[i] > d)
+                {
+                    var extr = d - Item.MeasurementStart[i - 1];
+                    var diff = (Item.MeasurementStart[i] - Item.MeasurementStart[i - 1]) / 2;
+                    TimeIndex = extr < diff ? i - 1 : i;
+                    break;
+                }
             }
-        }
-        //var maxAbs = Math.Max(Math.Abs(max), Math.Abs(min));
-        var maxAbs = 10;
-        Model = PlotHeatmap(data, maxAbs, indexes);
+            DistanceModel = Item.Traces[TimeIndex].PlotLine(Item.Distance, min: Min, max: Max, start: DistanceStart, stop: DistanceStop);
+            UpdateTimeIndex(TimeIndex);
+        }));
+        DistanceController.Unbind(PlotCommands.SnapTrack);
+        DistanceController.BindMouseDown(OxyMouseButton.Left, new DelegatePlotCommand<OxyMouseDownEventArgs>((view, controller, args) =>
+        {
+            if (Item is null || Item.MeasurementStart.Count == 0)
+                return;
+            var p = GetPosition(view, controller, args);
+            var DistanceIndex = 0;
+            var less = Item.Distance.Count - DistanceStop;
+            for (var i = DistanceStart; i < Item.Distance.Count - less; i++)
+            {
+                if (Item.Distance[i] > p.X)
+                {
+                    var extr = p.X - Item.Distance[i - 1];
+                    var diff = (Item.Distance[i] - Item.Distance[i - 1]) / 2;
+                    DistanceIndex = extr < diff ? i - 1 : i;
+                    break;
+                }
+            }
+            TimeModel = Item.Traces.PlotScatter(Item.MeasurementStart, index: DistanceIndex, min: Min, max: Max);
+            UpdateDistanceIndex(DistanceIndex - DistanceStart);
+        }));
+        HeatmapController.Unbind(PlotCommands.SnapTrack);
+        HeatmapController.BindMouseDown(OxyMouseButton.Left, new DelegatePlotCommand<OxyMouseDownEventArgs>((view, controller, args) =>
+        {
+            if (Item is null)
+                return;
+            var p = GetPosition(view, controller, args);
+            DistanceIndex = (int)Math.Round(p.X) + DistanceStart;
+            TimeIndex = (int)Math.Round(p.Y);
+            TimeModel = Item.Traces.PlotScatter(Item.MeasurementStart, index: DistanceIndex, min: Min, max: Max);
+            DistanceModel = Item.Traces[TimeIndex].PlotLine(Item.Distance, min: Min, max: Max, start: DistanceStart, stop: DistanceStop);
+        }));
+
+        if (Item is null)
+            return;
+        Item.BoundaryIndexes = new() { DistanceStart, DistanceStop };
+        var date = new DateTime(2023, 06, 23, 11, 40, 0);
+        Item.References["Temperature"] = new()
+        {
+            (date, 26),
+            (date.AddMinutes(20), 30),
+            (date.AddMinutes(40), 30),
+            (date.AddMinutes(60), 40),
+            (date.AddMinutes(80), 40),
+            (date.AddMinutes(100), 50),
+            (date.AddMinutes(120), 50),
+            (date.AddMinutes(140), 60),
+            (date.AddMinutes(160), 60),
+        };
+        Plot();
+        OnTimeIndexChanged(TimeIndex);
+        OnDistanceIndexChanged(DistanceIndex);
     }
 
-    private static readonly OxyPalette _palette = OxyPalettes.Rainbow(500);
-
-    public PlotModel PlotHeatmap(double[,] data, double max, int[] boundries, string title = "Plot Heatmap", string titleXAxis = "x")
+    // TODO still not working on
+    void UpdateTimeIndex(int value)
     {
-        var model = new PlotModel { Title = title  };
-        model.Axes.Add(new LinearColorAxis
+        if (TimeModel.Annotations[0] is PointAnnotation tpa && TimeModel.Series[0] is ScatterSeries ss)
         {
-            Key = "linear",
-            Minimum = -max,
-            Maximum = max,
-            Palette = _palette,
-            RenderAsImage = true,
-            Position = AxisPosition.None
-        });
+            tpa.X = ss.Points[value].X;
+            tpa.Y = ss.Points[value].Y;
+        }
+        TimeModel.InvalidatePlot(true);
+    }
+
+    // TODO still not working on
+    void UpdateDistanceIndex(int value)
+    {
+        if (DistanceModel.Annotations[0] is PointAnnotation dpa && DistanceModel.Series[0] is LineSeries ls)
+        {
+            dpa.X = ls.Points[value].X;
+            dpa.Y = ls.Points[value].Y;
+        }
+        DistanceModel.InvalidatePlot(true);
+    }
+
+
+    private static DataPoint GetPosition(IPlotView view, IController controller, OxyMouseDownEventArgs args)
+    {
+        controller.AddMouseManipulator(view, new TrackerManipulator(view)
+        {
+            //FiresDistance = 2.0,
+            CheckDistanceBetweenPoints = true,
+        }, args);
+        var x = view.ActualModel.Axes.FirstOrDefault(w => w.Key == "x");
+        var y = view.ActualModel.Axes.FirstOrDefault(w => w.Key == "y");
+        return Axis.InverseTransform(args.Position, x, y);
+    }
+
+    partial void OnIndexChanged(int value)
+    {
+        Item = Project.Items[value];
+        Plot();
+    }
+
+    [RelayCommand]
+    private void LoadFile()
+    {
+        var file = WeakReferenceMessenger.Default.Send(new FileDialogMessage()).Response.FirstOrDefault();
+        if (string.IsNullOrEmpty(file))
+            return;
+        var fdd = FrequencyShiftDistance.Load(file);
+        if (fdd is null)
+            return;
+        // convert old data
+        if (Path.GetExtension(file) == ".zip")
+            fdd.Save(@$"C:\Projects\MMU\projects\{Path.GetFileNameWithoutExtension(file)}.bin");
+        Item = fdd;
+        Plot();
+    }
+
+    [RelayCommand]
+    private void LoadFolder()
+    {
+        var path = WeakReferenceMessenger.Default.Send(new RequestMessage<string>()).Response;
+        if (string.IsNullOrEmpty(path))
+            return;
+        var fdd = FrequencyShiftDistance.LoadFolder(path);
+        if (fdd is null)
+            return;
+        //fdd.Save(@$"C:\Projects\MMU\projects\{Path.GetFileNameWithoutExtension(path)}.bin");
+        Item = fdd;
+        Plot();
+    }
+
+    private void Plot()
+    {
+        if (Item is null)
+            return;
+        HeatmapModel = Item.PlotHeatmap(max: Max, min: Min, start:DistanceStart, stop: DistanceStop);
+        DistanceModel = Item.Traces[TimeIndex].PlotLine(Item.Distance, max: Max, min: Min, start: DistanceStart, stop: DistanceStop);
+        TimeModel = Item.Traces.PlotScatter(Item.MeasurementStart, index: DistanceIndex, max: Max, min: Min);
+        CoefficientModel = CoefficientPlot();
+    }
+
+    private PlotModel CoefficientPlot(string measurement = "Temperature")
+    {
+        var data = new Characterisation(Item, measurement: measurement);
+        var model = new PlotModel { Title = "Fiber Coefficient" };
+        var line = new LineSeries
+        {
+            XAxisKey = "x",
+            Color = OxyColors.Black
+        };
+        var scatter = new ScatterSeries
+        {
+            MarkerType = MarkerType.Diamond,
+            MarkerFill = OxyColors.White,
+            MarkerStroke = OxyColors.Green,
+            MarkerStrokeThickness = 1,
+            MarkerSize = 4,
+        };
+
+        for (int j = 0; j < data.RegressionPoints.Count; j++)
+        {
+            var d = data.RegressionPoints[j];
+            line.Points.Add(new DataPoint(d[0], d[1]));
+        }
+
+        //line.Points.Add(new DataPoint(0, 0));
+        //line.Points.Add(new DataPoint(20, -10));
+        //line.Points.Add(new DataPoint(30, -15));
+        //line.Points.Add(new DataPoint(40, -20));
+
+        foreach (var p in line.Points)
+            scatter.Points.Add(new(p.X, p.Y));
+        
+        model.Series.Add(line);
+        model.Series.Add(scatter);
         model.Axes.Add(new LinearAxis
         {
             Key = "x",
-            AbsoluteMinimum = 0,
-            AbsoluteMaximum = data.GetLength(0) - 1,
-            Title = titleXAxis,
-            //TicklineColor = OxyColors.White,
-            //TextColor = OxyColors.White,
+            Title = measurement,
+            Minimum = data.ReferencePoints[0][0] - 10,
+            Maximum = data.ReferencePoints[^1][0] + 10,
             Position = AxisPosition.Bottom
         });
         model.Axes.Add(new LinearAxis
         {
             Key = "y",
-            AbsoluteMinimum = 0,
-            AbsoluteMaximum = data.GetLength(1) - 1,
-            //Title = titleYAxis,
-            StartPosition = 1,
-            EndPosition = 0,
-            //TicklineColor = OxyColors.White,
-            //TextColor = OxyColors.White,
+            Title = "Frequency Shift (GHz)",
+            MajorStep = 10,
+            MinorStep = 2,
+            MajorGridlineStyle = LineStyle.Dot,
+            MajorGridlineColor = OxyColors.LightGray,
+            Minimum = -50,
+            Maximum = 20,
             Position = AxisPosition.Left
         });
-        //// for display only
-        model.Axes.Add(new LinearColorAxis
+
+        var tap = line.Points[line.Points.Count / 2];
+        model.Annotations.Add(new TextAnnotation
         {
-            Key = "reverse",
-            Minimum = -max,
-            Maximum = max,
-            //MajorStep = 10,
-            Palette = OxyPalettes.Rainbow(512),
-            RenderAsImage = false,
-            Position = AxisPosition.Right
+            Text = $"Fiber Coefficient = {data.Slope:0.00}",
+            TextPosition = new DataPoint(tap.X + 5, tap.Y + 5),
         });
-        //model.Axes.Add(new LinearAxis
-        //{
-        //    Key = "axis_bottom",
-        //    Minimum = 0,
-        //    Maximum = data.GetLength(0) * xScale,
-        //    Position = AxisPosition.Bottom,
-        //});
-        //model.Axes.Add(new LinearAxis
-        //{
-        //    Key = "axis_left",
-        //    Minimum = 0,
-        //    Maximum = data.GetLength(1) * yScale,
-        //    StartPosition = 1,
-        //    EndPosition = 0,
-        //    Position = AxisPosition.Left,
-        //});
-        model.Series.Add(new HeatMapSeries
-        {
-            XAxisKey = "x",
-            //YAxisKey = "y",
-            ColorAxisKey = "linear",
-            X0 = 0,
-            X1 = data.GetLength(0),
-            Y0 = 0,
-            Y1 = data.GetLength(1),
-            Interpolate = true,
-            RenderMethod = HeatMapRenderMethod.Bitmap,
-            Data = data,
-        });
-        for (int i = 1; i < boundries.Length; i++)
-        {
-            var a = new RectangleAnnotation
-            {
-                Fill = OxyColor.FromAColor(50, i % 2 == 0 ? OxyColors.Magenta : OxyColors.Yellow),
-                MinimumY = 0,
-                MaximumY = data.GetLength(0) - 1,
-                MinimumX = boundries[i - 1],
-                MaximumX = boundries[i],
-                Layer = AnnotationLayer.AboveSeries
-            };
-            model.Annotations.Add(a);
-        }
-        model.InvalidatePlot(true);
         return model;
     }
 }

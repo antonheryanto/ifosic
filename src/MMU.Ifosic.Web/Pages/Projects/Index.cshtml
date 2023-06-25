@@ -22,10 +22,10 @@
 			<strong>Type of Measurement:</strong> @Model.Item.Measurement<br />
 			<strong>Number of Fibers:</strong> @Model.Item.Fibers?.Count<br />
 			<strong>Fibers Layout:</strong> @Model.Item.Layout<br />
-		@if (Model.Data.Distance.Count > 0) {
+		@*@if (Model.Data.Distance.Count > 0) {
 			<strong>Distance:</strong> @Model.Data?.Distance[^1] <text> m</text><br />
 			<strong>Duration:</strong> @(Model.Data?.MeasurementEnd[^1] - @Model.Data?.MeasurementStart[0])<br />
-		}
+		}*@
 		</div>
 	</div>
 

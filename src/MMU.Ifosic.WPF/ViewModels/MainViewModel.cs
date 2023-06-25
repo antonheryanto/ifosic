@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using MMU.Ifosic.Models;
+using NPOI.HPSF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,6 +21,7 @@ public partial class MainViewModel : ObservableRecipient
     [ObservableProperty] private ViewModelBase _content = _home;
     [ObservableProperty] private AssetItem _assets = new();
     public Workspace Workspace => Workspace.Instance;
+    public string Name => App.NAME;
 
     public MainViewModel()
     {
@@ -38,12 +41,18 @@ public partial class MainViewModel : ObservableRecipient
         ViewModelBase? vm = null;
         switch (page)
         {
+            case AppPage.Calculate:
+                vm = new PlotViewModel();
+                break;
+            case AppPage.Measurement:
+                vm = new ProjectViewModel();
+                break;
             case AppPage.ProjectNew:
                 Workspace.Instance.Project = new();
                 vm = new ProjectViewModel();
                 break;
             case AppPage.ProjectOpen:
-                ProjectOpen(data as string);
+                ProjectOpen();
                 break;
             case AppPage.ProjectClose:
                 ProjectClose();
@@ -69,6 +78,7 @@ public partial class MainViewModel : ObservableRecipient
         var fileName = Messenger.Send(new FileDialogMessage { IsOpenDialog = false }).Response.FirstOrDefault();
         if (fileName is null)
             return;
+        Workspace.Instance.Project?.Save(fileName);
     }
 
     private void ProjectClose()
@@ -83,8 +93,9 @@ public partial class MainViewModel : ObservableRecipient
         fileName ??= Messenger.Send(new FileDialogMessage()).Response.FirstOrDefault();
         if (string.IsNullOrEmpty(fileName))
             return;
-        ProgressViewModel.Init(() => Debug.WriteLine("open project"));
+        ProgressViewModel.Init(() => Workspace.Instance.Project = Project.Load(fileName), () => Content = new ProjectViewModel());
     }
+
 
     void AddAsset(string key, AssetItem value)
     {
