@@ -236,10 +236,8 @@ public partial class PlotViewModel : ViewModelBase
             line.Points.Add(new DataPoint(d[0], d[1]));
         }
 
-        //line.Points.Add(new DataPoint(0, 0));
-        //line.Points.Add(new DataPoint(20, -10));
-        //line.Points.Add(new DataPoint(30, -15));
-        //line.Points.Add(new DataPoint(40, -20));
+        var min = data.ReferencePoints.Count == 0 ? 0 : data.ReferencePoints[0][0] - 10;
+        var max = data.ReferencePoints.Count == 0 ? 0 : data.ReferencePoints[^1][0] + 10;
 
         foreach (var p in line.Points)
             scatter.Points.Add(new(p.X, p.Y));
@@ -250,8 +248,8 @@ public partial class PlotViewModel : ViewModelBase
         {
             Key = "x",
             Title = measurement,
-            Minimum = data.ReferencePoints[0][0] - 10,
-            Maximum = data.ReferencePoints[^1][0] + 10,
+            Minimum = min,
+            Maximum = max,
             Position = AxisPosition.Bottom
         });
         model.Axes.Add(new LinearAxis
@@ -266,6 +264,8 @@ public partial class PlotViewModel : ViewModelBase
             Maximum = 20,
             Position = AxisPosition.Left
         });
+        if (line.Points.Count == 0)
+            return model;
 
         var tap = line.Points[line.Points.Count / 2];
         model.Annotations.Add(new TextAnnotation
