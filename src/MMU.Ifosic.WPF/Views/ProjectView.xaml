@@ -31,7 +31,8 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="40"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="150"/>
                     <ColumnDefinition Width="50" />
                 </Grid.ColumnDefinitions>
                 <CheckBox IsChecked="{Binding IsMeasure}" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -51,7 +52,10 @@
                                Command="{Binding DataContext.BrowseCommand, RelativeSource={RelativeSource AncestorType=ListView}}"/>
                 </Grid>
                 <TextBlock Text="{Binding Method}" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding Port}" Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding DataContext.Measurements, RelativeSource={RelativeSource AncestorType=ListView}}"
+                    SelectedItem="{Binding Measurement}" 
+                    Grid.Column="3" Style="{StaticResource ComboBoxWidth}" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Port}" Grid.Column="4" HorizontalAlignment="Right" VerticalAlignment="Center"/>
             </Grid>
         </DataTemplate>
     </UserControl.Resources>
@@ -93,17 +97,19 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="50"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="150"/>
                 <ColumnDefinition Width="50" />
             </Grid.ColumnDefinitions>
             <TextBlock Text="Run" Grid.Column="0"  HorizontalAlignment="Center"/>
             <TextBlock Text="Path" Grid.Column="1" HorizontalAlignment="Center"/>
             <TextBlock Text="Method" Grid.Column="2"  HorizontalAlignment="Center"/>
-            <TextBlock Text="Port" Grid.Column="3"  HorizontalAlignment="Center"/>
+            <TextBlock Text="Measurement" Grid.Column="3"  HorizontalAlignment="Center"/>
+            <TextBlock Text="Port" Grid.Column="4"  HorizontalAlignment="Center"/>
 
             <ListView ItemsSource="{Binding Runner.Sequences}"
                       Grid.Row="1"
-                      Grid.ColumnSpan="4"
+                      Grid.ColumnSpan="5"
                       d:Margin="5 5 5 5" />
         </Grid>
         </GroupBox>

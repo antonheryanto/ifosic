@@ -34,19 +34,23 @@ public partial class ProjectViewModel : ViewModelBase
         Layouts.Insert(0, "Please choose");
         Measurements = Project.Measurements.Values.ToList();
         Measurements.Insert(0, "Please choose");
-        var p = Workspace.Instance.Project;
-        if (p is not null)
-        {
-            Switch = p.Switch;
-            Runner = p.Runner;
-        }
-        UpdateSequence();
+        var p = Workspace.Instance.Project ?? new();
+        Switch = p.Switch;
+        Runner = p.Runner;
+
         Switch.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName != "Ports")
                 return;
             UpdateSequence();
         };
+        if (Runner.Sequences.Count == 0)
+            UpdateSequence();
+        
+        if (p.LayoutId == 0 && Runner.Sequences.Count > 0) {
+            p.LayoutId = 2;
+            p.NumberOfFiber = Runner.Sequences.Count;
+        }
     }
 
     private void UpdateSequence()
@@ -82,13 +86,13 @@ public partial class ProjectViewModel : ViewModelBase
             {
                 if (_token.Token.IsCancellationRequested)
                     break;
-                //if (string.IsNullOrEmpty(sequence.Path) || !Switch.ToPort(sequence.Port))
-                //    continue;
-                //ProgressViewModel.Init(() => Runner.Start(sequence), cancel: _token.Cancel);
-                Switch.Logs.Add($"{DateTime.Now}, Request Change port to {sequence.Port}");
-                Switch.OutgoingPort = sequence.Port;
-                ProgressViewModel.Init(() => Task.Delay(100).Wait(),
-                    () => Switch.Logs.Add($"{DateTime.Now}, Success port changed to {sequence.Port}, duration: 650 ms"), cancel: _token.Cancel);
+                if (string.IsNullOrEmpty(sequence.Path) || !Switch.ToPort(sequence.Port))
+                   continue;
+                ProgressViewModel.Init(() => Runner.Start(sequence), cancel: _token.Cancel);
+                // Switch.Logs.Add($"{DateTime.Now}, Request Change port to {sequence.Port}");
+                // Switch.OutgoingPort = sequence.Port;
+                // ProgressViewModel.Init(() => Task.Delay(100).Wait(),
+                //     () => Switch.Logs.Add($"{DateTime.Now}, Success port changed to {sequence.Port}, duration: 650 ms"), cancel: _token.Cancel);
             }
         }
         IsStopped = true;

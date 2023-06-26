@@ -30,7 +30,7 @@ public partial class Project : ObservableObject
     {
         {1, "Serial" },
         {2, "Parallel" },
-        {3, "Parallel 2"},
+        // {3, "Parallel 2"},
 	};
 
     [NotMapped]

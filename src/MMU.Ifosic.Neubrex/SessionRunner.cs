@@ -15,6 +15,7 @@ public partial class SessionSequence : ObservableObject
 {
     [ObservableProperty] private string _path = "";
     [ObservableProperty] private string _method = "TW";
+    [ObservableProperty] private string _measurement = "Temperature";
     [ObservableProperty] private int _port = 1;
     [ObservableProperty] private bool _isMeasure = true;
 }
