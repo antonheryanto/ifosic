@@ -187,13 +187,14 @@ public static class OxyPlotExtensions
             Color = OxyColors.Black 
         };
         if (stop == 0)
-            stop = y.Count;
+            stop = y.Count - 1;
         if (max == 0)
             max = y.Select(Math.Abs).Max();
         if (min == -9999)
             min = -max;
         var less = y.Count - stop;
         for (int i = start; i < y.Count - less; i++)
+        // for (int i = 0; i < y.Count; i++)
         {
             var v = x is not null && x.Count == y.Count ? x[i] : i;
             line.Points.Add(new DataPoint(v, y[i]));            
@@ -291,7 +292,7 @@ public static class OxyPlotExtensions
         if (fdd.Distance.Count == 0)
             return model;
         if (stop == 0)
-            stop = fdd.Distance.Count;
+            stop = fdd.Distance.Count - 1;
 		var data = new double[stop-start, fdd.Traces.Count];
         var minValue = double.MaxValue;
         var maxValue = double.MinValue;

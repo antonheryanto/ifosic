@@ -32,7 +32,7 @@ public partial class PlotViewModel : ViewModelBase
     [ObservableProperty] private PlotController _coefficientController = new();
     [ObservableProperty] private ObservableCollection<string> _indexes = new();
     [ObservableProperty] private int _index;
-    [ObservableProperty] private int _timeIndex = 25;
+    [ObservableProperty] private int _timeIndex = 0;
     [ObservableProperty] private int _distanceIndex = 232;
     [ObservableProperty] private int _distanceStart = 220;
     [ObservableProperty] private int _distanceStop = 350;

@@ -187,14 +187,19 @@ public class Characterisation
 		var avgPoints = new List<double>();
 		var refPoints = new List<double>();
 
+		if (AveragePoints.Count == 0)
+			return;
+
 		for (int j = refStart; j < refArray.Count; j++)
 		{
 			var avgIdx = j + averageIndex;
 			//if (avgIdx > AveragePoints.Count - 1 || AveragePoints[avgIdx][1] < 0)
 			//	continue;
 			refPoints.Add(refArray[j]);
-			avgPoints.Add(AveragePoints[avgIdx][1]);
-			ReferencePoints.Add(new double[] { refPoints[^1], avgPoints[^1] });
+			if (avgIdx < AveragePoints.Count) {
+				avgPoints.Add(AveragePoints[avgIdx][1]);
+				ReferencePoints.Add(new double[] { refPoints[^1], avgPoints[^1] });
+			}
 		}
 		if (refPoints.Count < 2)
 		{
@@ -204,6 +209,9 @@ public class Characterisation
 				avgPoints.Insert(0, 0);
 			}
 		}
+
+		if (refPoints.Count != avgPoints.Count)
+			return;
 		//var p = MathNet.Numerics.Fit.Line(refArray, refPoints);
 		(Intercept, Slope) = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(refPoints.ToArray(), avgPoints.ToArray());
 		for (int i = 0; i < refPoints.Count; i++)
