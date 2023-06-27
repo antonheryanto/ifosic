@@ -66,7 +66,7 @@ public partial class MainViewModel : ObservableRecipient
                 vm = new SettingViewModel();
                 break;
             default:
-                vm = new FrontPageViewModel();
+                vm = _home;
                 break;
         }
         if (vm is not null && !vm.IsCanceled)
@@ -83,7 +83,7 @@ public partial class MainViewModel : ObservableRecipient
 
     private void ProjectClose()
     {
-        Content = new FrontPageViewModel();
+        Content = _home;
         Assets = new();
         Workspace.Instance.Project = null;
     }
