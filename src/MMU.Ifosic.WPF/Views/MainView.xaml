@@ -32,22 +32,18 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <ui:NavigationStore Grid.Column="0">
+                <ui:NavigationStore Grid.Column="0" Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <ui:NavigationStore.Items>
                         <ui:NavigationItem Icon="Home16" Content="Home" ToolTip="Front Page"
                                            Command="{StaticResource AppCommand}" CommandParameter="Home"/>
                         <ui:NavigationItem Icon="Play16" Content="Run" ToolTip="Session Runner"
-                                       Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                       Command="{StaticResource AppCommand}" CommandParameter="Measurement"/>
+                                           Command="{StaticResource AppCommand}" CommandParameter="Measurement"/>
                         <ui:NavigationItem Icon="ChartMultiple20" Content="Plot" ToolTip="Calculate"
-                                           Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
                                            Command="{StaticResource AppCommand}" CommandParameter="Calculate"/>
                         <ui:NavigationItem Content="Save" Icon="Save16" ToolTip="Save Project"
-                                       Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                       Command="{StaticResource AppCommand}" CommandParameter="ProjectSave"/>
+                                           Command="{StaticResource AppCommand}" CommandParameter="ProjectSave"/>
                         <ui:NavigationItem Content="Close" Icon="Door16" ToolTip="Close Project"
-                                       Visibility="{Binding Workspace.HasProject, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                       Command="{StaticResource AppCommand}" CommandParameter="ProjectClose"/>
+                                           Command="{StaticResource AppCommand}" CommandParameter="ProjectClose"/>
                     </ui:NavigationStore.Items>
                     <!--<ui:NavigationStore.Footer>
                         <ui:NavigationItem Content="Settings" Icon="Settings24"                                           
